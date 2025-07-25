@@ -1,0 +1,16 @@
+[testing_accs]
+test_accs = https://docs.google.com/spreadsheets/d/e/2PACX-1vSeU1VRx7yKJKsghukhC-n4JAKF-bN9MhDbgxLFt6mNTLRgd7iU5OEqvJxOjWvrHJY0O64EEqW-JFd7/pub?gid=0&single=true&output=csv
+
+[service_requests]
+accreditation_fl_cert_number = 00003
+accreditation_ul_cert_number = 00006
+accreditation_renewal_fl_id = 67224
+accreditation_fl_id = 0
+accreditation_ul_id = 0
+accreditation_dublicate_fl_id = 0
+accreditation_dublicate_ul_id = 0
+accreditation_renewal_ul_id = 0
+
+[account]
+settings_url = https://dev.astanahub.com/account/settings/
+

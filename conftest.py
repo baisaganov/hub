@@ -1,5 +1,5 @@
 import pytest
-from playwright.async_api import async_playwright
+from playwright.sync_api import sync_playwright
 import logging
 # import yaml
 
@@ -23,8 +23,8 @@ def page():
     console.setFormatter(formatter)
     logger.addHandler(console)
 
-    with async_playwright() as p:
-        browser = p.chromium.launch(headless=False, slow_mo=0, )  # slow_mo помогает увидеть действия
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=False, slow_mo=0, args=['--window-size=1920,1080'])
         context = browser.new_context()
         page = context.new_page()
         yield page

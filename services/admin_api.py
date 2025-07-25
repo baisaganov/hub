@@ -1,0 +1,472 @@
+from enum import Enum
+import json
+import requests
+from bs4 import BeautifulSoup
+import logging
+
+from commons.custom_response import CustomResponse
+from commons.types import AdminFuncTypes, AdminAccountChangeType, ServiceType
+
+from typing import Any
+
+
+class AdminAPI:
+    log = logging.getLogger(__name__)  # Подхватываем логгер
+
+    # def __init__(self):
+    #     self.session = self.__get_cookies()
+    #     self.auth_session = self.auth_authorization()
+
+    def auth_authorization(self):
+        session = requests.Session()
+
+        # 1. Получаем CSRF и cookies с GET-запроса на страницу входа
+        login_page = session.get("https://dev.astanahub.com/s/auth/secretadmin/login/?next=/s/auth/secretadmin/")
+        soup = BeautifulSoup(login_page.text, "html.parser")
+        csrf_token = soup.find("input", {"name": "csrfmiddlewaretoken"}).get("value")
+
+        # 2. Подготавливаем headers
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...",
+            "Referer": "https://dev.astanahub.com/s/auth/secretadmin/login/?next=/s/auth/secretadmin/",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Origin": "https://dev.astanahub.com",
+        }
+
+        # 3. Подготавливаем тело POST-запроса
+        data = {
+            "csrfmiddlewaretoken": csrf_token,
+            "username": "a.baisaganov@astanahub.com",
+            "password": "Pass1234!",
+            "next": "/s/auth/secretadmin/",
+            "active": "on"
+        }
+
+        # 4. Авторизация
+        login_response = session.post(
+            "https://dev.astanahub.com/s/auth/secretadmin/login/?next=/s/auth/secretadmin/",
+            data=data,
+            headers=headers
+        )
+
+        self.log.info(f"POST статус авторизации auth: {login_response.status_code}")
+
+        # # 5. Доступ к защищенной странице
+        protected = session.get("https://dev.astanahub.com/s/auth/secretadmin/")
+        self.log.info(f"Protected статус: {protected.status_code}")
+        return session
+
+    def __get_cookies(self):
+        try:
+            session = requests.Session()
+            login_headers = {
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+                "Accept": "application/json, text/plain, */*",
+                "Referer": "https://dev.astanahub.com/ru/s/auth/login/",
+                "Origin": "https://dev.astanahub.com",
+                "Content-Type": "application/json"
+            }
+
+            login_payload = {
+                "email": "a.baisaganov@astanahub.com",
+                "password": "Pass1234!"
+            }
+
+            # Авторизация Techhub
+            login_url = "https://dev.astanahub.com/s/auth/api/v1/auth/email/"
+            login_response = session.post(login_url, json=login_payload, headers=login_headers)
+
+            logging.info(f"Admin: Статус авторизации:{login_response.status_code}")
+
+            if login_response.status_code != 200:
+                logging.error("Admin: Авторизация не удалась")
+                raise
+
+            return session
+        except Exception as e:
+            logging.error("Admin: Авторизация не удалась")
+            raise
+
+    def __get_parsed_data(self, data: BeautifulSoup):
+        info = {'iin': data.find('input', id='id_iin'),
+                'email': data.find('input', id='id_email'),
+                'first_name': data.find('input', id='id_first_name'),
+                'last_name': data.find('input', id='id_last_name'),
+                'is_email_verified': data.find('input', id='id_email_verified'),
+                'phone': data.find('input', id='id_phone'),
+                'is_phone_checked': data.find('input', id='id_phone_verified'),
+                'role': data.find('select', id='id_role'),
+                'data': data.find('textarea', id='id_data'),
+                'initial_data': data.find('input', id='initial-id_data'),
+                'is_staff': data.find('input', id='id_is_staff'),
+                'is_active': data.find('input', id='id_is_active'),
+                'is_superuser': data.find('input', id='id_is_superuser'),
+                'arm_permissions': data.find('textarea', id='id_arm_permissions'),
+                'csrf_token': data.select_one("input[name=csrfmiddlewaretoken]")["value"]
+                }
+        return info
+
+    def __get_company_payload(self, data: BeautifulSoup):
+        info = {
+            "csrfmiddlewaretoken": data.select_one("input[name=csrfmiddlewaretoken]")["value"],
+            "games_data": data.find('textarea', id='id_games_data_textarea'),
+            "initial-games_data": data.find('input', id='initial-id_games_data'),
+            "author": data.find('input', id='id_author'),
+            "tin": data.find('input', id='id_tin'),
+            "name": data.find('input', id='id_name'),
+            "short_name": data.find('input', id='id_short_name'),
+            "city_phone": data.find('input', id='id_city_phone'),
+            "company_type": data.find('select', id='id_company_type').find('option', selected=True)['value'],
+            "status": data.find('select', id='id_status').find('option', selected=True)['value'],
+            "tag_startup": data.find('textarea', id='id_tag_startup_textarea'),
+            "tag_it_company": data.find('textarea', id='id_tag_it_company_textarea'),
+            "tag_ts_member": data.find('textarea', id='id_tag_ts_member_textarea'),
+            "tag_techpark": data.find('textarea', id='id_tag_techpark_textarea'),
+            "tag_corp_partner": data.find('textarea', id='id_tag_corp_partner_textarea'),
+            "tag_nii": data.find('textarea', id='id_tag_nii_textarea'),
+            "tag_nedrouser": data.find('textarea', id='id_tag_nedrouser_textarea'),
+            "verified": data.find('input', id='id_verified'),
+            "search_field": data.find('textarea', id='id_search_field'),
+            "basic_info": data.find('textarea', id='id_basic_info_textarea'),
+            "initial-basic_info": data.find('input', id='initial-id_basic_info'),
+            "links": data.find('textarea', id='id_links_textarea'),
+            "initial-links": data.find('input', id='initial-id_links'),
+            "expertise": data.find('textarea', id='id_expertise_textarea'),
+            "initial-expertise": data.find('input', id='initial-id_expertise'),
+            "fundraising": data.find('textarea', id='id_fundraising_textarea'),
+            "initial-fundraising": data.find('input', id='initial-id_fundraising'),
+            "investments": data.find('textarea', id='id_investments_textarea'),
+            "initial-investments": data.find('input', id='initial-id_investments'),
+            "revenues": data.find('textarea', id='id_revenues_textarea'),
+            "initial-revenues": data.find('input', id='initial-id_revenues'),
+            "adoption": data.find('textarea', id='id_adoption_textarea'),
+            "initial-adoption": data.find('input', id='initial-id_adoption'),
+            "company_files": data.find('textarea', id='id_company_files_textarea'),
+            "initial-company_files": data.find('input', id='initial-id_company_files'),
+            "questions": data.find('textarea', id='id_questions_textarea'),
+            "initial-questions": data.find('input', id='initial-id_questions'),
+            "visibility_settings": data.find('textarea', id='id_visibility_settings_textarea'),
+            "initial-visibility_settings": data.find('input', id='initial-id_visibility_settings'),
+            "product_link": data.find('input', id='id_product_link'),
+            "_save": "Сохранить",
+            "image": data.find('input', id='id_image')
+
+        }
+
+
+        return info
+
+    def get_code(self, uuid: str) -> dict[str, str] | None:
+        """
+            Getting registration code by UUID
+        """
+        try:
+            session = self.__get_cookies()
+            request = session.get(f"https://dev.astanahub.com/s/auth/secretadmin/core/activation/{uuid}/change/")
+            soup = BeautifulSoup(request.text, "html.parser")
+            status_code = request.status_code
+            if status_code == 200:
+                for i in soup.find_all('input'):
+                    if i['name'] == 'code':
+                        return {"status_code": status_code, "code": (i['value'])}
+            else:
+                return None
+        except Exception as e:
+            logging.error(f"AdminPage: Getting code [{e}]")
+            raise e
+
+    def delete_user_by_id(self, user_id, service='auth'):
+        try:
+            delete_url = f'https://dev.astanahub.com/s/auth/secretadmin/core/user/{user_id}/delete/' if service == 'auth' else f'https://dev.astanahub.com/secretadmin/account/user/{user_id}/delete/'
+            session = self.auth_authorization() if service == 'auth' else self.__get_cookies()
+            response = session.get(delete_url)
+
+            soup = BeautifulSoup(response.text, "html.parser")
+            csrf_token = soup.find("input", {"name": "csrfmiddlewaretoken"}).get("value")
+
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...",
+                "Referer": delete_url,
+                "Origin": "https://dev.astanahub.com",
+                "Content-Type": "application/x-www-form-urlencoded"
+            }
+
+            data = {
+                "csrfmiddlewaretoken": csrf_token,
+                "post": "yes"
+            }
+
+            delete_response = session.post(delete_url, headers=headers, data=data)
+            if delete_response.status_code in [200, 302]:
+                return CustomResponse(status_code=delete_response.status_code,
+                                      msg=f'Удаление успешно',
+                                      service=ServiceType.ADMIN)
+            else:
+                return CustomResponse(status_code=delete_response.status_code,
+                                      msg=f'Ошибка при удалении {delete_response.status_code} {delete_response.text}',
+                                      service=ServiceType.ADMIN)
+        except Exception as e:
+            return CustomResponse(status_code=None,
+                                  msg='Не удалось удалить юзера, возникла ошибка',
+                                  service=ServiceType.ADMIN)
+
+    def change_user(self, change_mode: AdminAccountChangeType, data: dict, user_id: int, functinonality: Enum):
+        """
+        Смена учетных данных юзера (При смене почты или иин, если есть убирается у учетки который есть
+        и ставится новые
+        :param change_mode: Как будет проводиться поиск [inn ==  иин, email == Смена email, user_id == ID юзера]
+        :param data: На что нужно поменять
+        :param user_id: ID юзера у кого меняем
+        :param functinonality: clear = Очищаем поле, change = Меняем у юзеров
+        """
+        functinonality = functinonality.value
+        # Поиск юзера в система с такими данными
+        match change_mode:
+            case AdminAccountChangeType.IIN:
+                reserved_user_id = self.get_user_id_by_(data['iin'])
+            case AdminAccountChangeType.EMAIL:
+                reserved_user_id = self.get_user_id_by_(data['email'])
+            case AdminAccountChangeType.USER_ID:
+                reserved_user_id = user_id
+            case _:
+                raise ValueError(f"Неизвестный тип поиска: {change_mode}")
+
+        url_old = f'https://dev.astanahub.com/s/auth/secretadmin/core/user/{reserved_user_id}/change/'  # Старый юзер
+        url_new = f'https://dev.astanahub.com/s/auth/secretadmin/core/user/{user_id}/change/'           # Новый юзер
+
+        sync_url_old = (f'https://dev.astanahub.com/s/auth/secretadmin/core/user/{reserved_user_id}/actions'
+                        f'/sync_service_providers_action/')
+        sync_url_new = (f'https://dev.astanahub.com/s/auth/secretadmin/core/user/{user_id}/actions'
+                        f'/sync_service_providers_action/')
+
+        # Если юзер с такими данными уже есть, то меняем у него, а затем заполняем другого
+        if reserved_user_id is not None and (reserved_user_id != user_id or functinonality == 'clear'):
+            # 1. Получение данных о пользователе и смена
+            session = self.auth_authorization()
+            edit_resp = session.get(url_old)
+            if edit_resp.status_code != 200:
+                return {'response': edit_resp.status_code, 'msg': 'AdminPage: Данные о старом аккаунте не получены'}
+            soup: BeautifulSoup = BeautifulSoup(edit_resp.text, 'html.parser')
+            parsed_dict = self.__get_parsed_data(soup)
+
+            payload = {
+                'iin': None if 'iin' in data.keys() else parsed_dict.get('iin').attrs.get('value'),
+                'email': None if 'email' in data.keys() else parsed_dict.get('email').attrs.get('value'),
+                'first_name': parsed_dict.get('first_name').attrs.get('value'),
+                'last_name': parsed_dict.get('last_name').attrs.get('value'),
+                'email_verified': 'on' if parsed_dict.get('is_email_verified').attrs.get('checked') == '' else None,
+                # 'on',
+                'phone': parsed_dict.get('phone').attrs.get('value'),
+                'phone_verified': 'on' if parsed_dict.get('is_phone_checked').attrs.get('checked') == '' else None,
+                'role': parsed_dict.get('role').find('option', selected=True).attrs.get('value'),
+                'data': parsed_dict.get('data').text[1::],
+                'initial-data': parsed_dict.get('initial_data').attrs.get('value'),
+                'is_staff': 'on' if parsed_dict.get('is_staff').attrs.get('checked') == '' else None,
+                'is_active': 'on' if parsed_dict.get('is_active').attrs.get('checked') == '' else None,
+                'is_superuser': 'on' if parsed_dict.get('is_superuser').attrs.get('checked') == '' else None,
+                'arm_permissions': parsed_dict.get('arm_permissions').text[1::],
+                '_save': "Сохранить",
+                "csrfmiddlewaretoken": parsed_dict.get('csrf_token')
+            }
+
+            pdate_resp = session.post(url_old, data=payload)
+            if pdate_resp.status_code != 200:
+                return {'response': pdate_resp.status_code, 'msg': 'AdminPage: Данные в старом аккаунте не обновлены'}
+
+            sync_user_info = session.get(sync_url_old)
+            if sync_user_info.status_code not in [200, 302]:
+                return {'response': sync_user_info.status_code, 'msg': 'AdminPage: Данные в старом аккаунте не синх-ы'}
+
+        if functinonality == 'clear':
+            return {'response': 200, 'msg': 'Данные удалены'}
+
+        #  Обновление переданного юзера
+        session = self.auth_authorization()
+        edit_resp = session.get(url_new)
+        soup: BeautifulSoup = BeautifulSoup(edit_resp.text, 'html.parser')
+
+        if edit_resp.status_code != 200:
+            return {'response': edit_resp.status_code, 'msg': 'AdminPage: Данные не получены'}
+
+        parsed_dict = self.__get_parsed_data(soup)
+
+        payload = {
+            'iin': data['iin'] if 'iin' in data.keys() else parsed_dict.get('iin').attrs.get('value'),
+            'email': data['email'] if 'email' in data.keys() else parsed_dict.get('email').attrs.get('value'),
+            'first_name': parsed_dict.get('first_name').attrs.get('value'),
+            'last_name': parsed_dict.get('last_name').attrs.get('value'),
+            'email_verified': 'on' if parsed_dict.get('is_email_verified').attrs.get('checked') == '' else None,
+            # 'on',
+            'phone': parsed_dict.get('phone').attrs.get('value'),
+            'phone_verified': 'on' if parsed_dict.get('is_phone_checked').attrs.get('checked') == '' else None,
+            'role': data['role'] if 'role' in data.keys()
+            else parsed_dict.get('role').find('option', selected=True).attrs.get('value'),
+            'data': parsed_dict.get('data').text[1::],
+            'initial-data': parsed_dict.get('initial_data').attrs.get('value'),
+            'is_staff': 'on' if parsed_dict.get('is_staff').attrs.get('checked') == '' else None,
+            'is_active': 'on' if parsed_dict.get('is_active').attrs.get('checked') == '' else None,
+            'is_superuser': 'on' if parsed_dict.get('is_superuser').attrs.get('checked') == '' else None,
+            'arm_permissions': parsed_dict.get('arm_permissions').text[1::],
+            '_save': 'Сохранить',
+            "csrfmiddlewaretoken": parsed_dict.get('csrf_token')
+        }
+
+        pdate_resp = session.post(url_new, data=payload)
+
+        if pdate_resp.status_code != 200:
+            return {'response': pdate_resp.status_code,
+                    'msg': f'AdminPage: Данные у юзера не обновлены user_id = {user_id}, '
+                           f'status = {pdate_resp.status_code}'}
+
+        sync_user_info = session.get(sync_url_new)
+        if sync_user_info.status_code not in [200, 302]:
+            return {'response': edit_resp.status_code,
+                    'msg': f'AdminPage: Синхронизация у нового юзера не удалась user_id = {user_id}, '
+                           f'status = {sync_user_info.status_code}'}
+
+        return {'response': 200, 'msg': 'Данные сменились'}
+
+    def get_user_id_by_(self, value):
+        """
+        Получение ID юзера из админки
+        :param value: Любое значение для поиска
+        :return: ID найденного юзера
+        """
+        try:
+            session = self.auth_authorization()
+            response = session.get(f'https://dev.astanahub.com/secretadmin/account/user/?q={value}')
+            soup = BeautifulSoup(response.text, "html.parser")
+            try:
+                user_id = soup.find('th', class_='field-id')
+            except Exception as e:
+                return None
+            return user_id if user_id is None else user_id.text
+        except AttributeError as e:
+            logging.error(f"AdminPage:[{value}] Get user id error NoneType: {e}")
+            raise e
+
+    def delete_service_by_id(self, id):
+        try:
+            delete_url = f'https://dev.astanahub.com/s/services/secretadmin/service/servicerequest/{id}/delete/'
+            session = self.__get_cookies()
+
+            response = session.get(delete_url)
+
+            soup = BeautifulSoup(response.text, "html.parser")
+            csrf_token = soup.find("input", {"name": "csrfmiddlewaretoken"}).get("value")
+
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...",
+                "Referer": delete_url,
+                "Origin": "https://dev.astanahub.com",
+                "Content-Type": "application/x-www-form-urlencoded"
+            }
+
+            data = {
+                "csrfmiddlewaretoken": csrf_token,
+                "post": "yes"
+            }
+
+            delete_response = session.post(delete_url, headers=headers, data=data)
+            if delete_response.status_code in [200, 302]:
+                logging.info("AdminPage: Удаление заявки успешно")
+                return CustomResponse(status_code=delete_response.status_code,
+                                      service=ServiceType.ADMIN,
+                                      msg='Удаление заявки успешно')
+            else:
+                logging.error(f"AdminPage: Ошибка при удалении {delete_response.status_code} {delete_response.text}")
+                return CustomResponse(status_code=delete_response.status_code,
+                                      service=ServiceType.ADMIN,
+                                      msg='Удаление заявки успешно')
+
+        except Exception as e:
+            logging.error("AdminPage: Не удалось удалить заявку, возникла ошибка")
+            return CustomResponse(status_code=None,
+                                  service=ServiceType.ADMIN,
+                                  msg=f'Не удалось удалить заявку, возникла ошибка {e}')
+
+    def company_update(self, company_id, data: dict[str, Any]):
+        session = self.__get_cookies()
+        request = session.get(f"https://dev.astanahub.com/secretadmin/account/company/{company_id}/change/")
+        soup = BeautifulSoup(request.text, 'html.parser')
+        original_payload = self.__get_company_payload(soup)
+
+        payload = {
+            "csrfmiddlewaretoken": original_payload['csrfmiddlewaretoken'],
+            "games_data": original_payload['games_data'].text,
+            "initial-games_data": original_payload['initial-games_data'].attrs.get('value'),
+            "author": original_payload['author'].attrs.get('value'),
+            "tin": original_payload['tin'].attrs.get('value'),
+            "name": original_payload['name'].attrs.get('value'),
+            "short_name": original_payload['short_name'].attrs.get('value'),
+            "city_phone": original_payload['city_phone'].attrs.get('value'),
+            "company_type": original_payload['company_type'],
+            "status": 'on' if original_payload['status'] == 'active' else None,
+            "tag_startup": original_payload['tag_startup'].text,
+            "tag_it_company": original_payload['tag_it_company'].text,
+            "tag_ts_member": original_payload['tag_ts_member'].text,
+            "tag_techpark": original_payload['tag_techpark'].text,
+            "tag_corp_partner": original_payload['tag_corp_partner'].text,
+            "tag_nii": data['tag_nii'] if 'tag_nii' in data.keys() else original_payload['tag_nii'].text[1::],
+            "tag_nedrouser": original_payload['tag_nedrouser'].text,
+            "verified": original_payload['verified'].attrs.get('value'),
+            "search_field": original_payload['search_field'].text[1::],
+            "basic_info": original_payload['basic_info'].text,
+            "initial-basic_info": original_payload['initial-basic_info'].attrs.get('value'),
+            "links": original_payload['links'].text,
+            "initial-links": original_payload['initial-links'].attrs.get('value'),
+            "expertise": original_payload['expertise'].text,
+            "initial-expertise": original_payload['initial-expertise'].attrs.get('value'),
+            "fundraising": original_payload['fundraising'].text,
+            "initial-fundraising": original_payload['initial-fundraising'].attrs.get('value'),
+            "investments": original_payload['investments'].text,
+            "initial-investments": original_payload['initial-investments'].attrs.get('value'),
+            "revenues": original_payload['revenues'].text,
+            "initial-revenues": original_payload['initial-revenues'].attrs.get('value'),
+            "adoption": original_payload['adoption'].text,
+            "initial-adoption": original_payload['initial-adoption'].attrs.get('value'),
+            "company_files": original_payload['company_files'].text,
+            "initial-company_files": original_payload['initial-company_files'].attrs.get('value'),
+            "questions": original_payload['questions'].text,
+            "initial-questions": original_payload['initial-questions'].attrs.get('value'),
+            "visibility_settings": original_payload['visibility_settings'].text,
+            "initial-visibility_settings": original_payload['initial-visibility_settings'].attrs.get('value'),
+            "product_link": original_payload['product_link'].attrs.get('value'),
+            "_save": "Сохранить",
+            "image": original_payload['image'].attrs.get('value'),
+        }
+
+        print(payload)
+
+        # files = {
+        #     "profile_cover": ('', b'', 'application/octet-stream')
+        # }
+        #
+        # session = self.__get_cookies()
+        # request = session.post(f"https://dev.astanahub.com/secretadmin/account/company/{company_id}/change/",
+        #                        data=payload, files=files)
+
+        if request.status_code not in [200, 302]:
+            logging.error('AdminPage: Обновление компании не удалось')
+            return CustomResponse(status_code=request.status_code,
+                                  service=ServiceType.ADMIN,
+                                  msg='Обновление компании не удалось')
+
+        return CustomResponse(status_code=request.status_code,
+                              service=ServiceType.ADMIN,
+                              msg='Компания успешно обновлена')
+
+if __name__ == '__main__':
+    adm = AdminAPI()
+    # # d = {'iin': '990315351258'}
+    # d = {'iin': '990315351258'}
+    # adm.change_user(AdminAccountChangeType.IIN, data=d, user_id=59919, functinonality=AdminFuncTypes.CHANGE)
+
+    d = {'tag_nii': {}}
+    adm.company_update(6874, data=d)
+
+
+# accreditation_department_head	    ruk_upr@acred.kz	    60071
+# accreditation_deputy_chairman	    zam_pred@acred.kz	    60070
+# accreditation_executor	        otv_ispolnitel@acred.kz	60072
+# accreditation_chairman	        predsedatel@acred.hub	60093
