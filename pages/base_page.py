@@ -124,16 +124,17 @@ class BasePage:
         elif button_type.value == FormButton.ECP_SUBMIT.value:
             with self.page.expect_response(
                     f'https://dev.astanahub.com/account/api/service_request/{request_id}/sign/') as resp:
-                self.logging.info(f"{service_type.value}: Submit btn click")
+                self.logging.debug(f"{service_type.value}: Submit btn click")
                 self.ecp_submit_btn.click()
-                self.logging.info(f"{service_type.value}: Sign started")
+                self.logging.debug(f"{service_type.value}: Sign started")
                 SignXml().sign_xml()
-                self.logging.info(f"{service_type.value}: Sign ended")
+                self.logging.debug(f"{service_type.value}: Sign ended")
 
             if resp.value.status not in [200, 201]:
                 return self.error_response(error_text=f'Sign error',
                                            status=resp.value.status,
                                            service=service_type)
+
             return self.pass_response(
                 status=resp.value.status,
                 service=service_type,
