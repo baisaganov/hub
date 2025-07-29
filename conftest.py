@@ -2,7 +2,9 @@ import pytest
 from playwright.sync_api import sync_playwright
 import logging
 
+from pages.account_page import AccountPage
 from pages.auth_page import AuthPage
+from services.admin_api import AdminAPI
 
 
 # import yaml
@@ -27,9 +29,12 @@ def page():
     console.setFormatter(formatter)
     logger.addHandler(console)
 
+    width = 1920
+    height = 1080
+
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False, slow_mo=0, args=['--window-size=1920,1080'])
-        context = browser.new_context()
+        browser = p.chromium.launch(headless=False, slow_mo=0, args=[f'--window-size={width},{height}'])
+        context = browser.new_context(viewport={'width': width, 'height': height})
         page = context.new_page()
         yield page
         context.close()
@@ -40,6 +45,15 @@ def page():
 def auth_page(page):
     return AuthPage(page)
 
+
+@pytest.fixture
+def admin():
+    return AdminAPI()
+
+
+@pytest.fixture
+def account_page(page):
+    return AccountPage(page)
 
 #
 # def pytest_collection_modifyitems(items):
