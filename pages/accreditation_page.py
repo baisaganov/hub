@@ -20,7 +20,10 @@ class AccreditationPage(BasePage):
         self.phone_number_input = page.locator('input[name=mobile_phone_number]')
         self.email_input = page.locator('input[name=email_field]')
         self.cert_give_date = page.locator('input[name=accreditation_given_date]')
+        self.cert_end_date = page.locator('input[name=data_cved]')
+        self.given_org = page.locator('input[name=vydano_svid]')
         self.company_name_input = page.locator('div.fblockcompany_name  > input[name=company_name]')
+        self.dublicate_reason_input = page.locator('input[name=reason_why]')
 
         self.check_cert_btn = page.locator('div.check-wrapper > div.btn')
 
@@ -28,8 +31,6 @@ class AccreditationPage(BasePage):
             'div.fblockchange_accept_copy > div.file-block > div.label-file-upload > label > input[type=file]')
         self.old_cert_doc = page.locator(
             'div.fblockcert_copy > div.file-block > div.label-file-upload > label > input[type=file]')
-
-        self.calednar_field = page.locator('input[name=accreditation_given_date]')
 
         # Старая аккредитация ФЛ
         self.surname_input = page.locator('input[name=surname]')
@@ -62,7 +63,7 @@ class AccreditationPage(BasePage):
         url = self.__get_service_link(service_type)
         with self.page.expect_response(url) as resp:
             self.page.goto(url)
-            self.logging.debug(f'{service_type.value}: Navigate to {url}')
+            self.logging.info(f'{service_type.value}: Navigate to {url}')
 
         assert resp.value.status in [200, 302], self.error_info(status=resp.value.status,
                                                                 msg=f'{service_type.value}: Page not reacheable '
@@ -86,7 +87,7 @@ class AccreditationPage(BasePage):
         with self.page.expect_response(f'https://dev.astanahub.com/service/api/fl-accreditation-requests/'
                                        f'{cert_number}/') as resp:
             self.check_cert_btn.click()
-            self.logging.debug(f"Accreditation Renewal FL: Check btn clicked")
+            self.logging.info(f"Accreditation Renewal FL: Check btn clicked")
 
         assert resp.value.status == 200, self.error_info(status=resp.value.status,
                                                          msg=f'Accreditation Renewal FL: Check btn clicked error '
@@ -96,14 +97,14 @@ class AccreditationPage(BasePage):
 
         with self.page.expect_response('https://dev.astanahub.com/account/api/protected_media_file/') as resp:
             self.fio_doc.set_input_files(upload_document)
-            self.logging.debug(f"Accreditation Renewal FL: FIO file upload")
+            self.logging.info(f"Accreditation Renewal FL: FIO file upload")
 
         assert resp.value.status in [200, 201], self.error_info(f'Accreditation Renewal FL: FIO doc not uploaded '
                                                                 f'{resp.value.json()}')
 
         with self.page.expect_response('https://dev.astanahub.com/account/api/protected_media_file/') as resp:
             self.old_cert_doc.set_input_files(upload_document)
-            self.logging.debug(f"Accreditation Renewal FL: Old cert doc file upload")
+            self.logging.info(f"Accreditation Renewal FL: Old cert doc file upload")
 
         assert resp.value.status in [200, 201], self.error_info(status=resp.value.status,
                                                                 msg=f'Accreditation Renewal FL: '
@@ -118,12 +119,12 @@ class AccreditationPage(BasePage):
         """
         self.cert_number_input.click()
         self.cert_number_input.fill(cert_number)
-        self.logging.debug(f"Accreditation Renewal UL: Номер свидетельства введен")
+        self.logging.info(f"Accreditation Renewal UL: Номер свидетельства введен")
 
         with self.page.expect_response(f'https://dev.astanahub.com/service/api/company-accreditation-requests/'
                                        f'{cert_number}/') as resp:
             self.check_cert_btn.click()
-            self.logging.debug(f"Accreditation Renewal UL: Check btn clicked")
+            self.logging.info(f"Accreditation Renewal UL: Check btn clicked")
 
         assert resp.value.status == 200, self.error_info(status=resp.value.status,
                                                          msg=f'Accreditation Renewal FL: Check btn clicked error '
@@ -141,7 +142,7 @@ class AccreditationPage(BasePage):
         try:
             self.cert_give_date.click()
             self.page.get_by_text('10', exact=True).click()
-            self.logging.debug(f"Accreditation Renewal UL: Дата выдачи сертификата заполнена")
+            self.logging.info(f"Accreditation Renewal UL: Дата выдачи сертификата заполнена")
         except Exception as e:
             assert 1 == 0, self.error_info(msg=f"Акред Переоформление ЮЛ: Ошибка при заполнении даты",
                                            exception=e)
@@ -153,7 +154,7 @@ class AccreditationPage(BasePage):
 
         try:
             self.bin_input.fill('123456789112')
-            self.logging.debug(f"Accreditation Renewal UL: Бин заполнен")
+            self.logging.info(f"Accreditation Renewal UL: Бин заполнен")
         except Exception as e:
             return self.error_info(msg=f"Акред Переоформление ЮЛ: Ошибка при заполнении БИН",
                                    exception=e)
@@ -163,7 +164,7 @@ class AccreditationPage(BasePage):
 
         with self.page.expect_response('https://dev.astanahub.com/account/api/protected_media_file/') as resp:
             self.fio_doc.set_input_files(upload_document)
-            self.logging.debug(f"Accreditation Renewal UL: Rename file upload")
+            self.logging.info(f"Accreditation Renewal UL: Rename file upload")
 
         assert resp.value.status in [200, 201], self.error_info(status=resp.value.status,
                                                                 msg=f'Accreditation Renewal UL: Rename doc not uploaded'
@@ -171,8 +172,70 @@ class AccreditationPage(BasePage):
 
         with self.page.expect_response('https://dev.astanahub.com/account/api/protected_media_file/') as resp:
             self.old_cert_doc.set_input_files(upload_document)
-            self.logging.debug(f"Accreditation Renewal UL: Old cert doc file upload")
+            self.logging.info(f"Accreditation Renewal UL: Old cert doc file upload")
 
         assert resp.value.status in [200, 201], self.error_info(status=resp.value.status,
                                                                 msg=f'Accreditation Renewal UL: Old cert file not '
                                                                     f'uploaded {resp.value.json()}')
+
+    def fill_service_dublicate_fl(self, cert_number, iin):
+        """
+        Заполнение формы дубликата аккредитации ФЛ
+
+        :param cert_number: Номер сертификата для проверки в базе
+        :param iin:
+        :return:
+        """
+        self.cert_number_input.click()
+        self.cert_number_input.fill(cert_number)
+        self.logging.info('Accreditation Dubplicate FL: Номер свидетельства введен')
+
+        with self.page.expect_response('') as resp:
+            self.check_cert_btn.click()
+            self.logging.info('Accreditation Dubplicate FL: Кнопка проверки нажата')
+
+        assert resp.value.status == 200, self.error_info(status=resp.value.status,
+                                                         msg="Accreditation Dubplicate FL: Ошибка при проверке свид-ва")
+
+        assert (self.cert_give_date.input_value() != '' or
+                self.cert_end_date.input_value() != '' or
+                self.iin_input.input_value() != '' or
+                self.company_name_input.input_value() != ''
+                ), self.error_info(msg="Accreditation Dubplicate FL: Автозаполнение не работает")
+
+        try:
+            self.cert_give_date.click()
+            self.page.get_by_text('10', exact=True).click()
+            self.logging.info(f"Accreditation Dubplicate FL: Дата выдачи сертификата заполнена")
+        except Exception as e:
+            assert 1 == 0, self.error_info(msg="Accreditation Dubplicate FL: Ошибка при заполнении даты выдачи",
+                                           exception=e)
+
+        try:
+            self.cert_end_date.click()
+            self.page.get_by_text('20', exact=True).click()
+            self.logging.info(f"Accreditation Dubplicate FL: Дата завершнения сертификата заполнена")
+        except Exception as e:
+            assert 1 == 0, self.error_info(msg="Accreditation Dubplicate FL: Ошибка при заполнении завершнения даты",
+                                           exception=e)
+
+        self.given_org.fill('TOO Astana')
+
+        try:
+            self.iin_input.fill(iin)
+            self.logging.info('Accreditation Dubplicate FL: ИИН заполнен')
+        except Exception as e:
+            assert 1 == 0, self.error_info("Accreditation Dubplicate FL: Ошибка при заполнении ИИН", exception=e)
+
+        self.company_name_input.fill("Auto Test")
+        self.phone_number_input.fill('1234567890')
+        self.dublicate_reason_input.fill('Test')
+
+        with self.page.expect_response('https://dev.astanahub.com/account/api/protected_media_file/') as resp:
+            self.old_cert_doc.set_input_files(upload_document)
+            self.logging.info('Accreditation Dubplicate FL: Загржуен старый сертификат')
+
+        assert resp.value.status in [200, 201], self.error_info(status=resp.value.status,
+                                                                msg=f'AAccreditation Dubplicate FL: Old cert file not '
+                                                                    f'uploaded {resp.value.json()}')
+

@@ -135,3 +135,57 @@ class TestServiceRequest:
                                                       service_id=request_id)
 
         assert save is None, save
+
+
+    @allure.title("Подача заявки на Дубликат аккредитации ФЛ")
+    @allure.severity(allure.severity_level.NORMAL)
+    @pytest.mark.parametrize(
+        "email, password, iin, cert_number",
+        [
+            ("a.baisaganov@astanahub.com", "Pass1234!", '990315351258', '00003')
+        ],
+        ids=["Отправка заявки валид"]
+    )
+    def test_accreditation_dublicate_fl(self, page, auth_page, accreditation_page, email, password, iin, cert_number):
+        accred_type = AccreditationType.DUBLICATE_FL
+
+        with allure.step("Проверка: Нет ли активной заявки"):
+            assert self.config['service_requests'][
+                       accred_type.value + '_id'] == '0', f"{accred_type.value.capitalize()}: Заявка уже создана"
+
+        with allure.step("Переход на страницу авторизация"):
+            auth_page.navigate()
+
+        with allure.step("Ввод почты"):
+            auth_page.input_email_or_phone(value=email)
+
+        with allure.step("Клик по кнопке продолжить"):
+            response = auth_page.click_auth_continue_btn()
+
+            assert response is not None, "Ошибка при входе, пустой ответ"
+            assert response.value.status == 200, f"Ошибка, неверный статус код: {response.value.status}"
+            assert response.value.json()['user_exists'] is True, "Юзер отсутвует"
+
+        with allure.step("Ввод пароля"):
+            auth_page.input_password(password=password)
+
+        with allure.step("Клик по кнопке продолжить"):
+            auth_page.click_auth_continue_btn_2()
+
+        with allure.step('Переход к форме заполнения заявки'):
+            accreditation_page.nav_service_(accred_type)
+
+        with allure.step('Заполнение заявки на дубликат'):
+            accreditation_page.fill_service_dublicate_fl(cert_number=cert_number, iin=iin)
+
+        with allure.step('Сохранение заявки'):
+            accreditation_page.save_and_submit_form(accred_type, FormButton.SAVE)
+
+        with allure.step('Подписание заявки'):
+            request_id = accreditation_page.save_and_submit_form(accred_type, FormButton.ECP_SUBMIT)
+
+        with allure.step('Сохранение ID заявки в конфиг'):
+            save = accreditation_page.save_service_id(service_name=accred_type.value + "_id",
+                                                      service_id=request_id)
+
+        assert save is None, save
