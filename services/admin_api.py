@@ -1,11 +1,9 @@
 from enum import Enum
-import json
 import requests
 from bs4 import BeautifulSoup
 import logging
 
-from commons.custom_response import CustomResponse
-from commons.types import AdminFuncTypes, AdminAccountChangeType, ServiceType
+from commons.types import AdminAccountChangeType, AdminFuncTypes
 
 from typing import Any
 
@@ -13,9 +11,9 @@ from typing import Any
 class AdminAPI:
     log = logging.getLogger(__name__)  # Подхватываем логгер
 
-    # def __init__(self):
-    #     self.session = self.__get_cookies()
-    #     self.auth_session = self.auth_authorization()
+    def __init__(self):
+        self.session = self.__get_cookies()
+        self.auth_session = self.auth_authorization()
 
     def auth_authorization(self):
         session = requests.Session()
@@ -49,11 +47,11 @@ class AdminAPI:
             headers=headers
         )
 
-        self.log.info(f"POST статус авторизации auth: {login_response.status_code}")
+        self.log.debug(f"POST статус авторизации auth: {login_response.status_code}")
 
         # # 5. Доступ к защищенной странице
         protected = session.get("https://dev.astanahub.com/s/auth/secretadmin/")
-        self.log.info(f"Protected статус: {protected.status_code}")
+        self.log.debug(f"Protected статус: {protected.status_code}")
         return session
 
     def __get_cookies(self):
@@ -76,10 +74,10 @@ class AdminAPI:
             login_url = "https://dev.astanahub.com/s/auth/api/v1/auth/email/"
             login_response = session.post(login_url, json=login_payload, headers=login_headers)
 
-            logging.info(f"Admin: Статус авторизации:{login_response.status_code}")
+            self.log.info(f"Admin: Статус авторизации:{login_response.status_code}")
 
             if login_response.status_code != 200:
-                logging.error("Admin: Авторизация не удалась")
+                self.log.error("Admin: Авторизация не удалась")
                 raise
 
             return session
@@ -153,32 +151,29 @@ class AdminAPI:
 
         }
 
-
         return info
 
-    def get_code(self, uuid: str) -> dict[str, str] | None:
+    def get_code(self, uuid: str) -> str | None:
         """
             Getting registration code by UUID
         """
         try:
-            session = self.__get_cookies()
+            session = self.session
             request = session.get(f"https://dev.astanahub.com/s/auth/secretadmin/core/activation/{uuid}/change/")
             soup = BeautifulSoup(request.text, "html.parser")
             status_code = request.status_code
-            if status_code == 200:
-                for i in soup.find_all('input'):
-                    if i['name'] == 'code':
-                        return {"status_code": status_code, "code": (i['value'])}
-            else:
-                return None
+            assert status_code == 200, 'AdminAPI: Страница получения кода не загрузилась'
+            for i in soup.find_all('input'):
+                if i['name'] == 'code':
+                    return i['value']
         except Exception as e:
-            logging.error(f"AdminPage: Getting code [{e}]")
-            raise e
+            self.log.error(f"AdminPage: Getting code [{e}]")
+            assert 1 == 0, f"AdminPage: Getting code [{e}]"
 
     def delete_user_by_id(self, user_id, service='auth'):
         try:
             delete_url = f'https://dev.astanahub.com/s/auth/secretadmin/core/user/{user_id}/delete/' if service == 'auth' else f'https://dev.astanahub.com/secretadmin/account/user/{user_id}/delete/'
-            session = self.auth_authorization() if service == 'auth' else self.__get_cookies()
+            session = self.auth_session if service == 'auth' else self.session
             response = session.get(delete_url)
 
             soup = BeautifulSoup(response.text, "html.parser")
@@ -197,20 +192,12 @@ class AdminAPI:
             }
 
             delete_response = session.post(delete_url, headers=headers, data=data)
-            if delete_response.status_code in [200, 302]:
-                return CustomResponse(status_code=delete_response.status_code,
-                                      msg=f'Удаление успешно',
-                                      service=ServiceType.ADMIN)
-            else:
-                return CustomResponse(status_code=delete_response.status_code,
-                                      msg=f'Ошибка при удалении {delete_response.status_code} {delete_response.text}',
-                                      service=ServiceType.ADMIN)
-        except Exception as e:
-            return CustomResponse(status_code=None,
-                                  msg='Не удалось удалить юзера, возникла ошибка',
-                                  service=ServiceType.ADMIN)
 
-    def change_user(self, change_mode: AdminAccountChangeType, data: dict, user_id: int, functinonality: Enum):
+            assert delete_response.status_code in [200, 302], f'[{delete_response.status_code}] AdminAPI: Ошибка при удалении {delete_response.text}'
+        except Exception as e:
+            assert 1 == 0, f'AdminAPI: Не удалось удалить юзера, возникла ошибка {e}'
+
+    def change_user(self, change_mode: AdminAccountChangeType, data: dict, user_id: int, functinonality: AdminFuncTypes):
         """
         Смена учетных данных юзера (При смене почты или иин, если есть убирается у учетки который есть
         и ставится новые
@@ -242,10 +229,11 @@ class AdminAPI:
         # Если юзер с такими данными уже есть, то меняем у него, а затем заполняем другого
         if reserved_user_id is not None and (reserved_user_id != user_id or functinonality == 'clear'):
             # 1. Получение данных о пользователе и смена
-            session = self.auth_authorization()
+            session = self.auth_session
             edit_resp = session.get(url_old)
-            if edit_resp.status_code != 200:
-                return {'response': edit_resp.status_code, 'msg': 'AdminPage: Данные о старом аккаунте не получены'}
+
+            assert edit_resp.status_code == 200, f'AdminPage: Данные о старом аккаунте не получены'
+
             soup: BeautifulSoup = BeautifulSoup(edit_resp.text, 'html.parser')
             parsed_dict = self.__get_parsed_data(soup)
 
@@ -270,26 +258,24 @@ class AdminAPI:
             }
 
             pdate_resp = session.post(url_old, data=payload)
-            if pdate_resp.status_code != 200:
-                return {'response': pdate_resp.status_code, 'msg': 'AdminPage: Данные в старом аккаунте не обновлены'}
+
+            assert pdate_resp.status_code == 200, 'AdminAPI: Данные в старом аккаунте не обновлены'
 
             sync_user_info = session.get(sync_url_old)
-            if sync_user_info.status_code not in [200, 302]:
-                return {'response': sync_user_info.status_code, 'msg': 'AdminPage: Данные в старом аккаунте не синх-ы'}
+
+            assert sync_user_info.status_code in [200, 302], 'AdminAPI: Данные в старом аккаунте не синх-ы'
 
         if functinonality == 'clear':
-            return {'response': 200, 'msg': 'Данные удалены'}
+            return
 
         #  Обновление переданного юзера
-        session = self.auth_authorization()
+        session = self.auth_session
         edit_resp = session.get(url_new)
         soup: BeautifulSoup = BeautifulSoup(edit_resp.text, 'html.parser')
 
-        if edit_resp.status_code != 200:
-            return {'response': edit_resp.status_code, 'msg': 'AdminPage: Данные не получены'}
+        assert edit_resp.status_code == 200, 'AdminPage: Данные не получены'
 
         parsed_dict = self.__get_parsed_data(soup)
-
         payload = {
             'iin': data['iin'] if 'iin' in data.keys() else parsed_dict.get('iin').attrs.get('value'),
             'email': data['email'] if 'email' in data.keys() else parsed_dict.get('email').attrs.get('value'),
@@ -313,18 +299,11 @@ class AdminAPI:
 
         pdate_resp = session.post(url_new, data=payload)
 
-        if pdate_resp.status_code != 200:
-            return {'response': pdate_resp.status_code,
-                    'msg': f'AdminPage: Данные у юзера не обновлены user_id = {user_id}, '
-                           f'status = {pdate_resp.status_code}'}
+        assert pdate_resp.status_code == 200, f'AdminPage: Данные у юзера не обновлены user_id = {user_id}'
 
         sync_user_info = session.get(sync_url_new)
-        if sync_user_info.status_code not in [200, 302]:
-            return {'response': edit_resp.status_code,
-                    'msg': f'AdminPage: Синхронизация у нового юзера не удалась user_id = {user_id}, '
-                           f'status = {sync_user_info.status_code}'}
 
-        return {'response': 200, 'msg': 'Данные сменились'}
+        assert sync_user_info.status_code in [200, 302], f'AdminPage: Синхронизация у нового юзера не удалась user_id = {user_id}'
 
     def get_user_id_by_(self, value):
         """
@@ -333,7 +312,7 @@ class AdminAPI:
         :return: ID найденного юзера
         """
         try:
-            session = self.auth_authorization()
+            session = self.auth_session
             response = session.get(f'https://dev.astanahub.com/secretadmin/account/user/?q={value}')
             soup = BeautifulSoup(response.text, "html.parser")
             try:
@@ -342,13 +321,13 @@ class AdminAPI:
                 return None
             return user_id if user_id is None else user_id.text
         except AttributeError as e:
-            logging.error(f"AdminPage:[{value}] Get user id error NoneType: {e}")
-            raise e
+            self.log.error(f"AdminAPI:[{value}] Get user id error NoneType: {e}")
+            assert 1 == 0, f"AdminAPI:[{value}] Get user id error NoneType: {e}"
 
     def delete_service_by_id(self, id):
         try:
             delete_url = f'https://dev.astanahub.com/s/services/secretadmin/service/servicerequest/{id}/delete/'
-            session = self.__get_cookies()
+            session = self.session
 
             response = session.get(delete_url)
 
@@ -368,25 +347,15 @@ class AdminAPI:
             }
 
             delete_response = session.post(delete_url, headers=headers, data=data)
-            if delete_response.status_code in [200, 302]:
-                logging.info("AdminPage: Удаление заявки успешно")
-                return CustomResponse(status_code=delete_response.status_code,
-                                      service=ServiceType.ADMIN,
-                                      msg='Удаление заявки успешно')
-            else:
-                logging.error(f"AdminPage: Ошибка при удалении {delete_response.status_code} {delete_response.text}")
-                return CustomResponse(status_code=delete_response.status_code,
-                                      service=ServiceType.ADMIN,
-                                      msg='Удаление заявки успешно')
+
+            assert delete_response.status_code in [200, 302], f"AdminAPI: Ошибка при удалении {delete_response.text}"
 
         except Exception as e:
-            logging.error("AdminPage: Не удалось удалить заявку, возникла ошибка")
-            return CustomResponse(status_code=None,
-                                  service=ServiceType.ADMIN,
-                                  msg=f'Не удалось удалить заявку, возникла ошибка {e}')
+            self.log.error("AdminPage: Не удалось удалить заявку, возникла ошибка")
+            assert 1 == 0, "AdminPage: Не удалось удалить заявку, возникла ошибка"
 
     def company_update(self, company_id, data: dict[str, Any]):
-        session = self.__get_cookies()
+        session = self.session
         request = session.get(f"https://dev.astanahub.com/secretadmin/account/company/{company_id}/change/")
         soup = BeautifulSoup(request.text, 'html.parser')
         original_payload = self.__get_company_payload(soup)
@@ -436,8 +405,6 @@ class AdminAPI:
             "image": original_payload['image'].attrs.get('value'),
         }
 
-        print(payload)
-
         # files = {
         #     "profile_cover": ('', b'', 'application/octet-stream')
         # }
@@ -446,24 +413,18 @@ class AdminAPI:
         # request = session.post(f"https://dev.astanahub.com/secretadmin/account/company/{company_id}/change/",
         #                        data=payload, files=files)
 
-        if request.status_code not in [200, 302]:
-            logging.error('AdminPage: Обновление компании не удалось')
-            return CustomResponse(status_code=request.status_code,
-                                  service=ServiceType.ADMIN,
-                                  msg='Обновление компании не удалось')
+        assert request.status_code in [200, 302], 'AdminAPI: Обновление компании не удалось'
+        self.log.debug('AdminAPI: Компания обновлена')
 
-        return CustomResponse(status_code=request.status_code,
-                              service=ServiceType.ADMIN,
-                              msg='Компания успешно обновлена')
 
 if __name__ == '__main__':
     adm = AdminAPI()
     # # d = {'iin': '990315351258'}
-    # d = {'iin': '990315351258'}
-    # adm.change_user(AdminAccountChangeType.IIN, data=d, user_id=59919, functinonality=AdminFuncTypes.CHANGE)
+    d = {'iin': '990315351258'}
+    adm.change_user(AdminAccountChangeType.IIN, data=d, user_id=59919, functinonality=AdminFuncTypes.CHANGE)
 
-    d = {'tag_nii': {}}
-    adm.company_update(6874, data=d)
+    # d = {'tag_nii': {}}
+    # adm.company_update(6874, data=d)
 
 
 # accreditation_department_head	    ruk_upr@acred.kz	    60071

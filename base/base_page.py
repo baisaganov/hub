@@ -1,7 +1,6 @@
-from commons.custom_response import CustomResponse
-from pages import Enum, configparser, re, log, Page
+from base import Enum, configparser, re, log, Page
 
-from pages import SignXml, allure
+from base import SignXml, allure
 
 from commons.types import FormButton
 from config.settings import config_path
@@ -31,37 +30,23 @@ class BasePage:
             attachment_type=allure.attachment_type.PNG
         )
 
-    def error_response(self, error_text: str, service: Enum, status: int = None, exception: Exception | None = None):
+    def error_info(self, msg: str, status: int = None, exception: Exception | str = ''):
         """
         Шаблон вывода ошибки в уровень теста
         :param status: Статус ответа, default=None
-        :param service: в Каком сервисе возникла ошибка
-        :param error_text: Текст ошибки для вывода
+        :param msg: Текст ошибки для вывода
         :param exception: Какая ошибка
-        :return: Возвращается словарь {"response"}
+        :return: Возвращается словарь текст
         """
-        text = f"[{status}]{service.value}: {error_text} \n{exception}"
+        text = f"[{status}] {msg} \n{exception}"
         self.logging.error(text)
-        self.__take_screenshot(error_text)
-        return CustomResponse(status_code=status, service=service, msg=error_text)
+        self.__take_screenshot(msg)
+        return text
 
-    def pass_response(self, service: Enum, message: str, status: int = None):
-        """
-        Ответ когда все ок
-        :param service:
-        :param message:
-        :param status:
-        :return:
-        """
-        text = f"[{status}]{service.value}: {message}"
-        self.logging.debug(text)
-        return CustomResponse(status_code=status, service=service, msg=text)
-
-    def clear_service_id(self, service: Enum) -> CustomResponse:
+    def clear_service_id(self, service: Enum) -> str:
         """
         Удаление ID заявки из конфига
         :param service:
-        :param service_name:
         :return:
         """
         try:
@@ -70,11 +55,11 @@ class BasePage:
             with open(config_path, 'w') as configfile:
                 self.config.write(configfile)
 
-            return self.pass_response(service=service, status=200, message='ID заявки удален')
+            return self.error_info(status=200, msg='ID заявки удален')
         except Exception as e:
-            return self.error_response(service=service,
+            return self.error_info(
                                        status=400,
-                                       error_text='ID заявки не удалось удалить',
+                                       msg='ID заявки не удалось удалить',
                                        exception=e)
 
     def get_request_id(self, service_name: Enum) -> str:
@@ -91,12 +76,11 @@ class BasePage:
             self.config.set('service_requests', service_name.value + '_id', service_id)
             with open(config_path, 'w') as configfile:
                 self.config.write(configfile)
-            self.pass_response(status=200, service=service_name, message=f'ID заявки {service_id} сохранен')
+            self.error_info(status=200, msg=f'ID заявки {service_id} сохранен')
         except Exception as e:
-            return self.error_response(status=400,
-                                       error_text=f'ID заявки {service_id} не удалось сохранить',
-                                       exception=e,
-                                       service=service_name)
+            return self.error_info(status=400,
+                                   msg=f'ID заявки {service_id} не удалось сохранить',
+                                   exception=e)
 
     def save_and_submit_form(self, service_type: Enum, button_type: FormButton):
         """
@@ -112,14 +96,9 @@ class BasePage:
                 self.save_btn.click()
                 self.logging.debug(f"{service_type.value}: Save btn click")
 
-            if resp.value.status not in [200, 201]:
-                return self.error_response(error_text=f'Save error',
-                                           status=resp.value.status,
-                                           service=service_type)
-            return self.pass_response(
-                status=resp.value.status,
-                service=service_type,
-                message='{service_type.value}: Сохраненно')
+            assert resp.value.status in [200, 201], self.error_info(
+                msg=f'{service_type.value}: Save from error',
+                status=resp.value.status)
 
         elif button_type.value == FormButton.ECP_SUBMIT.value:
             with self.page.expect_response(
@@ -130,26 +109,17 @@ class BasePage:
                 SignXml().sign_xml()
                 self.logging.debug(f"{service_type.value}: Sign ended")
 
-            if resp.value.status not in [200, 201]:
-                return self.error_response(error_text=f'Sign error',
-                                           status=resp.value.status,
-                                           service=service_type)
+            assert resp.value.status in [200, 201], self.error_info(
+                msg=f'{service_type.value}: Sign error',
+                status=resp.value.status)
 
-            return self.pass_response(
-                status=resp.value.status,
-                service=service_type,
-                message=f"{service_type.value}: Подписано")
-
+        # Нужно придумать какие ассерты добавить (вариант со сменой сслыки? проверить в логах меняется ли)
         elif button_type.value == FormButton.NEXT.value:
+            self.logging.info(self.page.url)
             self.next_btn.click()
-            return self.pass_response(
-                status=200,
-                service=service_type,
-                message=f"{service_type.value}: Следующая страница кнопка нажата")
+            self.logging.info(self.page.url)
 
         elif button_type.value == FormButton.PREV.value:
+            self.logging.info(self.page.url)
             self.previous_btn.click()
-            return self.pass_response(
-                status=200,
-                service=service_type,
-                message=f"{service_type.value}: Предыдующая страница кнопка нажата")
+            self.logging.info(self.page.url)

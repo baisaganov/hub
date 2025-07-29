@@ -6,8 +6,8 @@ import keyboard
 
 
 class SignXml:
-
-    def __activate_ncalayer(self):
+    @staticmethod
+    def __activate_ncalayer():
 
         # Перемести окно NCALayer в координаты (100, 100)
         try:
@@ -39,7 +39,6 @@ class SignXml:
         time.sleep(3)
         pyautogui.click()
 
-
     def sign_xml(self):
         tries = 0
         time.sleep(1)
@@ -51,8 +50,6 @@ class SignXml:
             time.sleep(1)
         self.__find_window()
         time.sleep(5)
-
-
 
 # if __name__ == '__main__':
 #     SignXml.sign_xml()

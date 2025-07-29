@@ -1,14 +1,11 @@
-import logging
-
 import playwright._impl._errors
 
 from playwright.sync_api import Page
-import logging as log
-
+import logging
 
 from commons.types import ServiceType, AdminFuncTypes, AdminAccountChangeType
 from services.admin_api import AdminAPI
-from pages.base_page import BasePage
+from base.base_page import BasePage
 from services.egov.sign_service import SignXml
 
 
@@ -47,15 +44,10 @@ class AuthPage(BasePage):
         :param value:
         :return:
         """
-        try:
-            input_field = self.username_field
-            input_field.click()
-            input_field.fill(value)
-            log.info(f"LoginModal: Filled {value}")
-        except Exception as e:
-            return self.error_response(error_text=f"Ошибка при вводе почты {e}",
-                                       service=ServiceType.HUBID,
-                                       status=400)
+        input_field = self.username_field
+        input_field.click()
+        input_field.fill(value)
+        self.log.debug(f"LoginModal: Filled {value}")
 
     def input_password(self, password):
         """
@@ -63,31 +55,25 @@ class AuthPage(BasePage):
         :param password:
         :return:
         """
-        try:
-            input_field = self.password_field
-            input_field.click()
-            input_field.fill(password)
-            log.info(f"LoginModal: Filled {password}")
-            return {'response': 200, 'msg': 'Пароль введен'}
-        except Exception as e:
-            return self.error_response(error_text=f"Input password error {e}",
-                                       service=ServiceType.HUBID,
-                                       status=400)
+        input_field = self.password_field
+        input_field.click()
+        input_field.fill(password)
+        self.log.debug(f"LoginModal: Filled {password}")
 
     def click_auth_continue_btn(self):
         """
-        Клик на продолжить при вводе почты Авторизация
+        Клик по кнопке продолжить при вводе почты Авторизация
         :return:
         """
         try:
             with self.page.expect_response("https://dev.astanahub.com/s/auth/api/v1/auth/check/") as response_info:
                 self.continue_button.click()
-            log.info(f"LoginModal: Continue btn clicked")
+                self.log.debug(f"Клик по кнопке продолжить при вводе почты Авторизация")
+            assert response_info.value.status == 200, (
+                self.error_info(msg=f"LoginModal: Continue btn clicked error", status=response_info.value.status))
             return response_info
         except Exception as e:
-            return self.error_response(error_text=f"Continue btn error {e}",
-                                       service=ServiceType.HUBID,
-                                       status=400)
+            assert 1 == 0, self.error_info(msg='Continue btn error exception', status=400, exception=e)
 
     def click_auth_continue_btn_2(self):
         """
@@ -97,24 +83,25 @@ class AuthPage(BasePage):
         try:
             with self.page.expect_response("https://dev.astanahub.com/s/auth/api/v1/auth/email/") as response_info:
                 self.continue_button_2.click()
-            log.info(f"LoginModal: Continue btn 2 clicked")
-            return response_info
+            self.log.debug(f"LoginModal: Continue btn 2 clicked")
+
+            assert response_info.value.status == 200, (
+                self.error_info(msg=f"LoginModal: Continue btn 2 clicked error", status=response_info.value.status))
+
         except Exception as e:
-            return self.error_response(error_text=f"Continue btn 2 error {e}",
-                                       service=ServiceType.HUBID,
-                                       status=400)
+            assert 1 == 0, self.error_info(msg='Continue btn 2 error exception', status=400, exception=e)
 
     def click_reg_join_btn(self):
         """
-        Нажатие на кнопку "Приесоединиться к Astanahub..."
+        Нажатие на кнопку "Присоединиться к Astanahub..."
         :return:
         """
         try:
             self.join_btn.click()
         except Exception as e:
-            return self.error_response(error_text=f"Join span click error {e}",
-                                       service=ServiceType.HUBID,
-                                       status=400)
+            assert 1 == 0, self.error_info(msg=f"Нажатие на кнопку \"Присоединиться к Astanahub...\"",
+                                           exception=e,
+                                           status=400)
 
     def check_inputed_email(self):
         """
@@ -126,21 +113,18 @@ class AuthPage(BasePage):
             with self.page.expect_response(
                     'https://dev.astanahub.com/s/auth/api/v1/auth/email_registration/') as response:
                 self.continue_btn_signup.click()
-            if response.value.status == 200:
-                return response
-            else:
-                self.__take_screenshot("Ошибка ответа при нажатии Продолжить при регистрации (проверка почты)")
-                raise
-        except Exception as e:
-            log.error(f"Registration: Check_inputed_email error {e}")
-            self.__take_screenshot("Ошибка при нажатии Продолжить при регистрации (проверка почты)")
-            raise e
 
-    def input_registration_code(self, code, status_code):
+            assert response.value.status == 200, self.error_info(msg=f"Ошибка проверки почты, токен не получен",
+                                                                 status=response.value.status)
+        except Exception as e:
+            assert 1 == 0, self.error_info(msg='Ошибка при нажатии Продолжить при регистрации (проверка почты)',
+                                           status=400,
+                                           exception=e)
+
+    def input_registration_code(self, code):
         """
         Ввод кода с почты при регистрации
         :param code:
-        :param status_code:
         :return:
         """
         try:
@@ -149,16 +133,10 @@ class AuthPage(BasePage):
             with self.page.expect_response(
                     'https://dev.astanahub.com/s/auth/api/v1/auth/activation_confirm/') as response:
                 self.send_code_btn.click()
-            if response.value.status == status_code:  # Ок 200 Неверный код 400
-                log.info(f'Registration: Code accept')
-            else:
-                raise
+                self.log.debug('Registration: Input code send')
             return response
         except Exception as e:
-            log.error(f"Registration: Input code error {e}")
-            self.__take_screenshot("Registration: Input code error")
-
-            raise
+            self.error_info(status=400, msg='Registration: Input code error', exception=e)
 
     def create_password(self, password):
         """
@@ -172,13 +150,10 @@ class AuthPage(BasePage):
             self.new_password_field_2.fill(password)
             with self.page.expect_response('https://dev.astanahub.com/s/auth/api/v1/flow/set_password/') as response:
                 self.continue_reg_password_btn.click()
-            if response.value.status != 200:
-                raise
-            log.info(f'Registration: Password created')
+                self.log.debug(f'Registration: Password created')
             return response
         except Exception as e:
-            log.error(f"Registration: Create password error {e}")
-            raise e
+            self.error_info(status=400, msg='Registration: Create password error', exception=e)
 
     def input_user_info(self, name, surname):
         """
@@ -192,12 +167,10 @@ class AuthPage(BasePage):
             self.surname_field.fill(surname)
             with self.page.expect_response("https://dev.astanahub.com/s/auth/api/v1/flow/set_names/") as response:
                 self.continue_user_info_btn.click()
-            log.info(f'Registration: Set name completed')
+                self.log.debug(f'Registration: Set name completed')
             return response
         except Exception as e:
-            self.__take_screenshot("Ошибка при отправке ФИО")
-            log.error(f"Registration: Set names error: {e}")
-            raise e
+            self.error_info(status=400, msg='Registration: Set names error', exception=e)
 
     def choose_role(self, is_role_select=False):
         """
@@ -211,18 +184,18 @@ class AuthPage(BasePage):
                     self.role_select_btn.click()
                 else:
                     self.role_not_select_btn.click()
-            if response.value.status == 200:
-                log.info(f'Registration: Role choosed')
-                return response
-            raise
+
+            assert response.value.status == 200, self.error_info(status=response.value.status,
+                                                                 msg="Registration: Role choosed")
+
         except Exception as e:
-            self.__take_screenshot(f"Registration: Select role error(is_role_select={is_role_select}")
-            log.error(f"Registration: Select role error(is_role_select={is_role_select}: {e}")
-            raise e
+            self.error_info(status=400,
+                            msg=f"Registration: Select role error(is_role_select={is_role_select}",
+                            exception=e)
         finally:
             self.page.goto("https://dev.astanahub.com/ru/")
             user_id = self.page.locator('a.gamification-header').last.get_attribute('href').split('/')[-2]
-            logging.info(user_id)
+            self.log.debug(user_id)
             admin = AdminAPI()
             admin.delete_user_by_id(user_id=user_id, service='auth')
             admin.delete_user_by_id(user_id=user_id, service='techhub')
@@ -248,62 +221,36 @@ class AuthPage(BasePage):
         with self.page.expect_response('https://dev.astanahub.com/s/auth/api/v1/auth/signature_xml/') as response:
             self.ecp_auth_btn.click()
 
-        if response.value.status not in [200]:
-            log.error(f'ЭЦП Авторизация: Не удалось получить timestamp {response.value.status}')
-            return response
+        assert response.value.status == 200, self.error_info(msg=f'ЭЦП Авторизация: Клик по кнопке ЭЦП',
+                                                             status=response.value.status)
 
         try:
             with self.page.expect_response('https://dev.astanahub.com/s/auth/api/v1/auth/signature/') as response:
                 SignXml().sign_xml()
-        except playwright._impl._errors.TimeoutError:
-            log.error('ЭЦП Авторизация: Окно не найдено или неверные координаты')
-            return None
 
-        if response.value.status == 200:
-            log.info(f'ЭЦП Авторизация: Успешно авторизованы')
-        else:
-            log.error(f'ЭЦП Авторизация: Не удалась авторизация. Status: {response.value.status}')
-
-        return response
+            assert response.value.status == 200, self.error_info(msg='ЭЦП Авторизация: Авторизация не удалась',
+                                                                 status=response.value.status)
+        except playwright._impl._errors.TimeoutError as e:
+            assert None is not None, self.error_info(msg='ЭЦП Авторизация: Окно не найдено или неверные координаты',
+                                                     status=400,
+                                                     exception=e)
 
     def email_auth(self, email, password):
         with self.page.expect_response('https://dev.astanahub.com/ru/s/auth/login/') as response:
             self.page.goto('https://dev.astanahub.com/ru/s/auth/login/')
-        if response.value.status != 200:
-            return self.error_response(error_text='Ошибка при авторизации, страница не открылась',
-                                       status=response.value.status,
-                                       service=ServiceType.HUBID)
+
+        assert response.value.status == 200, self.error_info(status=response.value.status,
+                                                             msg='Auth: Ошибка при авторизации, страница не открылась')
 
         self.input_email_or_phone(value=email)
         response = self.click_auth_continue_btn()
 
-        if response is None:
-            return self.error_response(error_text='Пустой ответ при заполнении почты',
-                                       status=None,
-                                       service=ServiceType.HUBID)
-        elif response.value.status != 200:
-            return self.error_response(error_text='Ошибка при авторизации через почту, этап ввод почты',
-                                       status=response.value.status,
-                                       service=ServiceType.HUBID)
-        elif response.value.json()['user_exists'] is False:
-            return self.error_response(error_text='Ошибка при авторизации, Юзер отсутвует',
-                                       status=response.value.status,
-                                       service=ServiceType.HUBID)
+        assert response is not None, self.error_info(msg='Auth: Пустой ответ при заполнении почты')
+        assert response.value.status == 200, self.error_info(msg='Ошибка при авторизации через почту, этап ввод почты',
+                                                             status=response.value.status)
+        assert response.value.json()['user_exists'] is True, self.error_info(status=response.value.status,
+                                                                             msg="Ошибка при авторизации, Юзер "
+                                                                                 "отсутвует")
+        self.input_password(password=password)
+        self.click_auth_continue_btn_2()
 
-        response = self.input_password(password=password)
-        if response['response'] != 200:
-            return self.error_response(error_text='Ошибка при вводе пароля',
-                                       status=response.value.status,
-                                       service=ServiceType.HUBID)
-        response = self.click_auth_continue_btn_2()
-
-        if response is None:
-            return self.error_response(error_text='Пустой ответ при заполнении пароля',
-                                       status=None,
-                                       service=ServiceType.HUBID)
-        elif response.value.status != 200:
-            return self.error_response(error_text='Ошибка при входе с валидными данными',
-                                       status=response.value.status,
-                                       service=ServiceType.HUBID)
-
-        return {"response": 200, 'msg': 'Успешно авторизован'}

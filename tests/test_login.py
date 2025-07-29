@@ -1,5 +1,4 @@
-from pages.feed_page import FeedPage
-from pages.hub_Id.auth import AuthPage
+from config.links import Links
 import allure
 import pytest
 
@@ -11,40 +10,31 @@ class TestAuth:
     @allure.description("Тест проверяет, что пользователь может войти с правильными учетными данными.")
     @allure.severity(allure.severity_level.BLOCKER)
     @pytest.mark.parametrize(
-        "email, password, expected_status",
+        "email, password",
         [
-            ("baisaganov99@gmail.com", "Pass1234!", 200)  # Валидный
+            ("baisaganov99@gmail.com", "Pass1234!")  # Валидный
         ],
         ids=["✅ Валидный логин"]
     )
-    def test_email_login_valid(self, page, email, password, expected_status):
-        feed = FeedPage(page)
-
-        with allure.step("Переход на главную страницу портала"):
-            feed.navigate()
-
-        with allure.step("Клик по кнопке авторизации"):
-            feed.click_on_login_page()
-
-        login_page = AuthPage(page)
+    def test_email_login_valid(self, page, auth_page, email, password):
+        with allure.step("Переход на страницу авторизации"):
+            page.goto(Links.LOGIN_PAGE)
 
         with allure.step("Ввод почты"):
-            login_page.input_email_or_phone(value=email)
+            auth_page.input_email_or_phone(value=email)
 
         with allure.step("Клик по кнопке продолжить"):
-            response = login_page.click_auth_continue_btn()
+            response = auth_page.click_auth_continue_btn()
 
         assert response is not None, "Ошибка при входе, пустой ответ"
-        assert response.value.status == expected_status, f"Ошибка, неверный статус код: {response.value.status}"
+        assert response.value.status == 200, f"Ошибка, неверный статус код: {response.value.status}"
         assert response.value.json()['user_exists'] is True, "Юзер отсутвует"
 
         with allure.step("Ввод пароля"):
-            login_page.input_password(password=password)
+            auth_page.input_password(password=password)
 
         with allure.step("Клик по кнопке продолжить"):
-            response = login_page.click_auth_continue_btn_2()
-
-        assert response.value.status == 200, "Ошибка при входе с валидными данными"
+            auth_page.click_auth_continue_btn_2()
 
     @allure.title("Проверка авторизации с несуществующей почтой")
     @allure.description("Тест проверяет, что если нет почты в базе, она предложит пройти регистрацию")
@@ -52,26 +42,19 @@ class TestAuth:
     @pytest.mark.parametrize(
         "email, password, expected_status",
         [
-            ("123alisher123@alisher.alisher", "Pass1234!", 200),  # Невалидный
-            ("wrong@example.com", "wrongpass", 200),  # Невалидный
+            ("123alisher123@alisher.alisher", "Pass1234!", 200),
+            ("wrong@example.com", "wrongpass", 200),
 
         ],
         ids=["✅ Невалидный логин", "✅ Невалидный логин 2"]
     )
-    def test_invite_for_reg(self, page, email, password, expected_status):
-        feed = FeedPage(page)
-
-        with allure.step("Переход на главную страницу портала"):
-            feed.navigate()
-
-        with allure.step("Клик по кнопке авторизации"):
-            feed.click_on_login_page()
-
-        login_page = AuthPage(page)
+    def test_invite_for_reg(self, page, auth_page, email, password, expected_status):
+        with allure.step("Переход на страницу авторизации"):
+            page.goto(Links.LOGIN_PAGE)
 
         with allure.step("Ввод несуществующей почты"):
-            login_page.input_email_or_phone(email)
-            response = login_page.click_auth_continue_btn()
+            auth_page.input_email_or_phone(email)
+            response = auth_page.click_auth_continue_btn()
 
         assert response.value.status == expected_status, f"Ошибка проверки статуса {response.value.status}"
         assert response.value.json()['user_exists'] is not True, "Почта существует, хоть и не должна"
@@ -87,18 +70,10 @@ class TestAuth:
         ],
         ids=["✅ Валидный логин"]
     )
-    def test_ecp_auth(self, page, iin, user_id):
-        feed = FeedPage(page)
-        with allure.step("Переход на главную страницу портала"):
-            feed.navigate()
-
-        with allure.step("Клик по кнопке авторизации"):
-            feed.click_on_login_page()
-
-        login_page = AuthPage(page)
+    def test_ecp_auth(self, page, auth_page, iin, user_id):
+        with allure.step("Переход на страницу авторизации"):
+            page.goto(Links.LOGIN_PAGE)
 
         with allure.step("Авторизация ЭЦП"):
-            response = login_page.auth_using_egov(iin, user_id)
+            auth_page.auth_using_egov(iin, user_id)
 
-        assert response is not None, 'Ошибка при подписании ЭЦП, окно возможно не найдено'
-        assert response.value.status == 200, 'Автоизация не удалась'

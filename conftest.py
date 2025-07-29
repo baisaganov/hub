@@ -1,6 +1,10 @@
 import pytest
 from playwright.sync_api import sync_playwright
 import logging
+
+from pages.auth_page import AuthPage
+
+
 # import yaml
 
 
@@ -30,6 +34,12 @@ def page():
         yield page
         context.close()
         browser.close()
+
+
+@pytest.fixture
+def auth_page(page):
+    return AuthPage(page)
+
 
 #
 # def pytest_collection_modifyitems(items):
