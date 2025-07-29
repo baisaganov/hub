@@ -4,6 +4,7 @@ from playwright.sync_api import Page
 import logging
 
 from commons.types import ServiceType, AdminFuncTypes, AdminAccountChangeType
+from config.links import Links
 from services.admin_api import AdminAPI
 from base.base_page import BasePage
 from services.egov.sign_service import SignXml
@@ -37,6 +38,13 @@ class AuthPage(BasePage):
         self.role_select_btn = page.locator('//html/body/div[2]/div[9]/div/div/div[1]')
         self.role_not_select_btn = page.locator('//html/body/div[2]/div[9]/div/div/div[2]')
         self.ecp_auth_btn = page.locator('//html/body/div[2]/div[1]/div[1]/div[3]/button')
+
+    def navigate(self):
+        with self.page.expect_response(Links.LOGIN_PAGE) as resp:
+            self.page.goto(Links.LOGIN_PAGE)
+
+        assert resp.value.status == 200, self.error_info(status=resp.value.status,
+                                                         msg="AuthPage: Страница не доступна")
 
     def input_email_or_phone(self, value):
         """

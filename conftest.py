@@ -3,6 +3,7 @@ from playwright.sync_api import sync_playwright
 import logging
 
 from pages.account_page import AccountPage
+from pages.accreditation_page import AccreditationPage
 from pages.auth_page import AuthPage
 from services.admin_api import AdminAPI
 
@@ -55,6 +56,10 @@ def admin():
 def account_page(page):
     return AccountPage(page)
 
+
+@pytest.fixture
+def accreditation_page(page):
+    return AccreditationPage(page)
 #
 # def pytest_collection_modifyitems(items):
 #     with open("./tests/order.yaml") as f:
