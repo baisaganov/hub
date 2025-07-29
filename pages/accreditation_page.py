@@ -3,7 +3,7 @@ from playwright.sync_api import Page
 from commons.types import AccreditationType
 from base.base_page import BasePage
 from config.links import Links
-
+from config.settings import upload_document
 
 class AccreditationPage(BasePage):
     """
@@ -68,7 +68,7 @@ class AccreditationPage(BasePage):
                                                                 msg=f'{service_type.value}: Page not reacheable '
                                                                     f'[{service_type.value}]')
 
-        assert self.page.locator('#page404').click() == 0, self.error_info(status=404,
+        assert self.page.locator('#page404').count() == 0, self.error_info(status=404,
                                                                            msg=f'{service_type.value}: '
                                                                                f'Прием заявок не открыт '
                                                                                f'[{service_type.value}]')
@@ -95,14 +95,14 @@ class AccreditationPage(BasePage):
         self.phone_number_input.fill('1234567890')
 
         with self.page.expect_response('https://dev.astanahub.com/account/api/protected_media_file/') as resp:
-            self.fio_doc.set_input_files('docs/silabus.pdf')
+            self.fio_doc.set_input_files(upload_document)
             self.logging.debug(f"Accreditation Renewal FL: FIO file upload")
 
         assert resp.value.status in [200, 201], self.error_info(f'Accreditation Renewal FL: FIO doc not uploaded '
                                                                 f'{resp.value.json()}')
 
         with self.page.expect_response('https://dev.astanahub.com/account/api/protected_media_file/') as resp:
-            self.old_cert_doc.set_input_files('docs/silabus.pdf')
+            self.old_cert_doc.set_input_files(upload_document)
             self.logging.debug(f"Accreditation Renewal FL: Old cert doc file upload")
 
         assert resp.value.status in [200, 201], self.error_info(status=resp.value.status,
@@ -162,7 +162,7 @@ class AccreditationPage(BasePage):
         self.phone_number_input.fill('1234567890')
 
         with self.page.expect_response('https://dev.astanahub.com/account/api/protected_media_file/') as resp:
-            self.fio_doc.set_input_files('docs/silabus.pdf')
+            self.fio_doc.set_input_files(upload_document)
             self.logging.debug(f"Accreditation Renewal UL: Rename file upload")
 
         assert resp.value.status in [200, 201], self.error_info(status=resp.value.status,
@@ -170,7 +170,7 @@ class AccreditationPage(BasePage):
                                                                     f' {resp.value.json()}')
 
         with self.page.expect_response('https://dev.astanahub.com/account/api/protected_media_file/') as resp:
-            self.old_cert_doc.set_input_files('docs/silabus.pdf')
+            self.old_cert_doc.set_input_files(upload_document)
             self.logging.debug(f"Accreditation Renewal UL: Old cert doc file upload")
 
         assert resp.value.status in [200, 201], self.error_info(status=resp.value.status,

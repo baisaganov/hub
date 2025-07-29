@@ -65,7 +65,7 @@ class BasePage:
     def get_request_id(self, service_name: Enum) -> str:
         return self.config['service_requests'][service_name.value + '_id']
 
-    def save_service_id(self, service_name: Enum, service_id: str):
+    def save_service_id(self, service_name: str, service_id: str):
         """
         Сохранение ID заявки в конфиг
         :param service_name:
@@ -73,7 +73,7 @@ class BasePage:
         :return:
         """
         try:
-            self.config.set('service_requests', service_name.value + '_id', service_id)
+            self.config.set('service_requests', service_name, service_id)
             with open(config_path, 'w') as configfile:
                 self.config.write(configfile)
             self.error_info(status=200, msg=f'ID заявки {service_id} сохранен')
@@ -123,3 +123,4 @@ class BasePage:
             self.logging.info(self.page.url)
             self.previous_btn.click()
             self.logging.info(self.page.url)
+        return request_id

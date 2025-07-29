@@ -3,16 +3,14 @@ import configparser
 import allure
 import pytest
 
-from pages.accreditation_page import AccreditationPage
-from services.admin_api import AdminAPI
-from pages.auth_page import AuthPage
-from commons.types import AccreditationType, FormButton, AdminAccountChangeType, AdminFuncTypes
 
+from commons.types import AccreditationType, FormButton, AdminAccountChangeType, AdminFuncTypes
+from config.settings import config_path
 
 @allure.suite("Astanahub - Подача заявок")
 class TestServiceRequest:
     config = configparser.ConfigParser()
-    config.read('CONFIG')
+    config.read(config_path)
 
     @allure.title("Подача заявки на Переоформление аккредитации ФЛ")
     @allure.severity(allure.severity_level.NORMAL)
@@ -26,15 +24,16 @@ class TestServiceRequest:
     def test_accreditation_renewal_fl(self, page, auth_page, admin, accreditation_page, email, password,
                                       expected_status, iin):
         accred_type = AccreditationType.RENEWAL_FL
-        user_id = admin.get_user_id_by_(email)
-        admin.change_user(change_mode=AdminAccountChangeType.IIN,
-                          data={'iin': iin},
-                          user_id=user_id,
-                          functinonality=AdminFuncTypes.CHANGE)
+        with allure.step("Подстановка ИИН пользователю"):
+            user_id = admin.get_user_id_by_(email)
+            admin.change_user(change_mode=AdminAccountChangeType.IIN,
+                              data={'iin': iin},
+                              user_id=user_id,
+                              functinonality=AdminFuncTypes.CHANGE)
 
-        with allure.step("Првоерка: Нет ли активной заявки"):
-            assert self.config['service_requests'][
-                       accred_type.value + '_id'] == '0', f"{accred_type.value.capitalize()}: Заявка уже создана"
+        with allure.step("Проверка: Нет ли активной заявки"):
+            assert self.config['service_requests'][accred_type.value + '_id'] == '0', (f"{accred_type.value.capitalize()}"
+                                                                                       f": Заявка уже создана")
 
         with allure.step("Переход на страницу авторизация"):
             auth_page.navigate()
@@ -66,11 +65,11 @@ class TestServiceRequest:
             accreditation_page.save_and_submit_form(accred_type, FormButton.SAVE)
 
         with allure.step('Подписание заявки'):
-            accreditation_page.save_and_submit_form(accred_type, FormButton.ECP_SUBMIT)
+            request_id = accreditation_page.save_and_submit_form(accred_type, FormButton.ECP_SUBMIT)
 
         with allure.step('Сохранение ID заявки в конфиг'):
             save = accreditation_page.save_service_id(service_name=accred_type.value + "_id",
-                                                      service_id=response['request_id'])
+                                                      service_id=request_id)
 
         assert save is None, save
 
@@ -129,10 +128,10 @@ class TestServiceRequest:
             accreditation_page.save_and_submit_form(accred_type, FormButton.SAVE)
 
         with allure.step('Подписание заявки'):
-            accreditation_page.save_and_submit_form(accred_type, FormButton.ECP_SUBMIT)
+            request_id = accreditation_page.save_and_submit_form(accred_type, FormButton.ECP_SUBMIT)
 
         with allure.step('Сохранение ID заявки в конфиг'):
             save = accreditation_page.save_service_id(service_name=accred_type.value + "_id",
-                                                      service_id=response['request_id'])
+                                                      service_id=request_id)
 
-            assert save is None, save
+        assert save is None, save
