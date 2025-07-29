@@ -36,7 +36,7 @@ class SignXml:
         pyautogui.moveTo(430, 309)  # Клик по кнопке Открыть
         pyautogui.click()
         pyautogui.moveTo(430, 565)  # Клик по кнопке Подписать
-        time.sleep(3)
+        time.sleep(1.5)
         pyautogui.click()
 
     def sign_xml(self):
