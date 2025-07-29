@@ -105,7 +105,7 @@ class AuthPage(BasePage):
 
     def check_inputed_email(self):
         """
-        Проверка введенно почты при регистарции
+        Проверка введенной почты при регистарции
         :return:
         """
         try:
@@ -116,6 +116,7 @@ class AuthPage(BasePage):
 
             assert response.value.status == 200, self.error_info(msg=f"Ошибка проверки почты, токен не получен",
                                                                  status=response.value.status)
+            return response
         except Exception as e:
             assert 1 == 0, self.error_info(msg='Ошибка при нажатии Продолжить при регистрации (проверка почты)',
                                            status=400,
@@ -134,7 +135,9 @@ class AuthPage(BasePage):
                     'https://dev.astanahub.com/s/auth/api/v1/auth/activation_confirm/') as response:
                 self.send_code_btn.click()
                 self.log.debug('Registration: Input code send')
-            return response
+
+            assert response.value.status == 200, 'Ошибка при отправке кода регистарции'
+
         except Exception as e:
             self.error_info(status=400, msg='Registration: Input code error', exception=e)
 
@@ -151,7 +154,9 @@ class AuthPage(BasePage):
             with self.page.expect_response('https://dev.astanahub.com/s/auth/api/v1/flow/set_password/') as response:
                 self.continue_reg_password_btn.click()
                 self.log.debug(f'Registration: Password created')
-            return response
+
+            assert response.value.status == 200, self.error_info(status=response.value.status,
+                                                                 msg='AuthPage: Пароль не создан')
         except Exception as e:
             self.error_info(status=400, msg='Registration: Create password error', exception=e)
 
@@ -168,7 +173,10 @@ class AuthPage(BasePage):
             with self.page.expect_response("https://dev.astanahub.com/s/auth/api/v1/flow/set_names/") as response:
                 self.continue_user_info_btn.click()
                 self.log.debug(f'Registration: Set name completed')
-            return response
+
+            assert response.value.status == 200, self.error_info(msg="AuthPage: ФИО не назначено",
+                                                                 status=response.value.status)
+
         except Exception as e:
             self.error_info(status=400, msg='Registration: Set names error', exception=e)
 
