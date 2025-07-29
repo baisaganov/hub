@@ -11,7 +11,7 @@ from pages.auth_page import AuthPage
 @pytest.fixture(scope="function")
 def page():
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
     # Очистим старые хендлеры, чтобы не было дублирования
     if logger.hasHandlers():

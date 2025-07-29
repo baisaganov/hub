@@ -158,7 +158,7 @@ class AdminAPI:
             Getting registration code by UUID
         """
         try:
-            session = self.session
+            session = self.auth_session
             request = session.get(f"https://dev.astanahub.com/s/auth/secretadmin/core/activation/{uuid}/change/")
             soup = BeautifulSoup(request.text, "html.parser")
             status_code = request.status_code
@@ -167,8 +167,8 @@ class AdminAPI:
                 if i['name'] == 'code':
                     return i['value']
         except Exception as e:
-            self.log.error(f"AdminPage: Getting code [{e}]")
-            assert 1 == 0, f"AdminPage: Getting code [{e}]"
+            self.log.error(f"AdminPage: Getting code error [{e}]")
+            assert 1 == 0, f"AdminPage: Getting code error [{e}]"
 
     def delete_user_by_id(self, user_id, service='auth'):
         try:
@@ -177,6 +177,7 @@ class AdminAPI:
             response = session.get(delete_url)
 
             soup = BeautifulSoup(response.text, "html.parser")
+            x = (soup.find("input", {"name": "csrfmiddlewaretoken"}))
             csrf_token = soup.find("input", {"name": "csrfmiddlewaretoken"}).get("value")
 
             headers = {
@@ -194,6 +195,9 @@ class AdminAPI:
             delete_response = session.post(delete_url, headers=headers, data=data)
 
             assert delete_response.status_code in [200, 302], f'[{delete_response.status_code}] AdminAPI: Ошибка при удалении {delete_response.text}'
+
+        except TypeError:
+            assert 1 == 0, f'AdminAPI: Не удалось удалить юзера, пустой ответ'
         except Exception as e:
             assert 1 == 0, f'AdminAPI: Не удалось удалить юзера, возникла ошибка {e}'
 
@@ -420,9 +424,10 @@ class AdminAPI:
 if __name__ == '__main__':
     adm = AdminAPI()
     # # d = {'iin': '990315351258'}
-    d = {'iin': '990315351258'}
-    adm.change_user(AdminAccountChangeType.IIN, data=d, user_id=59919, functinonality=AdminFuncTypes.CHANGE)
+    # d = {'iin': '990315351258'}
+    # adm.change_user(AdminAccountChangeType.IIN, data=d, user_id=59919, functinonality=AdminFuncTypes.CHANGE)
 
+    adm.delete_user_by_id(60143)
     # d = {'tag_nii': {}}
     # adm.company_update(6874, data=d)
 

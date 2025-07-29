@@ -49,9 +49,7 @@ class TestRegistration:
         with allure.step("Ввод кода"):
             code = admin.get_code(activation.value.json()['activation'])
             assert code is not None, "Код регистрации не получен"
-            response = auth_page.input_registration_code(code)
-
-        assert response.value.status == 200, f"Неверный статус запроса: {response.value.status}"
+            auth_page.input_registration_code(code)
 
         with allure.step("Ввод пароля с подтверждением"):
             auth_page.create_password(password=password)

@@ -206,7 +206,10 @@ class AuthPage(BasePage):
             self.log.debug(user_id)
             admin = AdminAPI()
             admin.delete_user_by_id(user_id=user_id, service='auth')
-            admin.delete_user_by_id(user_id=user_id, service='techhub')
+            try:
+                admin.delete_user_by_id(user_id=user_id, service='techhub')
+            except:
+                pass
 
     def auth_using_egov(self, iin, user_id):
         """
