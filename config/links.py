@@ -1,5 +1,6 @@
 class Links:
     HOST = 'https://dev.astanahub.com'
+    ACCOUNT_SETTING = f'{HOST}/account/settings/'
     ARM = 'https://arm-dev.astanahub.com'
     ACCREDITATION_RENEWAL_FL = f'{HOST}/account/service/Accreditation-for-phys/request/299/create/'
     ACCREDITATION_RENEWAL_UL = f'{HOST}/account/service/Accreditation-for-ur/request/351/create/'
