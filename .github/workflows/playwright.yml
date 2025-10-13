@@ -17,7 +17,7 @@ jobs:
       uses: actions/setup-python@v6
       with:
         python-version: '3.13'
-        cache: 'pip'  # Автоматическое кеширование pip
+        cache: 'pip'
         cache-dependency-path: 'requirements.txt'
 
     - name: Install Python dependencies
@@ -25,11 +25,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # Кеширование браузеров Playwright
+    # Получаем версию Playwright правильным способом
     - name: Get Playwright version
       id: playwright-version
       run: |
-        PLAYWRIGHT_VERSION=$(python -c "import playwright; print(playwright.__version__)")
+        PLAYWRIGHT_VERSION=$(pip show playwright | grep Version | cut -d' ' -f2)
         echo "PLAYWRIGHT_VERSION=$PLAYWRIGHT_VERSION" >> $GITHUB_ENV
 
     - name: Cache Playwright browsers
