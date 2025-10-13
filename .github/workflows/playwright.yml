@@ -136,5 +136,5 @@ jobs:
         REPORT_URL="https://${{ github.repository_owner }}.github.io/${{ github.repository }}/"
         TEXT="Allure report updated: $REPORT_URL\nPassed: $PASSED, Failed: $FAILED, Broken: $BROKEN, Skipped: $SKIPPED"
         curl -s -X POST "https://api.telegram.org/bot${{ secrets.TG_BOT_TOKEN }}/sendMessage" \
-          -d chat_id="${{ secrets.TG_CHAT_ID }}" \
+          -d chat_id="2962410919" \
           -d text="$TEXT"
