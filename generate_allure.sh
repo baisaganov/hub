@@ -7,7 +7,7 @@ mkdir -p allure-results
 # Запуск нужных тестов
 #pytest --alluredir=allure-results tests/test_arm.py::TestArm::test_positive_accreditation
 #pytest --alluredir=allure-results tests/test_registration.py::TestRegistration::test_valid_reg_email
-pytest --alluredir=allure-results
+pytest --alluredir=allure-results --tracing=retain-on-failure
 
 # Копируем историю отчета (если есть)
 if [ -d "allure-report/history" ]; then

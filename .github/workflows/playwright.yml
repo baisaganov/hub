@@ -41,12 +41,11 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-playwright-
 
-    # Установка браузеров только при cache miss
+    # Установка браузеров если нет кэша
     - name: Install Playwright browsers
       if: steps.playwright-cache.outputs.cache-hit != 'true'
       run: python -m playwright install --with-deps
 
-    # Установка только OS зависимостей при cache hit
     - name: Install Playwright OS dependencies
       if: steps.playwright-cache.outputs.cache-hit == 'true'
       run: python -m playwright install-deps
