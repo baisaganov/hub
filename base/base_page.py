@@ -1,6 +1,6 @@
 from base import Enum, configparser, re, log, Page
 
-from base import SignXml, allure
+from base import allure #, SignXml
 
 from commons.types import FormButton
 from config.settings import config_path
