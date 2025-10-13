@@ -48,14 +48,22 @@ jobs:
       run: python -m playwright install-deps
 
     - name: Run tests
-      run: pytest --alluredir=allure-results --tracing=retain-on-failure
+      run: pytest --alluredir=allure-results --tracing=on
       continue-on-error: true
 
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
+        name: playwright-traces
+        path: test-results/
+
+    - name: Upload Allure results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
         name: allure-results
         path: allure-results/
+        retention-days: 30
 
   generate-report:
     runs-on: ubuntu-latest
@@ -87,13 +95,13 @@ jobs:
         allure_history: allure-history
         keep_reports: 20
 
-#    - name: Deploy report to Github Pages
-#      if: always()
-#      uses: peaceiris/actions-gh-pages@v4
-#      with:
-#        github_token: ${{ secrets.GITHUB_TOKEN }}
-#        publish_branch: gh-pages
-#        publish_dir: allure-history
+    - name: Deploy report to Github Pages
+      if: always()
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: gh-pages
+        publish_dir: allure-history
 
     - name: Parse Allure report stats
       run: |
@@ -113,5 +121,5 @@ jobs:
         URL="https://${{ github.repository_owner }}.github.io/${{ github.repository }}/"
         TEXT="Allure report: $URL Passed: $PASSED, Failed: $FAILED, Skipped: $SKIPPED, Broken: $BROKEN"
         curl -s -X POST "https://api.telegram.org/bot${{ secrets.TG_BOT_TOKEN }}/sendMessage" \
-          -d chat_id=2962410919 \
+          -d chat_id=-1002962410919 \
           -d text="$TEXT"
