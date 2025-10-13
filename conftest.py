@@ -38,7 +38,7 @@ def page():
     height = 1080
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False, slow_mo=0, args=[f'--window-size={width},{height}'])
+        browser = p.chromium.launch(headless=True, slow_mo=0, args=[f'--window-size={width},{height}'])
         context = browser.new_context(viewport={'width': width, 'height': height})
         # context.set_default_timeout(15000)
         page = context.new_page()
