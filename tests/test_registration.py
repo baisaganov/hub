@@ -28,7 +28,7 @@ class TestRegistration:
 
         with allure.step("Ввод почты"):
             auth_page.input_email_or_phone(value=email)
-            response = auth_page.click_auth_continue_btn()
+            response = auth_page.click_auth_email_continue_btn()
 
         assert (response is not None and
                 response.value.status == status_code and
@@ -57,5 +57,11 @@ class TestRegistration:
         with allure.step("Ввод информации о пользователе (ФИО)"):
             auth_page.input_user_info(name="Auto", surname="Test")
 
+        with allure.step("Скип добавления фото профиля"):
+            auth_page.skip_profile_photo()
+
         with allure.step("Выбор роли"):
-            auth_page.choose_role(is_role_select=False)
+            auth_page.select_tag()
+
+        with allure.step("Завершение регистрации"):
+            auth_page.complete_registration()

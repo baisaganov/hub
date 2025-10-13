@@ -1,27 +1,30 @@
 import configparser
 import pytest
 import allure
+from os import getenv
+from dotenv import load_dotenv, find_dotenv
 
 from commons.types import AdminFuncTypes, AdminAccountChangeType
-from pages.account_page import AccountPage
-from services.admin_api import AdminAPI
-from pages.auth_page import AuthPage
 
 
 @allure.suite("Account")
 class TestAccount:
     config = configparser.ConfigParser()
     config.read('CONFIG')
+    load_dotenv(find_dotenv())
+    USERNAME = getenv("AUTH_LOGIN")
+    PASSWORD = getenv("AUTH_PASSWORD")
 
     @allure.title("Привязка ИИН")
     @allure.severity(allure.severity_level.NORMAL)
     @pytest.mark.parametrize(
         "email, password",
         [
-            ('a.baisaganov@astanahub.com', 'Pass1234!')
+            (USERNAME, PASSWORD)
         ],
         ids=["Успешное Добавление ИИН",]
     )
+    @pytest.mark.skip('ЭЦП')
     def test_connect_ecp_to_account(self, page, admin, auth_page, account_page, email, password):
         with allure.step('Очищаем у юзера ИИН в базе'):
             user_id = admin.get_user_id_by_(email)

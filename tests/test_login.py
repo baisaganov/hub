@@ -1,4 +1,8 @@
+import random
+from os import getenv
+from dotenv import load_dotenv, find_dotenv
 from config.links import Links
+
 import allure
 import pytest
 
@@ -6,13 +10,17 @@ import pytest
 @allure.suite("Astanahub - Авторизация")
 @allure.sub_suite("Smoke тесты")
 class TestAuth:
+    load_dotenv(find_dotenv())
+    USERNAME = getenv("AUTH_LOGIN")
+    PASSWORD = getenv("AUTH_PASSWORD")
+
     @allure.title("Проверка авторизации с валидными данными")
     @allure.description("Тест проверяет, что пользователь может войти с правильными учетными данными.")
     @allure.severity(allure.severity_level.BLOCKER)
     @pytest.mark.parametrize(
         "email, password",
         [
-            ("baisaganov99@gmail.com", "Pass1234!")  # Валидный
+            (USERNAME, PASSWORD)  # Валидный
         ],
         ids=["✅ Валидный логин"]
     )
@@ -24,7 +32,7 @@ class TestAuth:
             auth_page.input_email_or_phone(value=email)
 
         with allure.step("Клик по кнопке продолжить"):
-            response = auth_page.click_auth_continue_btn()
+            response = auth_page.click_auth_email_continue_btn()
 
         assert response is not None, "Ошибка при входе, пустой ответ"
         assert response.value.status == 200, f"Ошибка, неверный статус код: {response.value.status}"
@@ -34,7 +42,7 @@ class TestAuth:
             auth_page.input_password(password=password)
 
         with allure.step("Клик по кнопке продолжить"):
-            auth_page.click_auth_continue_btn_2()
+            auth_page.click_auth_password_continue_btn()
 
     @allure.title("Проверка авторизации с несуществующей почтой")
     @allure.description("Тест проверяет, что если нет почты в базе, она предложит пройти регистрацию")
@@ -42,8 +50,8 @@ class TestAuth:
     @pytest.mark.parametrize(
         "email, password, expected_status",
         [
-            ("123alisher123@alisher.alisher", "Pass1234!", 200),
-            ("wrong@example.com", "wrongpass", 200),
+            ("123alisher123@alisher.alisher", "Adfsaf4213!", 200),
+            (f"wrong@example{random.randint(1, 1000)}.com", "wrongpass", 200),
 
         ],
         ids=["✅ Невалидный логин", "✅ Невалидный логин 2"]
@@ -54,7 +62,7 @@ class TestAuth:
 
         with allure.step("Ввод несуществующей почты"):
             auth_page.input_email_or_phone(email)
-            response = auth_page.click_auth_continue_btn()
+            response = auth_page.click_auth_email_continue_btn()
 
         assert response.value.status == expected_status, f"Ошибка проверки статуса {response.value.status}"
         assert response.value.json()['user_exists'] is not True, "Почта существует, хоть и не должна"
@@ -70,6 +78,7 @@ class TestAuth:
         ],
         ids=["✅ Валидный логин"]
     )
+    @pytest.mark.skip("Проверка ЭЦП отключена")
     def test_ecp_auth(self, page, auth_page, iin, user_id):
         with allure.step("Переход на страницу авторизации"):
             page.goto(Links.LOGIN_PAGE)

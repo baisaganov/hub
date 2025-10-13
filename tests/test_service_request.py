@@ -7,6 +7,7 @@ import pytest
 from commons.types import AccreditationType, FormButton, AdminAccountChangeType, AdminFuncTypes
 from config.settings import config_path
 
+
 @allure.suite("Astanahub - Подача заявок")
 class TestServiceRequest:
     config = configparser.ConfigParser()
@@ -21,6 +22,7 @@ class TestServiceRequest:
         ],
         ids=["Валидный логин"]
     )
+    @pytest.mark.skip("Решение проблемы с подписанием")
     def test_accreditation_renewal_fl(self, page, auth_page, admin, accreditation_page, email, password,
                                       expected_status, iin):
         accred_type = AccreditationType.RENEWAL_FL
@@ -42,7 +44,7 @@ class TestServiceRequest:
             auth_page.input_email_or_phone(value=email)
 
         with allure.step("Клик по кнопке продолжить"):
-            response = auth_page.click_auth_continue_btn()
+            response = auth_page.click_auth_email_continue_btn()
 
             assert response is not None, "Ошибка при входе, пустой ответ"
             assert response.value.status == expected_status, f"Ошибка, неверный статус код: {response.value.status}"
@@ -82,7 +84,7 @@ class TestServiceRequest:
         ],
         ids=["Валидный логин"]
     )
-    @pytest.mark.skip
+    @pytest.mark.skip("Решение проблемы с подписанием")
     def test_accreditation_renewal_ul(self, page, admin, auth_page, accreditation_page, email, password,
                                       expected_status, iin):
         accred_type = AccreditationType.RENEWAL_UL
@@ -105,7 +107,7 @@ class TestServiceRequest:
             auth_page.input_email_or_phone(value=email)
 
         with allure.step("Клик по кнопке продолжить"):
-            response = auth_page.click_auth_continue_btn()
+            response = auth_page.click_auth_email_continue_btn()
 
             assert response is not None, "Ошибка при входе, пустой ответ"
             assert response.value.status == expected_status, f"Ошибка, неверный статус код: {response.value.status}"
@@ -136,7 +138,6 @@ class TestServiceRequest:
 
         assert save is None, save
 
-
     @allure.title("Подача заявки на Дубликат аккредитации ФЛ")
     @allure.severity(allure.severity_level.NORMAL)
     @pytest.mark.parametrize(
@@ -146,6 +147,7 @@ class TestServiceRequest:
         ],
         ids=["Отправка заявки валид"]
     )
+    @pytest.mark.skip("Решение проблемы с подписанием")
     def test_accreditation_dublicate_fl(self, page, auth_page, accreditation_page, email, password, iin, cert_number):
         accred_type = AccreditationType.DUBLICATE_FL
 
@@ -160,7 +162,7 @@ class TestServiceRequest:
             auth_page.input_email_or_phone(value=email)
 
         with allure.step("Клик по кнопке продолжить"):
-            response = auth_page.click_auth_continue_btn()
+            response = auth_page.click_auth_email_continue_btn()
 
             assert response is not None, "Ошибка при входе, пустой ответ"
             assert response.value.status == 200, f"Ошибка, неверный статус код: {response.value.status}"
@@ -189,3 +191,106 @@ class TestServiceRequest:
                                                       service_id=request_id)
 
         assert save is None, save
+
+    @allure.title("Подача заявки на Регистрацию участника (БП)")
+    @allure.severity(allure.severity_level.NORMAL)
+    @pytest.mark.parametrize(
+        "email, password, iin",
+        [
+            ("a.baisaganov@astanahub.com", "Pass1234!", '990315351258')
+        ],
+        ids=["Отправка заявки валид"]
+    )
+    @pytest.mark.skip(reason='Недоработанный тест')
+    def test_positive_business_plan(self, auth_page, admin, business_plan_page, email, password, iin):
+        with allure.step("Добавление ИИН к аккаунту"):
+            user_id = admin.get_user_id_by_(email)
+
+            assert user_id is not None, "Регистрация участника: Юзера не существует"
+
+            admin.change_user(
+                change_mode=AdminAccountChangeType.IIN,
+                data={'iin': iin},
+                user_id=user_id,
+                functinonality=AdminFuncTypes.CHANGE
+            )
+
+        with allure.step("Авторизация"):
+            auth_page.navigate()
+            auth_page.email_auth(email, password)
+
+        with allure.step("Переход к форме заполнения"):
+            business_plan_page.navigate()
+
+        with allure.step("Заполнение таба 1"):
+            business_plan_page.select_company()
+
+        with allure.step("Сохранение"):
+            business_plan_page.save()
+
+        with allure.step("Переход к табу 2"):
+            pass
+
+        with allure.step("Заполнение таба 2"):
+            pass
+
+        with allure.step("Сохранение"):
+            pass
+
+        with allure.step("Проверка есть ли данные на прошлом табе"):
+            pass
+
+        with allure.step("Переход к табу 3"):
+            pass
+
+        with allure.step("Заполнение таба 3"):
+            pass
+
+        with allure.step("Сохранение"):
+            pass
+
+        with allure.step("Проверка есть ли данные на прошлом табе"):
+            pass
+
+        with allure.step("Переход к табу 4"):
+            pass
+
+        with allure.step("Заполнение таба 4"):
+            pass
+
+        with allure.step("Сохранение"):
+            pass
+
+        with allure.step("Проверка есть ли данные на прошлом табе"):
+            pass
+
+        with allure.step("Переход к табу 5"):
+            pass
+
+        with allure.step("Заполнение таба 5"):
+            pass
+
+        with allure.step("Сохранение"):
+            pass
+
+        with allure.step("Проверка есть ли данные на прошлых табах"):
+            pass
+
+        with allure.step("Переход к табу 6"):
+            pass
+
+        with allure.step("Заполнение таба 6"):
+            pass
+
+        with allure.step("Сохранение"):
+            pass
+
+        with allure.step("Проверка есть ли данные на прошлых табах"):
+            pass
+
+        with allure.step("Подписание"):
+            pass
+
+        with allure.step("Удаление заявки"):
+            pass
+

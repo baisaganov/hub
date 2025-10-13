@@ -2,9 +2,13 @@ import pytest
 from playwright.sync_api import sync_playwright
 import logging
 
+from base.arm_base_page import ArmBasePage
 from pages.account_page import AccountPage
 from pages.accreditation_page import AccreditationPage
+from pages.arm.arm_accreditation_page import ArmAccreditationPage
+
 from pages.auth_page import AuthPage
+from pages.business_plan_page import BusinessPlanPage
 from services.admin_api import AdminAPI
 
 
@@ -14,7 +18,7 @@ from services.admin_api import AdminAPI
 @pytest.fixture(scope="function")
 def page():
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
     # Очистим старые хендлеры, чтобы не было дублирования
     if logger.hasHandlers():
@@ -36,6 +40,7 @@ def page():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False, slow_mo=0, args=[f'--window-size={width},{height}'])
         context = browser.new_context(viewport={'width': width, 'height': height})
+        # context.set_default_timeout(15000)
         page = context.new_page()
         yield page
         context.close()
@@ -60,7 +65,19 @@ def account_page(page):
 @pytest.fixture
 def accreditation_page(page):
     return AccreditationPage(page)
-#
+
+
+@pytest.fixture
+def arm_base_page(page):
+    return ArmBasePage(page)
+
+
+@pytest.fixture
+def business_plan_page(page):
+    return BusinessPlanPage(page)
+
+
+
 # def pytest_collection_modifyitems(items):
 #     with open("./tests/order.yaml") as f:
 #         order_map = yaml.safe_load(f)["order"]

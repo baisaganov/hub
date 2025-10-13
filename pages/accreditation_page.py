@@ -5,6 +5,7 @@ from base.base_page import BasePage
 from config.links import Links
 from config.settings import upload_document
 
+
 class AccreditationPage(BasePage):
     """
     Услуга: Аккредитация (Аккредитация, переоформление, дубликат)
@@ -203,9 +204,10 @@ class AccreditationPage(BasePage):
                 self.company_name_input.input_value() != ''
                 ), self.error_info(msg="Accreditation Dubplicate FL: Автозаполнение не работает")
 
+
         try:
             self.cert_give_date.click()
-            self.page.get_by_text('10', exact=True).click()
+            self.page.get_by_text('10', exact=True).first.click()
             self.logging.info(f"Accreditation Dubplicate FL: Дата выдачи сертификата заполнена")
         except Exception as e:
             assert 1 == 0, self.error_info(msg="Accreditation Dubplicate FL: Ошибка при заполнении даты выдачи",
@@ -213,7 +215,7 @@ class AccreditationPage(BasePage):
 
         try:
             self.cert_end_date.click()
-            self.page.get_by_text('20', exact=True).click()
+            self.page.get_by_text('20', exact=True).last.click()
             self.logging.info(f"Accreditation Dubplicate FL: Дата завершнения сертификата заполнена")
         except Exception as e:
             assert 1 == 0, self.error_info(msg="Accreditation Dubplicate FL: Ошибка при заполнении завершнения даты",
@@ -222,8 +224,9 @@ class AccreditationPage(BasePage):
         self.given_org.fill('TOO Astana')
 
         try:
-            self.iin_input.fill(iin)
-            self.logging.info('Accreditation Dubplicate FL: ИИН заполнен')
+            if self.iin_input.get_attribute('disabled'):
+                self.iin_input.fill(iin)
+                self.logging.info('Accreditation Dubplicate FL: ИИН заполнен')
         except Exception as e:
             assert 1 == 0, self.error_info("Accreditation Dubplicate FL: Ошибка при заполнении ИИН", exception=e)
 

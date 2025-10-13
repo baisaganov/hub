@@ -43,7 +43,7 @@ class BasePage:
         self.__take_screenshot(msg)
         return text
 
-    def clear_service_id(self, service: Enum) -> str:
+    def clear_service_id(self, service: Enum):
         """
         Удаление ID заявки из конфига
         :param service:
@@ -55,12 +55,8 @@ class BasePage:
             with open(config_path, 'w') as configfile:
                 self.config.write(configfile)
 
-            return self.error_info(status=200, msg='ID заявки удален')
         except Exception as e:
-            return self.error_info(
-                                       status=400,
-                                       msg='ID заявки не удалось удалить',
-                                       exception=e)
+            self.error_info(msg="ID заявки не удалось удалить", exception=e)
 
     def get_request_id(self, service_name: Enum) -> str:
         return self.config['service_requests'][service_name.value + '_id']
@@ -89,38 +85,41 @@ class BasePage:
         :param service_type: AccreditationType Какой вид формы аккредитации
         :return:
         """
-        request_id = re.findall("(\\d+)", self.page.url)[0]
-        if button_type.value == FormButton.SAVE.value:
-            with self.page.expect_response(
-                    f'https://dev.astanahub.com/account/api/service_request/{request_id}/') as resp:
-                self.save_btn.click()
-                self.logging.debug(f"{service_type.value}: Save btn click")
+        try:
+            request_id = re.findall("(\\d+)", self.page.url)[0]
+            if button_type.value == FormButton.SAVE.value:
+                with self.page.expect_response(
+                        f'https://dev.astanahub.com/account/api/service_request/{request_id}/') as resp:
+                    self.save_btn.click()
+                    self.logging.debug(f"{service_type.value}: Save btn click")
 
-            assert resp.value.status in [200, 201], self.error_info(
-                msg=f'{service_type.value}: Save from error',
-                status=resp.value.status)
+                assert resp.value.status in [200, 201], self.error_info(
+                    msg=f'{service_type.value}: Save from error',
+                    status=resp.value.status)
 
-        elif button_type.value == FormButton.ECP_SUBMIT.value:
-            with self.page.expect_response(
-                    f'https://dev.astanahub.com/account/api/service_request/{request_id}/sign/') as resp:
-                self.logging.debug(f"{service_type.value}: Submit btn click")
-                self.ecp_submit_btn.click()
-                self.logging.debug(f"{service_type.value}: Sign started")
-                SignXml().sign_xml()
-                self.logging.debug(f"{service_type.value}: Sign ended")
+            elif button_type.value == FormButton.ECP_SUBMIT.value:
+                with self.page.expect_response(
+                        f'https://dev.astanahub.com/account/api/service_request/{request_id}/sign/') as resp:
+                    self.logging.debug(f"{service_type.value}: Submit btn click")
+                    self.ecp_submit_btn.click()
+                    self.logging.debug(f"{service_type.value}: Sign started")
+                    SignXml().sign_xml()
+                    self.logging.debug(f"{service_type.value}: Sign ended")
 
-            assert resp.value.status in [200, 201], self.error_info(
-                msg=f'{service_type.value}: Sign error',
-                status=resp.value.status)
+                assert resp.value.status in [200, 201], self.error_info(
+                    msg=f'{service_type.value}: Sign error',
+                    status=resp.value.status)
 
-        # Нужно придумать какие ассерты добавить (вариант со сменой сслыки? проверить в логах меняется ли)
-        elif button_type.value == FormButton.NEXT.value:
-            self.logging.info(self.page.url)
-            self.next_btn.click()
-            self.logging.info(self.page.url)
+            # Нужно придумать какие ассерты добавить (вариант со сменой сслыки? проверить в логах меняется ли)
+            elif button_type.value == FormButton.NEXT.value:
+                self.logging.info(self.page.url)
+                self.next_btn.click()
+                self.logging.info(self.page.url)
 
-        elif button_type.value == FormButton.PREV.value:
-            self.logging.info(self.page.url)
-            self.previous_btn.click()
-            self.logging.info(self.page.url)
-        return request_id
+            elif button_type.value == FormButton.PREV.value:
+                self.logging.info(self.page.url)
+                self.previous_btn.click()
+                self.logging.info(self.page.url)
+            return request_id
+        except TimeoutError as e:
+            self.error_info(msg='Ошибка при пподписании или сохранении', exception=e)

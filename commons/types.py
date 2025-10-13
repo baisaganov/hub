@@ -36,7 +36,7 @@ class FormButton(str, Enum):
     ECP_SUBMIT = 'sign_submit'
 
 
-class ArmRoles(str, Enum):
+class BusinessProccess(str, Enum):
     """Наименования услуги из Таблица с тестовыми аккаунтами"""
     ACCREDITATION = 'Аккредитация'
 

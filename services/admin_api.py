@@ -4,11 +4,17 @@ from bs4 import BeautifulSoup
 import logging
 
 from commons.types import AdminAccountChangeType, AdminFuncTypes
+from config.links import Links
+from os import getenv
+from dotenv import load_dotenv, find_dotenv
 
 from typing import Any
 
 
 class AdminAPI:
+    load_dotenv(find_dotenv())
+    USERNAME = getenv("AUTH_LOGIN")
+    PASSWORD = getenv("AUTH_PASSWORD")
     log = logging.getLogger(__name__)  # Подхватываем логгер
 
     def __init__(self):
@@ -19,16 +25,16 @@ class AdminAPI:
         session = requests.Session()
 
         # 1. Получаем CSRF и cookies с GET-запроса на страницу входа
-        login_page = session.get("https://dev.astanahub.com/s/auth/secretadmin/login/?next=/s/auth/secretadmin/")
+        login_page = session.get(f"{Links.HOST}/s/auth/secretadmin/login/?next=/s/auth/secretadmin/")
         soup = BeautifulSoup(login_page.text, "html.parser")
         csrf_token = soup.find("input", {"name": "csrfmiddlewaretoken"}).get("value")
 
         # 2. Подготавливаем headers
         headers = {
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...",
-            "Referer": "https://dev.astanahub.com/s/auth/secretadmin/login/?next=/s/auth/secretadmin/",
+            "Referer": f"{Links.HOST}/s/auth/secretadmin/login/?next=/s/auth/secretadmin/",
             "Content-Type": "application/x-www-form-urlencoded",
-            "Origin": "https://dev.astanahub.com",
+            "Origin": Links.HOST,
         }
 
         # 3. Подготавливаем тело POST-запроса
@@ -42,36 +48,37 @@ class AdminAPI:
 
         # 4. Авторизация
         login_response = session.post(
-            "https://dev.astanahub.com/s/auth/secretadmin/login/?next=/s/auth/secretadmin/",
+            f"{Links.HOST}/s/auth/secretadmin/login/?next=/s/auth/secretadmin/",
             data=data,
             headers=headers
         )
 
-        self.log.debug(f"POST статус авторизации auth: {login_response.status_code}")
+        self.log.info(f"POST статус авторизации auth: {login_response.status_code}")
 
         # # 5. Доступ к защищенной странице
-        protected = session.get("https://dev.astanahub.com/s/auth/secretadmin/")
-        self.log.debug(f"Protected статус: {protected.status_code}")
+        protected = session.get(f"{Links.HOST}/s/auth/secretadmin/")
+        self.log.info(f"Protected статус: {protected.status_code}")
         return session
 
     def __get_cookies(self):
         try:
             session = requests.Session()
             login_headers = {
-                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) "
+                              "Chrome/138.0.0.0 Safari/537.36",
                 "Accept": "application/json, text/plain, */*",
-                "Referer": "https://dev.astanahub.com/ru/s/auth/login/",
-                "Origin": "https://dev.astanahub.com",
+                "Referer": f"{Links.HOST}/ru/s/auth/login/",
+                "Origin": Links.HOST,
                 "Content-Type": "application/json"
             }
 
             login_payload = {
-                "email": "a.baisaganov@astanahub.com",
-                "password": "Pass1234!"
+                "email": self.USERNAME,
+                "password": self.PASSWORD
             }
 
             # Авторизация Techhub
-            login_url = "https://dev.astanahub.com/s/auth/api/v1/auth/email/"
+            login_url = f"{Links.HOST}/s/auth/api/v1/auth/email/"
             login_response = session.post(login_url, json=login_payload, headers=login_headers)
 
             self.log.info(f"Admin: Статус авторизации:{login_response.status_code}")
@@ -159,7 +166,7 @@ class AdminAPI:
         """
         try:
             session = self.auth_session
-            request = session.get(f"https://dev.astanahub.com/s/auth/secretadmin/core/activation/{uuid}/change/")
+            request = session.get(f"{Links.HOST}/s/auth/secretadmin/core/activation/{uuid}/change/")
             soup = BeautifulSoup(request.text, "html.parser")
             status_code = request.status_code
             assert status_code == 200, 'AdminAPI: Страница получения кода не загрузилась'
@@ -172,7 +179,8 @@ class AdminAPI:
 
     def delete_user_by_id(self, user_id, service='auth'):
         try:
-            delete_url = f'https://dev.astanahub.com/s/auth/secretadmin/core/user/{user_id}/delete/' if service == 'auth' else f'https://dev.astanahub.com/secretadmin/account/user/{user_id}/delete/'
+            delete_url = (f'{Links.HOST}/s/auth/secretadmin/core/user/{user_id}/delete/'
+                          if service == 'auth' else f'{Links.HOST}/secretadmin/account/user/{user_id}/delete/')
             session = self.auth_session if service == 'auth' else self.session
             response = session.get(delete_url)
 
@@ -183,7 +191,7 @@ class AdminAPI:
             headers = {
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...",
                 "Referer": delete_url,
-                "Origin": "https://dev.astanahub.com",
+                "Origin": Links.HOST,
                 "Content-Type": "application/x-www-form-urlencoded"
             }
 
@@ -194,14 +202,19 @@ class AdminAPI:
 
             delete_response = session.post(delete_url, headers=headers, data=data)
 
-            assert delete_response.status_code in [200, 302], f'[{delete_response.status_code}] AdminAPI: Ошибка при удалении {delete_response.text}'
+            assert delete_response.status_code in [200, 302], (f'[{delete_response.status_code}] '
+                                                               f'AdminAPI: Ошибка при удалении {delete_response.text}')
 
         except TypeError:
             assert 1 == 0, f'AdminAPI: Не удалось удалить юзера, пустой ответ'
-        except Exception as e:
-            assert 1 == 0, f'AdminAPI: Не удалось удалить юзера, возникла ошибка {e}'
+        except AttributeError as e:
+            self.delete_user_by_id(user_id=user_id, service='main')
 
-    def change_user(self, change_mode: AdminAccountChangeType, data: dict, user_id: int, functinonality: AdminFuncTypes):
+    def change_user(self,
+                    change_mode: AdminAccountChangeType,
+                    data: dict,
+                    user_id: int,
+                    functinonality: AdminFuncTypes):
         """
         Смена учетных данных юзера (При смене почты или иин, если есть убирается у учетки который есть
         и ставится новые
@@ -210,6 +223,7 @@ class AdminAPI:
         :param user_id: ID юзера у кого меняем
         :param functinonality: clear = Очищаем поле, change = Меняем у юзеров
         """
+        self.log.info("Started")
         functinonality = functinonality.value
         # Поиск юзера в система с такими данными
         match change_mode:
@@ -222,13 +236,15 @@ class AdminAPI:
             case _:
                 raise ValueError(f"Неизвестный тип поиска: {change_mode}")
 
-        url_old = f'https://dev.astanahub.com/s/auth/secretadmin/core/user/{reserved_user_id}/change/'  # Старый юзер
-        url_new = f'https://dev.astanahub.com/s/auth/secretadmin/core/user/{user_id}/change/'           # Новый юзер
+        url_old = f'{Links.HOST}/s/auth/secretadmin/core/user/{reserved_user_id}/change/'  # Старый юзер
+        url_new = f'{Links.HOST}/s/auth/secretadmin/core/user/{user_id}/change/'           # Новый юзер
 
-        sync_url_old = (f'https://dev.astanahub.com/s/auth/secretadmin/core/user/{reserved_user_id}/actions'
+        sync_url_old = (f'{Links.HOST}/s/auth/secretadmin/core/user/{reserved_user_id}/actions'
                         f'/sync_service_providers_action/')
-        sync_url_new = (f'https://dev.astanahub.com/s/auth/secretadmin/core/user/{user_id}/actions'
+        sync_url_new = (f'{Links.HOST}/s/auth/secretadmin/core/user/{user_id}/actions'
                         f'/sync_service_providers_action/')
+
+        self.log.info("Started")
 
         # Если юзер с такими данными уже есть, то меняем у него, а затем заполняем другого
         if reserved_user_id is not None and (reserved_user_id != user_id or functinonality == 'clear'):
@@ -237,7 +253,6 @@ class AdminAPI:
             edit_resp = session.get(url_old)
 
             assert edit_resp.status_code == 200, f'AdminPage: Данные о старом аккаунте не получены'
-
             soup: BeautifulSoup = BeautifulSoup(edit_resp.text, 'html.parser')
             parsed_dict = self.__get_parsed_data(soup)
 
@@ -247,7 +262,6 @@ class AdminAPI:
                 'first_name': parsed_dict.get('first_name').attrs.get('value'),
                 'last_name': parsed_dict.get('last_name').attrs.get('value'),
                 'email_verified': 'on' if parsed_dict.get('is_email_verified').attrs.get('checked') == '' else None,
-                # 'on',
                 'phone': parsed_dict.get('phone').attrs.get('value'),
                 'phone_verified': 'on' if parsed_dict.get('is_phone_checked').attrs.get('checked') == '' else None,
                 'role': parsed_dict.get('role').find('option', selected=True).attrs.get('value'),
@@ -264,7 +278,7 @@ class AdminAPI:
             pdate_resp = session.post(url_old, data=payload)
 
             assert pdate_resp.status_code == 200, 'AdminAPI: Данные в старом аккаунте не обновлены'
-
+            self.log.info("Смена данных")
             sync_user_info = session.get(sync_url_old)
 
             assert sync_user_info.status_code in [200, 302], 'AdminAPI: Данные в старом аккаунте не синх-ы'
@@ -307,7 +321,8 @@ class AdminAPI:
 
         sync_user_info = session.get(sync_url_new)
 
-        assert sync_user_info.status_code in [200, 302], f'AdminPage: Синхронизация у нового юзера не удалась user_id = {user_id}'
+        assert sync_user_info.status_code in [200, 302], (f'AdminPage: Синхронизация у нового юзера не удалась '
+                                                          f'user_id = {user_id}')
 
     def get_user_id_by_(self, value):
         """
@@ -317,7 +332,7 @@ class AdminAPI:
         """
         try:
             session = self.auth_session
-            response = session.get(f'https://dev.astanahub.com/secretadmin/account/user/?q={value}')
+            response = session.get(f'{Links.HOST}/secretadmin/account/user/?q={value}')
             soup = BeautifulSoup(response.text, "html.parser")
             try:
                 user_id = soup.find('th', class_='field-id')
@@ -328,9 +343,9 @@ class AdminAPI:
             self.log.error(f"AdminAPI:[{value}] Get user id error NoneType: {e}")
             assert 1 == 0, f"AdminAPI:[{value}] Get user id error NoneType: {e}"
 
-    def delete_service_by_id(self, id):
+    def delete_service_by_id(self, request_id):
         try:
-            delete_url = f'https://dev.astanahub.com/s/services/secretadmin/service/servicerequest/{id}/delete/'
+            delete_url = f'{Links.HOST}/s/services/secretadmin/service/servicerequest/{request_id}/delete/'
             session = self.session
 
             response = session.get(delete_url)
@@ -341,7 +356,7 @@ class AdminAPI:
             headers = {
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...",
                 "Referer": delete_url,
-                "Origin": "https://dev.astanahub.com",
+                "Origin": Links.HOST,
                 "Content-Type": "application/x-www-form-urlencoded"
             }
 
@@ -353,14 +368,13 @@ class AdminAPI:
             delete_response = session.post(delete_url, headers=headers, data=data)
 
             assert delete_response.status_code in [200, 302], f"AdminAPI: Ошибка при удалении {delete_response.text}"
-
         except Exception as e:
-            self.log.error("AdminPage: Не удалось удалить заявку, возникла ошибка")
+            self.log.error(f"AdminPage: Не удалось удалить заявку, возникла ошибка {e}")
             assert 1 == 0, "AdminPage: Не удалось удалить заявку, возникла ошибка"
 
     def company_update(self, company_id, data: dict[str, Any]):
         session = self.session
-        request = session.get(f"https://dev.astanahub.com/secretadmin/account/company/{company_id}/change/")
+        request = session.get(f"{Links.HOST}/secretadmin/account/company/{company_id}/change/")
         soup = BeautifulSoup(request.text, 'html.parser')
         original_payload = self.__get_company_payload(soup)
 
@@ -418,16 +432,18 @@ class AdminAPI:
         #                        data=payload, files=files)
 
         assert request.status_code in [200, 302], 'AdminAPI: Обновление компании не удалось'
-        self.log.debug('AdminAPI: Компания обновлена')
+        self.log.info('AdminAPI: Компания обновлена')
 
 
 if __name__ == '__main__':
     adm = AdminAPI()
-    # # d = {'iin': '990315351258'}
-    # d = {'iin': '990315351258'}
-    # adm.change_user(AdminAccountChangeType.IIN, data=d, user_id=59919, functinonality=AdminFuncTypes.CHANGE)
+    d = {'iin': '990315351258'}
+    # d = {'iin': '010805550740'}
+    # d = {'iin': '030909650657'}
+    adm.change_user(AdminAccountChangeType.IIN, data=d, user_id=60071, functinonality=AdminFuncTypes.CHANGE)
 
-    adm.delete_user_by_id(60143)
+
+    # adm.delete_user_by_id(60143)
     # d = {'tag_nii': {}}
     # adm.company_update(6874, data=d)
 

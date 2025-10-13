@@ -4,12 +4,12 @@ test_accs = https://docs.google.com/spreadsheets/d/e/2PACX-1vSeU1VRx7yKJKsghukhC
 [service_requests]
 accreditation_fl_cert_number = 00003
 accreditation_ul_cert_number = 00006
-accreditation_renewal_fl_id = 67236
+accreditation_renewal_fl_id = 67424
 accreditation_fl_id = 0
 accreditation_ul_id = 0
-accreditation_dublicate_fl_id = 0
-accreditation_dublicate_ul_id = 0
-accreditation_renewal_ul_id = 0
+accreditation_dublicate_fl_id = 67424
+accreditation_dublicate_ul_id = 67424
+accreditation_renewal_ul_id = 67424
 
 [account]
 settings_url = https://dev.astanahub.com/account/settings/
