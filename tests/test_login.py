@@ -5,6 +5,8 @@ from config.links import Links
 
 import allure
 import pytest
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+
 
 
 @allure.suite("Astanahub - Авторизация")
@@ -26,8 +28,11 @@ class TestAuth:
     )
     def test_email_login_valid(self, page, auth_page, email, password):
         with allure.step("Переход на страницу авторизации"):
-            response = page.goto(Links.LOGIN_PAGE)
-            assert response.status == 200, f"Ошибка, url не действительный: {response.status}"
+            try:
+                response = page.goto(Links.LOGIN_PAGE)
+                assert response.status == 200, f"Ошибка, url не действительный: {response.status}"
+            except PlaywrightTimeoutError as e:
+                assert False, f"Не удалось загрузить страницу: {e}"
 
         with allure.step("Ввод почты"):
             auth_page.input_email_or_phone(value=email)
@@ -59,8 +64,11 @@ class TestAuth:
     )
     def test_invite_for_reg(self, page, auth_page, email, password, expected_status):
         with allure.step("Переход на страницу авторизации"):
-            response = page.goto(Links.LOGIN_PAGE)
-            assert response.status == 200, f"Ошибка, url не действительный: {response.status}"
+            try:
+                response = page.goto(Links.LOGIN_PAGE)
+                assert response.status == 200, f"Ошибка, url не действительный: {response.status}"
+            except PlaywrightTimeoutError as e:
+                assert False, f"Не удалось загрузить страницу: {e}"
 
         with allure.step("Ввод несуществующей почты"):
             auth_page.input_email_or_phone(email)
