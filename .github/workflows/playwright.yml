@@ -12,18 +12,44 @@ jobs:
     steps:
     - uses: actions/checkout@v5
 
+    # Python с автоматическим кешированием pip зависимостей
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
         python-version: '3.13'
+        cache: 'pip'  # Автоматическое кеширование pip
+        cache-dependency-path: 'requirements.txt'
 
-    - name: Install dependencies
+    - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Ensure browsers are installed
+    # Кеширование браузеров Playwright
+    - name: Get Playwright version
+      id: playwright-version
+      run: |
+        PLAYWRIGHT_VERSION=$(python -c "import playwright; print(playwright.__version__)")
+        echo "PLAYWRIGHT_VERSION=$PLAYWRIGHT_VERSION" >> $GITHUB_ENV
+
+    - name: Cache Playwright browsers
+      uses: actions/cache@v4
+      id: playwright-cache
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
+        restore-keys: |
+          ${{ runner.os }}-playwright-
+
+    # Установка браузеров только при cache miss
+    - name: Install Playwright browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
       run: python -m playwright install --with-deps
+
+    # Установка только OS зависимостей при cache hit
+    - name: Install Playwright OS dependencies
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      run: python -m playwright install-deps
 
     - name: Run your tests
       run: pytest --alluredir=allure-results --tracing=retain-on-failure
