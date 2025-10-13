@@ -1,0 +1,1 @@
+ERROR    root:admin_api.py:92 Admin: Авторизация не удалась
