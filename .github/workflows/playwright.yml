@@ -84,6 +84,7 @@ jobs:
       with:
         ref: gh-pages
         path: gh-pages
+      continue-on-error: true
 
     - name: Copy Allure history to current results
       run: |
@@ -91,6 +92,12 @@ jobs:
           mkdir -p allure-results/history
           cp -r gh-pages/allure-report/history/* allure-results/history/
         fi
+
+    - name: Install Allure CLI
+      run: |
+        wget https://repo.maven.apache.org/maven2/io/qameta/allure/allure/2.21.0/allure-2.21.0.zip
+        unzip allure-2.21.0.zip -d $HOME/.allure
+        echo "$HOME/.allure/allure-2.21.0/bin" >> $GITHUB_PATH
 
     - name: Generate Allure Report
       run: |
