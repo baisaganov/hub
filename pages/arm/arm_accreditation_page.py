@@ -7,7 +7,7 @@ from services.admin_api import AdminAPI
 from services.services import get_roles_list
 import allure
 
-from services.egov.sign_service import SignXml
+# from services.egov.sign_service import SignXml
 
 
 class ArmAccreditationPage(ArmBasePage):
@@ -132,7 +132,8 @@ class ArmAccreditationPage(ArmBasePage):
 
         with self.page.expect_response('https://dev.astanahub.com/arm/service_request/' + self.request_id
                                        + '/process_action/') as response:
-            SignXml().sign_xml()
+            # SignXml().sign_xml() TODO: SignXml fix
+            pass
 
         time.sleep(5)
 
@@ -163,7 +164,8 @@ class ArmAccreditationPage(ArmBasePage):
         self.click_on_button(button_list[-1])
         with self.page.expect_response('https://dev.astanahub.com/arm/service_request/' + self.request_id
                                        + '/process_action/') as response:
-            SignXml().sign_xml()
+            # SignXml().sign_xml() TODO: SignXml fix
+            pass
 
         assert response.value.status == 200, self.error_info(status=response.value.status, msg="Ошибка при подписании")
 
@@ -204,7 +206,8 @@ class ArmAccreditationPage(ArmBasePage):
         with self.page.expect_response(f'https://dev.astanahub.com/arm/service_request/{self.request_id}/'
                                        f'process_action/') as resp:
             self.click_on_button(button_list[0])
-            SignXml().sign_xml()
+            # SignXml().sign_xml() TODO: SignXml fix
+            pass
 
         assert resp.value.status == 200, self.error_info(status=resp.value.status, msg="Не удалось подписать")
 
@@ -230,7 +233,8 @@ class ArmAccreditationPage(ArmBasePage):
         with self.page.expect_response(f'https://dev.astanahub.com/arm/service_request/{self.request_id}/'
                                        f'process_action/') as resp:
             self.click_on_button(button_list[1])
-            SignXml().sign_xml()
+            # SignXml().sign_xml() TODO: SignXml fix
+            pass
 
         assert resp.value.status == 200, self.error_info(status=resp.value.status,
                                                          msg=f"Не удалось подписать {role.value}")
@@ -258,7 +262,8 @@ class ArmAccreditationPage(ArmBasePage):
             with self.page.expect_response(f'https://dev.astanahub.com/arm/service_request/{self.request_id}/'
                                            f'process_action/') as resp:
                 self.click_on_button(button_list[0])
-                SignXml().sign_xml()
+                # SignXml().sign_xml()
+                pass
 
             assert resp.value.status == 200, self.error_info(status=resp.value.status,
                                                              msg=f"Не удалось скачать файл "

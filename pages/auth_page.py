@@ -9,7 +9,7 @@ from commons.types import ServiceType, AdminFuncTypes, AdminAccountChangeType
 from config.links import Links
 from services.admin_api import AdminAPI
 from base.base_page import BasePage
-from services.egov.sign_service import SignXml
+# from services.egov.sign_service import SignXml TODO: SignXml fix
 
 
 # Авторизация и Регистрация на портале Astanahub
@@ -267,7 +267,8 @@ class AuthPage(BasePage):
 
         try:
             with self.page.expect_response(f'{Links.HOST}/s/auth/api/v1/auth/signature/') as response:
-                SignXml().sign_xml()
+                # SignXml().sign_xml() TODO: SignXml fix
+                pass
 
             assert response.value.status == 200, self.error_info(msg='ЭЦП Авторизация: Авторизация не удалась',
                                                                  status=response.value.status)

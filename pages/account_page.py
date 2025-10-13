@@ -4,7 +4,7 @@ from commons.types import ServiceType
 from base.base_page import BasePage
 
 from config.links import Links
-from services.egov.sign_service import SignXml
+# from services.egov.sign_service import SignXml
 
 
 class AccountPage(BasePage):
