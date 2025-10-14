@@ -126,14 +126,14 @@ jobs:
 
     - name: Send to Telegram
       run: |
-        URL="https://${{ github.repository_owner }}.github.io/${{ github.repository }}/"
+        URL="https://baisaganov.github.io/hub/"
         TEXT="
         📊 <b>Allure report update at $NOW</b>
         
         🟢Passed: $PASSED
         🔴Failed: $FAILED
-        🟡Skipped: $SKIPPED
-        ⚫️Broken: $BROKEN
+        🔘Skipped: $SKIPPED
+        🟡️Broken: $BROKEN
         🕒Duration: $DURATION_MIN:$DURATION_SEC
         Link: $URL
         "
