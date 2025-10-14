@@ -122,7 +122,7 @@ jobs:
     - name: Send to Telegram
       run: |
         URL="https://${{ github.repository_owner }}.github.io/${{ github.repository }}/"
-        TEXT="Allure report: $URL \n Passed: $PASSED, Failed: $FAILED, Skipped: $SKIPPED, Broken: $BROKEN, Duration: $DURATION"
+        TEXT="Allure report: $URL <br> Passed: $PASSED,   Failed: $FAILED, \Skipped: $SKIPPED, Broken: $BROKEN, Duration: $DURATION"
         curl -s -X POST "https://api.telegram.org/bot${{ secrets.TG_BOT_TOKEN }}/sendMessage" \
           -d chat_id=-1002962410919 \
           -d text="$TEXT"
