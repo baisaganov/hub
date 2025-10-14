@@ -113,7 +113,7 @@ jobs:
         BROKEN=$(echo "$STAT" | jq '.statistic.broken')
         DURATION_MS=$(echo "$STAT" | jq '.time.duration')
         DURATION_MIN=$((DURATION_MS / 1000 / 60))
-        DURATION_SEC=$((DURATION_MS-DURATION_MIN*60*1000) / 1000)
+        DURATION_SEC=$(((DURATION_MS - DURATION_MIN * 60 * 1000) / 1000))
         NOW=$(date +"%Y-%m-%d %H:%M:%S")
         echo "PASSED=$PASSED" >> $GITHUB_ENV
         echo "FAILED=$FAILED" >> $GITHUB_ENV
