@@ -111,18 +111,31 @@ jobs:
         FAILED=$(echo "$STAT" | jq '.statistic.failed')
         SKIPPED=$(echo "$STAT" | jq '.statistic.skipped')
         BROKEN=$(echo "$STAT" | jq '.statistic.broken')
-        DURATION=$(echo "$STAT" | jq '.time.duration')
+        DURATION_MS=$(echo "$STAT" | jq '.time.duration')
+        DURATION_MIN=$((DURATION_MS / 1000 / 60))
+        DURATION_SEC=$((DURATION_MS-DURATION_MIN*60*1000) / 1000)
+        NOW=$(date +"%Y-%m-%d %H:%M:%S")
         echo "PASSED=$PASSED" >> $GITHUB_ENV
         echo "FAILED=$FAILED" >> $GITHUB_ENV
         echo "SKIPPED=$SKIPPED" >> $GITHUB_ENV
         echo "BROKEN=$BROKEN" >> $GITHUB_ENV
-        echo "DURATION=$DURATION" >> $GITHUB_ENV
-      
+        echo "DURATION_MIN=$DURATION_MIN" >> $GITHUB_ENV
+        echo "DURATION_SEC=$DURATION_SEC" >> $GITHUB_ENV
+        echo "NOW=$NOW" >> $GITHUB_ENV
+
 
     - name: Send to Telegram
       run: |
         URL="https://${{ github.repository_owner }}.github.io/${{ github.repository }}/"
-        TEXT="Allure report: $URL <br> Passed: $PASSED,   Failed: $FAILED, \Skipped: $SKIPPED, Broken: $BROKEN, Duration: $DURATION"
+        TEXT="
+        📊 Allure report update at $NOW<br>
+        Passed: $PASSED<br>
+        Failed: $FAILED<br>
+        Skipped: $SKIPPED<br>
+        Broken: $BROKEN<br>
+        Duration: $DURATION_MIN:DURATION_SEC"<br>
+        Link: $URL
         curl -s -X POST "https://api.telegram.org/bot${{ secrets.TG_BOT_TOKEN }}/sendMessage" \
           -d chat_id=-1002962410919 \
-          -d text="$TEXT"
+          -d text="$TEXT" \
+          -d parse_mode="HTML"
