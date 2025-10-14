@@ -114,7 +114,7 @@ jobs:
         DURATION_MS=$(echo "$STAT" | jq '.time.duration')
         DURATION_MIN=$((DURATION_MS / 1000 / 60))
         DURATION_SEC=$(((DURATION_MS - DURATION_MIN * 60 * 1000) / 1000))
-        NOW=$(date +"%Y-%m-%d %H:%M:%S")
+        NOW=$(date -d "+5 hours" +"%Y-%m-%d %H:%M:%S")
         echo "PASSED=$PASSED" >> $GITHUB_ENV
         echo "FAILED=$FAILED" >> $GITHUB_ENV
         echo "SKIPPED=$SKIPPED" >> $GITHUB_ENV
@@ -133,8 +133,9 @@ jobs:
         Failed: $FAILED<br>
         Skipped: $SKIPPED<br>
         Broken: $BROKEN<br>
-        Duration: $DURATION_MIN:DURATION_SEC"<br>
+        Duration: $DURATION_MIN:DURATION_SEC<br>
         Link: $URL
+        "
         curl -s -X POST "https://api.telegram.org/bot${{ secrets.TG_BOT_TOKEN }}/sendMessage" \
           -d chat_id=-1002962410919 \
           -d text="$TEXT" \
