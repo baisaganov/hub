@@ -43,9 +43,9 @@ jobs:
       if: steps.playwright-cache.outputs.cache-hit != 'true'
       run: python -m playwright install --with-deps
 
-    - name: Install Playwright OS deps
-      if: steps.playwright-cache.outputs.cache-hit == 'true'
-      run: python -m playwright install-deps
+#    - name: Install Playwright OS deps
+#      if: steps.playwright-cache.outputs.cache-hit == 'true'
+#      run: python -m playwright install-deps
 
     - name: Run tests
       run: pytest --alluredir=allure-results --tracing=on
@@ -111,7 +111,7 @@ jobs:
         FAILED=$(echo "$STAT" | jq '.statistic.failed')
         SKIPPED=$(echo "$STAT" | jq '.statistic.skipped')
         BROKEN=$(echo "$STAT" | jq '.statistic.broken')
-        DURATION=${echo "$STAT" | jq '.time.duration'
+        DURATION=$(echo "$STAT" | jq '.time.duration')
         echo "PASSED=$PASSED" >> $GITHUB_ENV
         echo "FAILED=$FAILED" >> $GITHUB_ENV
         echo "SKIPPED=$SKIPPED" >> $GITHUB_ENV
