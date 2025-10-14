@@ -128,12 +128,12 @@ jobs:
       run: |
         URL="https://${{ github.repository_owner }}.github.io/${{ github.repository }}/"
         TEXT="
-        📊 Allure report update at $NOW<br>
-        Passed: $PASSED<br>
-        Failed: $FAILED<br>
-        Skipped: $SKIPPED<br>
-        Broken: $BROKEN<br>
-        Duration: $DURATION_MIN:DURATION_SEC<br>
+        📊 Allure report update at $NOW
+        Passed: $PASSED
+        Failed: $FAILED
+        Skipped: $SKIPPED
+        Broken: $BROKEN
+        Duration: $DURATION_MIN:DURATION_SEC
         Link: $URL
         "
         curl -s -X POST "https://api.telegram.org/bot${{ secrets.TG_BOT_TOKEN }}/sendMessage" \
