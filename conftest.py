@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from playwright.sync_api import sync_playwright
 import logging
@@ -11,12 +13,13 @@ from pages.auth_page import AuthPage
 from pages.business_plan_page import BusinessPlanPage
 from services.admin_api import AdminAPI
 
+import allure
 
 # import yaml
 
 
 @pytest.fixture(scope="function")
-def page():
+def page(request):
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
 
@@ -40,12 +43,44 @@ def page():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True, slow_mo=0, args=[f'--window-size={width},{height}'])
         context = browser.new_context(viewport={'width': width, 'height': height})
+
+        test_name = request.node.name
+        trace_path = f"traces/{test_name}_trace.zip"
+        os.makedirs("traces", exist_ok=True)
+        context.tracing.start(screenshots=True, snapshots=True, sources=True)
+
         # context.set_default_timeout(15000)
         page = context.new_page()
+
         yield page
+
+        context.tracing.stop(path=trace_path)
+
+        # Прикрепляем trace к Allure отчету
+        if os.path.exists(trace_path):
+            allure.attach.file(
+                trace_path,
+                name=f"Playwright Trace: {test_name}",
+                attachment_type="application/zip"
+            )
+
+        if request.node.rep_call.failed if hasattr(request.node, 'rep_call') else False:
+            screenshot = page.screenshot()
+            allure.attach(
+                screenshot,
+                name="Screenshot on failure",
+                attachment_type=allure.attachment_type.PNG
+            )
+
         context.close()
         browser.close()
 
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    rep = outcome.get_result()
+    setattr(item, f"rep_{rep.when}", rep)
 
 @pytest.fixture
 def auth_page(page):
