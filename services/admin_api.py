@@ -177,7 +177,7 @@ class AdminAPI:
             self.log.error(f"AdminPage: Getting code error [{e}]")
             assert 1 == 0, f"AdminPage: Getting code error [{e}]"
 
-    def delete_user_by_id(self, user_id, service='auth'):
+    def delete_user_by_id(self, user_id, service='auth', counts=0):
         try:
             delete_url = (f'{Links.HOST}/s/auth/secretadmin/core/user/{user_id}/delete/'
                           if service == 'auth' else f'{Links.HOST}/secretadmin/account/user/{user_id}/delete/')
@@ -208,7 +208,8 @@ class AdminAPI:
         except TypeError:
             assert 1 == 0, f'AdminAPI: Не удалось удалить юзера, пустой ответ'
         except AttributeError as e:
-            self.delete_user_by_id(user_id=user_id, service='main')
+            if counts <= 1:
+                self.delete_user_by_id(user_id=user_id, service='main', counts=counts+1)
 
     def change_user(self,
                     change_mode: AdminAccountChangeType,
