@@ -34,7 +34,7 @@ class AppConfig:
 
 
     # URLs
-    app_url: str = get_env("APP_URL", "astanahub.com")
+    app_url: str = None
     admin_url: str = get_env("ADMIN_URL", "astanahub.com/secretadmin")
 
     # Окружение
@@ -58,7 +58,6 @@ class AppConfig:
         """
         Обновить полный URL приложения с учетом поддомена.
         """
-
         if self.subdomain:
             self.app_url = f"https://{self.subdomain}.{self.base_domain}"
             return
