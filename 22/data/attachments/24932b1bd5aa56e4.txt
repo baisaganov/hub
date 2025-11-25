@@ -1,0 +1,4 @@
+INFO     conftest:conftest.py:68 Starting test: test_event_send[qa-3]
+ERROR    conftest:conftest.py:86 ❌ TEST FAILED: test_event_send[qa-3]
+INFO     conftest:conftest.py:97 Screenshot saved: screenshots/test_event_send[qa-3]_failure.png
+INFO     conftest:conftest.py:105 Trace saved: traces/test_event_send[qa-3]_trace.zip
