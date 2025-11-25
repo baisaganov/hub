@@ -1,5 +1,3 @@
-version: '3.7'
-
 services:
   tests:
     image: python:3.11-slim
@@ -10,3 +8,13 @@ services:
       - ./:/usr/workspace
     command: /bin/sh -c "python -m pip install --upgrade pip  --disable-pip-version-check --root-user-action=ignore && pip install -r requirements.txt && playwright install --with-deps chromium &&  pytest -sv --alluredir=allure-results"
     working_dir: /usr/workspace
+    environment:
+      - BROWSER=${BROWSER}
+      - HEADLESS=${HEADLESS}
+      - NAVIGATION_TIMEOUT=${NAVIGATION_TIMEOUT}
+      - SCREENSHOT=${SCREENSHOT}
+      - SLOW_MO=${SLOW_MO}
+      - TIMEOUT=${TIMEOUT}
+      - TRACE=${TRACE}
+      - VIEWPORT_HEIGHT=${VIEWPORT_HEIGHT}
+      - VIEWPORT_WIDTH=${VIEWPORT_WIDTH}
