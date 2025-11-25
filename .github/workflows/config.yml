@@ -86,18 +86,33 @@ jobs:
         run: |
           apt-get update && apt-get install -y jq
 
-          # Проверь где находится файл
-          find allure-history -name "summary.json" -type f
+          # Найди файл со статистикой
+          STAT_FILE=$(find allure-history -name "summary.json" -o -name "statistics.json" | head -1)
 
-          # Используй правильный путь
-          STAT=$(cat allure-history/latest/data/statistics.json 2>/dev/null || cat allure-history/0/data/statistics.json 2>/dev/null || echo '{}')
+          if [ -z "$STAT_FILE" ]; then
+            echo "Statistic file not found, trying alternative paths..."
+            STAT_FILE=$(find allure-history -type f -name "*.json" | grep -E "(summary|statistic)" | head -1)
+          fi
 
-          PASSED=$(echo "$STAT" | jq '.total' 2>/dev/null || echo "0")
-          FAILED=$(echo "$STAT" | jq '.failed' 2>/dev/null || echo "0")
-          SKIPPED=$(echo "$STAT" | jq '.skipped' 2>/dev/null || echo "0")
-          BROKEN=$(echo "$STAT" | jq '.broken' 2>/dev/null || echo "0")
+          echo "Using stat file: $STAT_FILE"
+
+          if [ ! -z "$STAT_FILE" ] && [ -f "$STAT_FILE" ]; then
+            STAT=$(cat "$STAT_FILE")
+            echo "Raw data: $STAT"
+
+            PASSED=$(echo "$STAT" | jq '.statistic.passed // .passed // 0' 2>/dev/null)
+            FAILED=$(echo "$STAT" | jq '.statistic.failed // .failed // 0' 2>/dev/null)
+            SKIPPED=$(echo "$STAT" | jq '.statistic.skipped // .skipped // 0' 2>/dev/null)
+            BROKEN=$(echo "$STAT" | jq '.statistic.broken // .broken // 0' 2>/dev/null)
+          else
+            echo "No statistic file found!"
+            PASSED="?"
+            FAILED="?"
+            SKIPPED="?"
+            BROKEN="?"
+          fi
+
           NOW=$(date -d "+5 hours" +"%Y-%m-%d %H:%M:%S")
-
           URL="https://baisaganov.github.io/hub/"
           TEXT="📊 <b>Allure report updated at $NOW</b>%0A%0A🟢Passed: $PASSED%0A🔴Failed: $FAILED%0A🔘Skipped: $SKIPPED%0A🟡️Broken: $BROKEN%0ALink: $URL"
 
