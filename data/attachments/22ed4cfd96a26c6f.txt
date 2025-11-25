@@ -1,0 +1,3 @@
+INFO     conftest:conftest.py:46 Launching chromium browser
+INFO     conftest:conftest.py:68 Starting test: test_event_send[qa-1]
+ERROR    conftest:conftest.py:86 ❌ TEST FAILED: test_event_send[qa-1]
