@@ -1,0 +1,2 @@
+INFO     conftest:conftest.py:68 Starting test: test_event_send[qa-3]
+INFO     conftest:conftest.py:110 ✅ TEST PASSED: test_event_send[qa-3]
