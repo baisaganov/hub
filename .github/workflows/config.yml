@@ -84,19 +84,23 @@ jobs:
       - name: Send to Telegram
         continue-on-error: true
         run: |
-          STAT=$(cat allure-history/latest/widgets/summary.json)
-          PASSED=$(echo "$STAT" | jq '.statistic.passed')
-          FAILED=$(echo "$STAT" | jq '.statistic.failed')
-          SKIPPED=$(echo "$STAT" | jq '.statistic.skipped')
-          BROKEN=$(echo "$STAT" | jq '.statistic.broken')
-          DURATION_MS=$(echo "$STAT" | jq '.time.duration')
-          DURATION_MIN=$((DURATION_MS / 1000 / 60))
-          DURATION_SEC=$(((DURATION_MS - DURATION_MIN * 60 * 1000) / 1000))
+          apt-get update && apt-get install -y jq
+
+          # Проверь где находится файл
+          find allure-history -name "summary.json" -type f
+
+          # Используй правильный путь
+          STAT=$(cat allure-history/latest/data/statistics.json 2>/dev/null || cat allure-history/0/data/statistics.json 2>/dev/null || echo '{}')
+
+          PASSED=$(echo "$STAT" | jq '.total' 2>/dev/null || echo "0")
+          FAILED=$(echo "$STAT" | jq '.failed' 2>/dev/null || echo "0")
+          SKIPPED=$(echo "$STAT" | jq '.skipped' 2>/dev/null || echo "0")
+          BROKEN=$(echo "$STAT" | jq '.broken' 2>/dev/null || echo "0")
           NOW=$(date -d "+5 hours" +"%Y-%m-%d %H:%M:%S")
-          
+
           URL="https://baisaganov.github.io/hub/"
-          TEXT="📊 <b>Allure report update at $NOW</b>%0A%0A🟢Passed: $PASSED%0A🔴Failed: $FAILED%0A🔘Skipped: $SKIPPED%0A🟡️Broken: $BROKEN%0A🕒Duration: $DURATION_MIN:$DURATION_SEC%0ALink: $URL"
-          
+          TEXT="📊 <b>Allure report updated at $NOW</b>%0A%0A🟢Passed: $PASSED%0A🔴Failed: $FAILED%0A🔘Skipped: $SKIPPED%0A🟡️Broken: $BROKEN%0ALink: $URL"
+
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TG_BOT_TOKEN }}/sendMessage" \
             -d "chat_id=-1002962410919" \
             -d "text=$TEXT" \
