@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   tests:
     build:
@@ -5,7 +7,6 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./:/usr/workspace
-    command: /bin/sh -c "python -m pip install --upgrade pip --disable-pip-version-check --root-user-action=ignore && pip install -r requirements.txt && playwright install --with-deps chromium &&  pytest -sv --alluredir=allure-results && allure generate allure-results --clean -o allure-report"
     working_dir: /usr/workspace
     environment:
       - BROWSER=${BROWSER}

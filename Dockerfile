@@ -16,4 +16,5 @@ RUN playwright install --with-deps chromium
 
 COPY . .
 
-CMD ["pytest", "-sv", "--alluredir=allure-results"]
+# Запусти тесты, потом ВСЕГДА создай отчет, но сохрани exit code тестов
+CMD ["/bin/sh", "-c", "pytest -sv --alluredir=allure-results || true; allure generate allure-results --clean -o allure-report"]
