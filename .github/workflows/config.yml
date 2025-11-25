@@ -10,16 +10,32 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run Tests via docker compose
         env:
-          BROWSER: ${{ secrets.BROWSER }}
           HEADLESS: ${{ secrets.HEADLESS }}
-          NAVIGATION_TIMEOUT: ${{ secrets.NAVIGATION_TIMEOUT }}
-          SCREENSHOT: ${{ secrets.SCREENSHOT }}
+          BROWSER: ${{ secrets.BROWSER }}
           SLOW_MO: ${{ secrets.SLOW_MO }}
           TIMEOUT: ${{ secrets.TIMEOUT }}
-          TRACE: ${{ secrets.TRACE }}
-          VIEWPORT_HEIGHT: ${{ secrets.VIEWPORT_HEIGHT }}
+          NAVIGATION_TIMEOUT: ${{ secrets.NAVIGATION_TIMEOUT }}
           VIEWPORT_WIDTH: ${{ secrets.VIEWPORT_WIDTH }}
+          VIEWPORT_HEIGHT: ${{ secrets.VIEWPORT_HEIGHT }}
+          USER_AGENT: ${{ secrets.USER_AGENT }}
+          LOCALE: ${{ secrets.LOCALE }}
+          TIMEZONE: ${{ secrets.TIMEZONE }}
+          TRACE: ${{ secrets.TRACE }}
+          SCREENSHOT: ${{ secrets.SCREENSHOT }}
+          VIDEO: ${{ secrets.VIDEO }}
           DOWNLOADS_PATH: ${{ secrets.DOWNLOADS_PATH}}
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          API_TIMEOUT: ${{ secrets.API_TIMEOUT }}
+          API_RETRY_ATTEMPTS: ${{ secrets.API_RETRY_ATTEMPTS }}
+          API_RETRY_DELAY: ${{ secrets.API_RETRY_DELAY }}
+          BASE_DOMAIN: ${{ secrets.BASE_DOMAIN }}
+          ADMIN_URL: ${{ secrets.ADMIN_URL }}
+          ENV: ${{ secrets.ENV }}
+          LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+          API_TOKEN: ${{ secrets.API_TOKEN }}
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
         run: |
           docker compose up --exit-code-from tests || true
 
