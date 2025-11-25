@@ -5,7 +5,6 @@ import allure
 
 from commons.types import AccreditationRoles, AccreditationType
 from pages.arm.arm_accreditation_page import ArmAccreditationPage
-from services.admin_api import AdminAPI
 from config.settings import config_path
 
 
@@ -27,7 +26,7 @@ class TestArm:
             # "Аккредитация Дубликат ФЛ",
             ]
     )
-    @pytest.mark.skip("Решение проблемы с подписанием")
+    # @pytest.mark.skip("Решение проблемы с подписанием")
     def test_positive_accreditation(self, page, acred_type: AccreditationType, account_data: dict):
         self.config.clear()
         self.config.read(config_path)

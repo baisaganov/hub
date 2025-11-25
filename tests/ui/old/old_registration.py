@@ -2,7 +2,7 @@ import allure
 import pytest
 
 from config.links import Links
-from services.admin_api import AdminAPI
+from api.admin_api import AdminAPI
 
 
 @allure.suite("Astanahub - Регистрация")

@@ -1,9 +1,9 @@
 import time
 
-from base import Page
+from playwright.sync_api import Page
 
-from base.base_page import BasePage
-from config.links import Links
+from .base_page import BasePage
+# from config.links import Links
 
 
 class ArmBasePage(BasePage):
@@ -17,7 +17,7 @@ class ArmBasePage(BasePage):
 
     def auth_arm(self, login, password):
         try:
-            self.page.goto(Links.ARM_LOGIN)
+            # self.page.goto(Links.ARM_LOGIN)
             self.email_field.fill(login)
             self.password_field.fill(password)
             self.rnd_checkbox.click()

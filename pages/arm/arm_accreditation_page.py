@@ -1,10 +1,10 @@
 import time
 
-from base.arm_base_page import ArmBasePage
-from commons.types import BusinessProccess, AccreditationRoles, AdminFuncTypes, AdminAccountChangeType, ServiceType
+from pages.base import ArmBasePage
+from commons.types import BusinessProccess, AccreditationRoles, AdminFuncTypes, AdminAccountChangeType
 from config.links import Links
-from services.admin_api import AdminAPI
-from services.services import get_roles_list
+from api.admin_api import AdminAPI
+from api.services import get_roles_list
 import allure
 
 # from services.egov.sign_service import SignXml

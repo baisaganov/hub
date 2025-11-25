@@ -1,9 +1,13 @@
-from base import Enum, configparser, re, log, Page
-
-from base import allure #, SignXml
-
+import re
+from playwright.sync_api import Page, expect
+import logging as log
+import configparser
+from enum import Enum
+import allure
 from commons.types import FormButton
 from config.settings import config_path
+from typing import Literal
+from config import config
 
 
 class BasePage:
@@ -18,6 +22,35 @@ class BasePage:
         self.next_btn = page.locator('#nextStep > div.btn')
         self.previous_btn = page.locator('#prevStep > div.btn')
 
+    #  ============== Готовые функции ==============
+    def action_buttons(self, button_id: Literal[
+        'event-save',
+        'submit-create-event'
+    ]):
+        """
+        Сохранение и Отправка заполненной формы
+        :param button_id: ID кнопки для клика
+            - 'event-save': Сохранить черновик Event
+            - 'submit-create-event': Отправить Event на модерацию
+        :return:
+        """
+        response_url = ''
+
+        # self.page.pause()
+        match button_id:
+            case 'event-save':
+                response_url = f'{config.app.app_url}/account/api/event/'
+            case 'submit-create-event':
+                response_url = re.compile(fr'{config.app.app_url}/account/api/event/.*')
+        locator = self.page.locator(f"#{button_id}")
+        expect(locator).to_be_visible()
+        expect(locator).to_be_enabled()
+        with self.page.expect_response(response_url) as response:
+            locator.click()
+
+        assert response.value.status == 200, f'BasePage: Ошибка запроса {response.value.status}, json {response.value.json()}'
+
+    #  ============== Трбуется рефакторинг ==============
     def __take_screenshot(self, name="Скриншот"):
         """
         Создание скриншота
@@ -78,48 +111,3 @@ class BasePage:
                                    msg=f'ID заявки {service_id} не удалось сохранить',
                                    exception=e)
 
-    def save_and_submit_form(self, service_type: Enum, button_type: FormButton):
-        """
-        Сохранение и Отправка заполненной формы
-        :param button_type: Тип кнопки (Сохранить, Подписать, Отправить, След, Пред)
-        :param service_type: AccreditationType Какой вид формы аккредитации
-        :return:
-        """
-        try:
-            request_id = re.findall("(\\d+)", self.page.url)[0]
-            if button_type.value == FormButton.SAVE.value:
-                with self.page.expect_response(
-                        f'https://dev.astanahub.com/account/api/service_request/{request_id}/') as resp:
-                    self.save_btn.click()
-                    self.logging.debug(f"{service_type.value}: Save btn click")
-
-                assert resp.value.status in [200, 201], self.error_info(
-                    msg=f'{service_type.value}: Save from error',
-                    status=resp.value.status)
-
-            elif button_type.value == FormButton.ECP_SUBMIT.value:
-                with self.page.expect_response(
-                        f'https://dev.astanahub.com/account/api/service_request/{request_id}/sign/') as resp:
-                    self.logging.debug(f"{service_type.value}: Submit btn click")
-                    self.ecp_submit_btn.click()
-                    self.logging.debug(f"{service_type.value}: Sign started")
-                    SignXml().sign_xml()
-                    self.logging.debug(f"{service_type.value}: Sign ended")
-
-                assert resp.value.status in [200, 201], self.error_info(
-                    msg=f'{service_type.value}: Sign error',
-                    status=resp.value.status)
-
-            # Нужно придумать какие ассерты добавить (вариант со сменой сслыки? проверить в логах меняется ли)
-            elif button_type.value == FormButton.NEXT.value:
-                self.logging.info(self.page.url)
-                self.next_btn.click()
-                self.logging.info(self.page.url)
-
-            elif button_type.value == FormButton.PREV.value:
-                self.logging.info(self.page.url)
-                self.previous_btn.click()
-                self.logging.info(self.page.url)
-            return request_id
-        except TimeoutError as e:
-            self.error_info(msg='Ошибка при пподписании или сохранении', exception=e)

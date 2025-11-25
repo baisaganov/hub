@@ -1,7 +1,6 @@
 import random
 from os import getenv
 from dotenv import load_dotenv, find_dotenv
-from config.links import Links
 
 import allure
 import pytest

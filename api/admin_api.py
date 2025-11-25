@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import logging
 
 from commons.types import AdminAccountChangeType, AdminFuncTypes
-from config.links import Links
+from config import config
 from os import getenv
 from dotenv import load_dotenv, find_dotenv
 
@@ -25,16 +25,16 @@ class AdminAPI:
         session = requests.Session()
 
         # 1. Получаем CSRF и cookies с GET-запроса на страницу входа
-        login_page = session.get(f"{Links.HOST}/s/auth/secretadmin/login/?next=/s/auth/secretadmin/")
+        login_page = session.get(f"{config.app.app_url}/s/auth/secretadmin/login/?next=/s/auth/secretadmin/")
         soup = BeautifulSoup(login_page.text, "html.parser")
         csrf_token = soup.find("input", {"name": "csrfmiddlewaretoken"}).get("value")
 
         # 2. Подготавливаем headers
         headers = {
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...",
-            "Referer": f"{Links.HOST}/s/auth/secretadmin/login/?next=/s/auth/secretadmin/",
+            "Referer": f"{config.app.app_url}/s/auth/secretadmin/login/?next=/s/auth/secretadmin/",
             "Content-Type": "application/x-www-form-urlencoded",
-            "Origin": Links.HOST,
+            "Origin": config.app.app_url,
         }
 
         # 3. Подготавливаем тело POST-запроса
@@ -48,7 +48,7 @@ class AdminAPI:
 
         # 4. Авторизация
         login_response = session.post(
-            f"{Links.HOST}/s/auth/secretadmin/login/?next=/s/auth/secretadmin/",
+            f"{config.app.app_url}/s/auth/secretadmin/login/?next=/s/auth/secretadmin/",
             data=data,
             headers=headers
         )
@@ -56,7 +56,7 @@ class AdminAPI:
         self.log.info(f"POST статус авторизации auth: {login_response.status_code}")
 
         # # 5. Доступ к защищенной странице
-        protected = session.get(f"{Links.HOST}/s/auth/secretadmin/")
+        protected = session.get(f"{config.app.app_url}/s/auth/secretadmin/")
         self.log.info(f"Protected статус: {protected.status_code}")
         return session
 
@@ -67,8 +67,8 @@ class AdminAPI:
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) "
                               "Chrome/138.0.0.0 Safari/537.36",
                 "Accept": "application/json, text/plain, */*",
-                "Referer": f"{Links.HOST}/ru/s/auth/login/",
-                "Origin": Links.HOST,
+                "Referer": f"{config.app.app_url}/ru/s/auth/login/",
+                "Origin": config.app.app_url,
                 "Content-Type": "application/json"
             }
 
@@ -78,7 +78,7 @@ class AdminAPI:
             }
 
             # Авторизация Techhub
-            login_url = f"{Links.HOST}/s/auth/api/v1/auth/email/"
+            login_url = f"{config.app.app_url}/s/auth/api/v1/auth/email/"
             login_response = session.post(login_url, json=login_payload, headers=login_headers)
 
             self.log.info(f"Admin: Статус авторизации:{login_response.status_code}")
@@ -166,7 +166,7 @@ class AdminAPI:
         """
         try:
             session = self.auth_session
-            request = session.get(f"{Links.HOST}/s/auth/secretadmin/core/activation/{uuid}/change/")
+            request = session.get(f"{config.app.app_url}/s/auth/secretadmin/core/activation/{uuid}/change/")
             soup = BeautifulSoup(request.text, "html.parser")
             status_code = request.status_code
             assert status_code == 200, 'AdminAPI: Страница получения кода не загрузилась'
@@ -179,8 +179,8 @@ class AdminAPI:
 
     def delete_user_by_id(self, user_id, service='auth', counts=0):
         try:
-            delete_url = (f'{Links.HOST}/s/auth/secretadmin/core/user/{user_id}/delete/'
-                          if service == 'auth' else f'{Links.HOST}/secretadmin/account/user/{user_id}/delete/')
+            delete_url = (f'{config.app.app_url}/s/auth/secretadmin/core/user/{user_id}/delete/'
+                          if service == 'auth' else f'{config.app.app_url}/secretadmin/account/user/{user_id}/delete/')
             session = self.auth_session if service == 'auth' else self.session
             response = session.get(delete_url)
 
@@ -191,7 +191,7 @@ class AdminAPI:
             headers = {
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...",
                 "Referer": delete_url,
-                "Origin": Links.HOST,
+                "Origin": config.app.app_url,
                 "Content-Type": "application/x-www-form-urlencoded"
             }
 
@@ -237,12 +237,12 @@ class AdminAPI:
             case _:
                 raise ValueError(f"Неизвестный тип поиска: {change_mode}")
 
-        url_old = f'{Links.HOST}/s/auth/secretadmin/core/user/{reserved_user_id}/change/'  # Старый юзер
-        url_new = f'{Links.HOST}/s/auth/secretadmin/core/user/{user_id}/change/'           # Новый юзер
+        url_old = f'{config.app.app_url}/s/auth/secretadmin/core/user/{reserved_user_id}/change/'  # Старый юзер
+        url_new = f'{config.app.app_url}/s/auth/secretadmin/core/user/{user_id}/change/'           # Новый юзер
 
-        sync_url_old = (f'{Links.HOST}/s/auth/secretadmin/core/user/{reserved_user_id}/actions'
+        sync_url_old = (f'{config.app.app_url}/s/auth/secretadmin/core/user/{reserved_user_id}/actions'
                         f'/sync_service_providers_action/')
-        sync_url_new = (f'{Links.HOST}/s/auth/secretadmin/core/user/{user_id}/actions'
+        sync_url_new = (f'{config.app.app_url}/s/auth/secretadmin/core/user/{user_id}/actions'
                         f'/sync_service_providers_action/')
 
         self.log.info("Started")
@@ -333,7 +333,7 @@ class AdminAPI:
         """
         try:
             session = self.auth_session
-            response = session.get(f'{Links.HOST}/secretadmin/account/user/?q={value}')
+            response = session.get(f'{config.app.app_url}/secretadmin/account/user/?q={value}')
             soup = BeautifulSoup(response.text, "html.parser")
             try:
                 user_id = soup.find('th', class_='field-id')
@@ -346,7 +346,7 @@ class AdminAPI:
 
     def delete_service_by_id(self, request_id):
         try:
-            delete_url = f'{Links.HOST}/s/services/secretadmin/service/servicerequest/{request_id}/delete/'
+            delete_url = f'{config.app.app_url}/s/services/secretadmin/service/servicerequest/{request_id}/delete/'
             session = self.session
 
             response = session.get(delete_url)
@@ -357,7 +357,7 @@ class AdminAPI:
             headers = {
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...",
                 "Referer": delete_url,
-                "Origin": Links.HOST,
+                "Origin": config.app.app_url,
                 "Content-Type": "application/x-www-form-urlencoded"
             }
 
@@ -375,7 +375,7 @@ class AdminAPI:
 
     def company_update(self, company_id, data: dict[str, Any]):
         session = self.session
-        request = session.get(f"{Links.HOST}/secretadmin/account/company/{company_id}/change/")
+        request = session.get(f"{config.app.app_url}/secretadmin/account/company/{company_id}/change/")
         soup = BeautifulSoup(request.text, 'html.parser')
         original_payload = self.__get_company_payload(soup)
 
@@ -453,3 +453,11 @@ if __name__ == '__main__':
 # accreditation_deputy_chairman	    zam_pred@acred.kz	    60070
 # accreditation_executor	        otv_ispolnitel@acred.kz	60072
 # accreditation_chairman	        predsedatel@acred.hub	60093
+# 1. Председатель комитета назначает на Рук. упр.
+# 2. Рук. упр. назначает ответсвенного исполнителя
+# 3. Отв. исполнитель формирует акт экспертизы на выдачу
+# 4. Рук. упр. подписывает акт
+# 5. Отв. исполнитель формирует приказ о переоформлении и подписывает
+# 6. Рук. упр. подписывает приказ
+# 7. Зам. пред. подписывает приказ
+# 8. Председатель подписывает приказ

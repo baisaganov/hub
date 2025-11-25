@@ -1,2 +1,2 @@
-config_path = 'config/CONFIG'
-upload_document = 'data/uploads/silabus.pdf'
+config_path = 'config/CONFIG_old'
+upload_document = 'testdata/files/test_pdf.pdf'

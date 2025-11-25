@@ -1,9 +1,9 @@
-from base.base_page import BasePage
-from config.links import Links
+from pages.base import BasePage
+# from config.links import Links
 
 
 class BusinessPlanPage(BasePage):
-    link = Links.BP
+    # link = Links.BP
 
     def __init__(self, page):
         super().__init__(page)
@@ -19,7 +19,7 @@ class BusinessPlanPage(BasePage):
 
 
     def navigate(self):
-        self.page.goto(self.link)
+        self.page.goto('pass')
 
 
 

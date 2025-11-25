@@ -1,8 +1,8 @@
 from playwright.sync_api import Page
 
 from commons.types import AccreditationType
-from base.base_page import BasePage
-from config.links import Links
+from pages.base import BasePage
+# from config.links import Links
 from config.settings import upload_document
 
 
@@ -45,13 +45,17 @@ class AccreditationPage(BasePage):
     def __get_service_link(service_type: AccreditationType):
         match service_type:
             case service_type.RENEWAL_FL:
-                return Links.ACCREDITATION_RENEWAL_FL
+                pass
+                # return Links.ACCREDITATION_RENEWAL_FL
             case service_type.RENEWAL_UL:
-                return Links.ACCREDITATION_RENEWAL_UL
+                pass
+                # return Links.ACCREDITATION_RENEWAL_UL
             case service_type.DUBLICATE_FL:
-                return Links.ACCREDITATION_DUBLICATE_FL
+                pass
+                # return Links.ACCREDITATION_DUBLICATE_FL
             case service_type.DUBLICATE_UL:
-                return Links.ACCREDITATION_DUBLICATE_UL
+                pass
+                # return Links.ACCREDITATION_DUBLICATE_UL
             case _:
                 return None
 

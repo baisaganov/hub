@@ -1,11 +1,19 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Cache
+__pycache__/
+*.pyc
+.pytest_cache/
+.tests/.pytest_cache
+
+# Others
 venv
 .idea
-.pytest_cache
-.tests/.pytest_cache
-__pychache__
-.env
 *.iml
 report
 allure-results
-__pycache__
 logs_hub.log
+trash

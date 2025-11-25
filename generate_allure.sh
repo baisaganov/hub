@@ -5,8 +5,8 @@ rm -rf allure-results
 mkdir -p allure-results
 
 # Запуск нужных тестов
-#pytest --alluredir=allure-results tests/test_arm.py::TestArm::test_positive_accreditation
-#pytest --alluredir=allure-results tests/test_registration.py::TestRegistration::test_valid_reg_email
+#pytest --alluredir=allure-results tests/ui/test_events.py::TestEvents::test_event_save_single_scope
+#pytest --alluredir=allure-results tests/old_registration.py::TestRegistration::test_valid_reg_email
 pytest --alluredir=allure-results --tracing=on
 
 # Копируем историю отчета (если есть)

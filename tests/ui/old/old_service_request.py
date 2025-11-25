@@ -64,10 +64,10 @@ class TestServiceRequest:
                 cert_number=self.config['service_requests']['accreditation_fl_cert_number'])
 
         with allure.step('Сохранение заявки'):
-            accreditation_page.save_and_submit_form(accred_type, FormButton.SAVE)
+            accreditation_page.action_buttons(accred_type, FormButton.SAVE)
 
         with allure.step('Подписание заявки'):
-            request_id = accreditation_page.save_and_submit_form(accred_type, FormButton.ECP_SUBMIT)
+            request_id = accreditation_page.action_buttons(accred_type, FormButton.ECP_SUBMIT)
 
         with allure.step('Сохранение ID заявки в конфиг'):
             save = accreditation_page.save_service_id(service_name=accred_type.value + "_id",
@@ -127,10 +127,10 @@ class TestServiceRequest:
                                                        self.config['service_requests']['accreditation_ul_cert_number'])
 
         with allure.step('Сохранение заявки'):
-            accreditation_page.save_and_submit_form(accred_type, FormButton.SAVE)
+            accreditation_page.action_buttons(accred_type, FormButton.SAVE)
 
         with allure.step('Подписание заявки'):
-            request_id = accreditation_page.save_and_submit_form(accred_type, FormButton.ECP_SUBMIT)
+            request_id = accreditation_page.action_buttons(accred_type, FormButton.ECP_SUBMIT)
 
         with allure.step('Сохранение ID заявки в конфиг'):
             save = accreditation_page.save_service_id(service_name=accred_type.value + "_id",
@@ -181,10 +181,10 @@ class TestServiceRequest:
             accreditation_page.fill_service_dublicate_fl(cert_number=cert_number, iin=iin)
 
         with allure.step('Сохранение заявки'):
-            accreditation_page.save_and_submit_form(accred_type, FormButton.SAVE)
+            accreditation_page.action_buttons(accred_type, FormButton.SAVE)
 
         with allure.step('Подписание заявки'):
-            request_id = accreditation_page.save_and_submit_form(accred_type, FormButton.ECP_SUBMIT)
+            request_id = accreditation_page.action_buttons(accred_type, FormButton.ECP_SUBMIT)
 
         with allure.step('Сохранение ID заявки в конфиг'):
             save = accreditation_page.save_service_id(service_name=accred_type.value + "_id",

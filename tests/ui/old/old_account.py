@@ -10,7 +10,7 @@ from commons.types import AdminFuncTypes, AdminAccountChangeType
 @allure.suite("Account")
 class TestAccount:
     config = configparser.ConfigParser()
-    config.read('CONFIG')
+    config.read('CONFIG_old')
     load_dotenv(find_dotenv())
     USERNAME = getenv("AUTH_LOGIN")
     PASSWORD = getenv("AUTH_PASSWORD")

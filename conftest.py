@@ -1,125 +1,130 @@
-import os
+"""
+Root conftest.py
+Fixtures здесь доступны для ВСЕ тестов в проекте.
+"""
 
 import pytest
 from playwright.sync_api import sync_playwright
-import logging
+from pathlib import Path
 
-from base.arm_base_page import ArmBasePage
-from pages.account_page import AccountPage
-from pages.accreditation_page import AccreditationPage
-from pages.arm.arm_accreditation_page import ArmAccreditationPage
-
-from pages.auth_page import AuthPage
-from pages.business_plan_page import BusinessPlanPage
-from services.admin_api import AdminAPI
-
+from config import config
+from utils.logger import Logger
 import allure
+import os
 
-# import yaml
+
+logger = Logger().get_logger(__name__)
+
+TRACES_DIR = Path("traces")
+SCREENSHOTS_DIR = Path("screenshots")
+LOGS_DIR = Path("logs")
+
+TRACES_DIR.mkdir(exist_ok=True)
+SCREENSHOTS_DIR.mkdir(exist_ok=True)
+LOGS_DIR.mkdir(exist_ok=True)
+
+
+@pytest.fixture(scope="session")
+def browser_type_launch_args():
+    """Аргументы браузера, берутся из конфига"""
+    return {
+        "headless": config.browser.headless,
+        "slow_mo": config.browser.slow_mo,
+    }
+
+
+@pytest.fixture(scope="session")
+def playwright():
+    """Session-scoped"""
+    with sync_playwright() as p:
+        yield p
+
+
+@pytest.fixture(scope="session")
+def browser(playwright, browser_type_launch_args):
+    """Если session один экземпляр браузера на все тесты, если function то каждый раз новый"""
+    logger.info(f"Launching {config.browser.browser_type} browser")
+    browser_type = getattr(playwright, config.browser.browser_type)
+    browser = browser_type.launch(**browser_type_launch_args)
+
+    yield browser
+    browser.close()
 
 
 @pytest.fixture(scope="function")
-def page(request):
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+def context(browser):
+    """Function-scoped - новый контекст на каждый тест"""
+    context = browser.new_context()
+    context.set_default_timeout(config.browser.timeout)
+    yield context
+    context.close()
 
-    # Очистим старые хендлеры, чтобы не было дублирования
-    if logger.hasHandlers():
-        logger.handlers.clear()
 
-    file_handler = logging.FileHandler("logs_hub.log", mode='a')
-    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
+@pytest.fixture(scope="function")
+def page(request, context):
+    print(f"Config loaded: {config.print_config()}")
+    """Function-scoped - новая страница на каждый тест"""
+    test_name = request.node.name
+    logger.info(f"Starting test: {test_name}")
 
-    # Можно добавить вывод в консоль
-    console = logging.StreamHandler()
-    console.setFormatter(formatter)
-    logger.addHandler(console)
+    trace_path = TRACES_DIR / f"{test_name}_trace.zip"
+    context.tracing.start(screenshots=True, snapshots=True, sources=True)
 
-    width = 1920
-    height = 1080
+    page = context.new_page()
+    yield page
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True, slow_mo=0, args=[f'--window-size={width},{height}'])
-        context = browser.new_context(viewport={'width': width, 'height': height})
+    test_failed = (
+        hasattr(request.node, 'rep_call') and
+        request.node.rep_call.failed
+    )
 
-        test_name = request.node.name
-        trace_path = f"traces/{test_name}_trace.zip"
-        os.makedirs("traces", exist_ok=True)
-        context.tracing.start(screenshots=True, snapshots=True, sources=True)
+    context.tracing.stop(path=str(trace_path))
 
-        # context.set_default_timeout(15000)
-        page = context.new_page()
 
-        yield page
+    # Если тест упал прикрепляем скриншот + HTML
+    if test_failed:
+        logger.error(f"❌ TEST FAILED: {test_name}")
 
-        context.tracing.stop(path=trace_path)
+        # Скриншот
+        screenshot_path = SCREENSHOTS_DIR / f"{test_name}_failure.png"
+        screenshot_bytes = page.screenshot(path=str(screenshot_path))
 
-        # Прикрепляем trace к Allure отчету
+        allure.attach(
+            screenshot_bytes,
+            name="Screenshot on failure",
+            attachment_type=allure.attachment_type.PNG
+        )
+        logger.info(f"Screenshot saved: {screenshot_path}")
+
         if os.path.exists(trace_path):
             allure.attach.file(
                 trace_path,
                 name=f"Playwright Trace: {test_name}",
                 attachment_type="application/zip"
             )
+            logger.info(f"Trace saved: {trace_path}")
 
-        if request.node.rep_call.failed if hasattr(request.node, 'rep_call') else False:
-            screenshot = page.screenshot()
-            allure.attach(
-                screenshot,
-                name="Screenshot on failure",
-                attachment_type=allure.attachment_type.PNG
-            )
-
-        context.close()
-        browser.close()
+        else:
+            logger.warning(f"Trace file not found: {trace_path}")
+    else:
+        logger.info(f"✅ TEST PASSED: {test_name}")
+    page.close()
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
+    """Общий hook для всех тестов"""
     outcome = yield
     rep = outcome.get_result()
     setattr(item, f"rep_{rep.when}", rep)
 
-@pytest.fixture
-def auth_page(page):
-    return AuthPage(page)
+
+def pytest_sessionstart(session):
+    """Вызывается в начале сессии"""
+    logger.info("PYTEST SESSION START")
+    # config.print_config()
 
 
-@pytest.fixture
-def admin():
-    return AdminAPI()
-
-
-@pytest.fixture
-def account_page(page):
-    return AccountPage(page)
-
-
-@pytest.fixture
-def accreditation_page(page):
-    return AccreditationPage(page)
-
-
-@pytest.fixture
-def arm_base_page(page):
-    return ArmBasePage(page)
-
-
-@pytest.fixture
-def business_plan_page(page):
-    return BusinessPlanPage(page)
-
-
-
-# def pytest_collection_modifyitems(items):
-#     with open("./tests/order.yaml") as f:
-#         order_map = yaml.safe_load(f)["order"]
-#
-#     file_order = {name: i for i, name in enumerate(order_map)}
-#
-#     items.sort(key=lambda item: (
-#         file_order.get(os.path.basename(item.location[0]), 999),
-#         item.name
-#     ))
+def pytest_sessionfinish(session, exitstatus):
+    """Вызывается в конце сессии"""
+    logger.info(f"PYTEST SESSION END - Exit status: {exitstatus}")
