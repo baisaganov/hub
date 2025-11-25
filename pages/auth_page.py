@@ -344,4 +344,9 @@ class AuthPage(BasePage):
         assert response.value.status == 200, 'AuthPage: Ошибка при авторизации (этап пароль)'
 
         self.page.wait_for_url(f"{config.app.app_url}/account/v2/main/")
+
+        self.page.wait_for_load_state("domcontentloaded")
+        self.page.wait_for_load_state("load")
+        self.page.wait_for_load_state("networkidle")
+
         self.page.keyboard.press('Escape')
