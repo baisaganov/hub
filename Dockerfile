@@ -1,13 +1,27 @@
-FROM python:3.12.0a4-alpine3.17
+FROM python:3.12-slim
+
 WORKDIR /usr/workspace
 
-#Install playwright
-RUN pip install playwright==@1.50.0 && \
-    playwright install --with-deps
+# Установи зависимости для Allure (Java) и других инструментов
+RUN apt-get update && \
+    apt-get install -y default-jre allure && \
+    rm -rf /var/lib/apt/lists/*
 
+# Копируй requirements ДО других команд (для лучшего кэширования)
+COPY requirements.txt .
 
-# Install reqs
-RUN pip3 install -r requirements.txt
+# Установи Python зависимости
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
+
+# Установи Playwright браузеры
+RUN playwright install --with-deps chromium
+
+# Копируй весь код
+COPY . .
+
+CMD ["pytest", "-sv", "--alluredir=allure-results"]
+
 
 
 
