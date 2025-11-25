@@ -23,6 +23,16 @@ jobs:
           docker compose up --exit-code-from tests || true
 
       - name: Generate Allure Report
+        env:
+          BROWSER: ${{ secrets.BROWSER }}
+          HEADLESS: ${{ secrets.HEADLESS }}
+          NAVIGATION_TIMEOUT: ${{ secrets.NAVIGATION_TIMEOUT }}
+          SCREENSHOT: ${{ secrets.SCREENSHOT }}
+          SLOW_MO: ${{ secrets.SLOW_MO }}
+          TIMEOUT: ${{ secrets.TIMEOUT }}
+          TRACE: ${{ secrets.TRACE }}
+          VIEWPORT_HEIGHT: ${{ secrets.VIEWPORT_HEIGHT }}
+          VIEWPORT_WIDTH: ${{ secrets.VIEWPORT_WIDTH }}
         run: |
           npm install -g allure-commandline
           docker compose run tests allure generate allure-results --clean -o allure-report
