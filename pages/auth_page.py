@@ -326,6 +326,7 @@ class AuthPage(BasePage):
         :return:
         """
         self.navigate()
+
         self.input_email_or_phone(email)
 
         response = self.click_auth_email_continue_btn()
