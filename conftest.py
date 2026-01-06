@@ -12,7 +12,6 @@ from utils.logger import Logger
 import allure
 import os
 
-
 logger = Logger().get_logger(__name__)
 
 TRACES_DIR = Path("traces")
@@ -54,8 +53,16 @@ def browser(playwright, browser_type_launch_args):
 @pytest.fixture(scope="function")
 def context(browser):
     """Function-scoped - новый контекст на каждый тест"""
-    context = browser.new_context()
+    FAKE_UA = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/120.0.0.0 Safari/537.36"
+    )
+    context = browser.new_context(user_agent=FAKE_UA)
     context.set_default_timeout(config.browser.timeout)
+    context.add_init_script("""
+        Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+    """)
     yield context
     context.close()
 
@@ -63,7 +70,7 @@ def context(browser):
 @pytest.fixture(scope="function")
 def page(request, context):
     print(f"Config loaded: {config.print_config()}")
-    """Function-scoped - новая страница на каждый тест"""
+    """Function-scoped - новый контекст на каждый тест"""
     test_name = request.node.name
     logger.info(f"Starting test: {test_name}")
 
@@ -80,8 +87,6 @@ def page(request, context):
 
     context.tracing.stop(path=str(trace_path))
 
-
-    # Если тест упал прикрепляем скриншот + HTML
     if test_failed:
         logger.error(f"❌ TEST FAILED: {test_name}")
 
@@ -108,7 +113,9 @@ def page(request, context):
             logger.warning(f"Trace file not found: {trace_path}")
     else:
         logger.info(f"✅ TEST PASSED: {test_name}")
-    page.close()
+
+    context.close()
+    # page.close()
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)

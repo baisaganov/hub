@@ -1,5 +1,5 @@
 import re
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Page, expect, Locator
 import logging as log
 import configparser
 from enum import Enum
@@ -8,21 +8,43 @@ from commons.types import FormButton
 from config.settings import config_path
 from typing import Literal
 from config import config
-
+import json
+from pathlib import Path
 
 class BasePage:
     logging = log.getLogger(__name__)  # Подхватываем логгер
     config = configparser.ConfigParser()
     config.read(config_path)
+    COOKIES_PATH = Path("cookies.json")
 
     def __init__(self, page: Page):
         self.page = page
-        self.save_btn = page.locator('#saveForm[type=submit]')
-        self.ecp_submit_btn = page.locator('#sendEcp')
-        self.next_btn = page.locator('#nextStep > div.btn')
-        self.previous_btn = page.locator('#prevStep > div.btn')
+        self.SAVE_BTN = page.locator('#saveForm[type=submit]')
+        self.SUBMIT_ECP_BTN = page.locator('#sendEcp')
+        self.NEXT_BTN = page.locator('#nextStep > div.btn')
 
     #  ============== Готовые функции ==============
+    def save_cookies(self):
+        """
+        Сохранение куки
+        :return:
+        """
+        self.COOKIES_PATH.write_text(json.dumps(self.page.context.cookies()))
+
+    def load_cookies(self):
+        """
+        Загрузка куки в браузер
+        :return:
+        """
+        if self.COOKIES_PATH.exists():
+            self.page.context.add_cookies(json.loads(self.COOKIES_PATH.read_text()))
+        else:
+            self.logging.error("Cookies not found")
+
+    def check_input_text_correct(self, locator: str, text: str) -> str:
+        result = self.page.evaluate(f'document.querySelector("{locator}").value')
+        return result
+
     def action_buttons(self, button_id: Literal[
         'event-save',
         'submit-create-event'
@@ -110,4 +132,3 @@ class BasePage:
             return self.error_info(status=400,
                                    msg=f'ID заявки {service_id} не удалось сохранить',
                                    exception=e)
-

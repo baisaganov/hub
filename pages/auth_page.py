@@ -20,22 +20,38 @@ class AuthPage(BasePage):
         #  Логин
         self.LOGIN_STEP = page.locator("div[x-show=\"step === 'login'\"]")
         self.LOGIN = self.LOGIN_STEP.locator("input[name=value]")
-        self.EMAIL_AUTH_BTN = self.LOGIN_STEP.locator("button[type='submit']")
+        self.EMAIL_AUTH_BTN = self.LOGIN_STEP.locator("button[type=submit]")
+        self.JOIN_SPAN = self.LOGIN_STEP.locator("span.underline")
 
         #  Пароль
         self.PASSWORD_STEP = page.locator("div[x-show=\"step === 'password'\"]")
         self.PASSWORD = self.PASSWORD_STEP.locator("input[name=password]")
-        self.PASSWORD_AUTH_BTN = self.PASSWORD_STEP.locator("button[type='submit']")
+        self.PASSWORD_AUTH_BTN = self.PASSWORD_STEP.locator("button[type=submit]")
+
+        # ============================ Политика конфиденциальности ============================
+        self.PRIVACY_POLICY_STEP = page.locator("div[x-show=\"step === 'privacy_policy'\"]")
+        self.PRIVACY_CHECKBOX = self.PRIVACY_POLICY_STEP.locator("input[type=checkbox]")
+        self.PRIVACY_CONTINUE_BTN = self.PRIVACY_POLICY_STEP.locator("button")
+        self.PRIVACY_READ = self.PRIVACY_POLICY_STEP.locator("div[x-show=showPrivacyRead]")
+        self.PRIVACY_SCROLL = self.PRIVACY_POLICY_STEP.locator("div.overflow-auto")
 
         # ============================ Регистрация ============================
-        self.username_signup_field = page.locator("//html/body/div[2]/div[10]/div[1]/form/div/input")
+        self.SIGNUP_STEP = page.locator("div[x-show=\"step === 'signup'\"]")
+        self.SIGNUP_EMAIL_INPUT = self.SIGNUP_STEP.locator("input")
+        self.SIGNUP_SUBMIT = self.SIGNUP_STEP.locator("button[type=submit]")
+        self.SIGNUP_ACTIVATION_EMAIL_STEP = page.locator("div[x-show=\"step === 'confirm_email_register'\"]")
+        self.SIGNUP_ACTIVATION_EMAIL_CODE_INPUT = self.SIGNUP_ACTIVATION_EMAIL_STEP.locator("input[name=code]")
+        self.SIGNUP_ACTIVATION_EMAIL_SUBMIT = self.SIGNUP_ACTIVATION_EMAIL_STEP.locator("button[type=submit]")
+        self.SIGNUP_PASSWORD_STEP = page.locator("form[data_tag=set_password]")
+        self.SIGNUP_PASSWORD_INPUT = self.SIGNUP_PASSWORD_STEP.locator("input")
+        self.SIGNUP_PASSWORD_SUBMIT = self.SIGNUP_PASSWORD_STEP.locator("button[type=submit]")
+        self.SIGNUP_USER_INFO_STEP = page.locator("form[data_tag=set_names]")
+        self.SIGNUP_USER_INFO_NAME = self.SIGNUP_USER_INFO_STEP.locator("input[name=first_name]")
+        self.SIGNUP_USER_INFO_SURNAME = self.SIGNUP_USER_INFO_STEP.locator("input[name=last_name]")
+        self.SIGNUP_USER_INFO_SUBMIT = self.SIGNUP_USER_INFO_STEP.locator("button[type=submit]")
 
         # ============================ К исправлению ============================
 
-        self.otp_code_field = page.locator("div[x-show=\"step === 'confirm_email_register'\"] "
-                                           "form[data_tag='submitOTP'] input")
-        self.new_password_field_1 = page.locator('form[data_tag="set_password"] input[name="new_password"]')
-        self.new_password_field_2 = page.locator('form[data_tag="set_password"] input[name="confirm_password"]')
         self.continue_reg_password_btn = page.locator('form[data_tag=set_password] button[type=submit]')
         self.name_field = page.locator("input[name='first_name']")
         self.surname_field = page.locator("input[name='last_name']")
@@ -43,7 +59,6 @@ class AuthPage(BasePage):
 
         # self.auth_password_continue_btn = page.locator("div[x-show=\"step === 'password'\"] button[type='submit']")
         self.continue_btn_signup = page.locator("form[data_tag='start_registration'] > button")
-        self.join_btn = page.locator("div[x-show=\"step === 'login'\"] span.underline")
         self.send_code_btn = page.locator("div[x-show=\"step === 'confirm_email_register'\"] button")
         self.resend_code_btn = page.locator("div[x-show=\"step === 'confirm_email_register'\"] "
                                             "form > div > div > span.cursor-pointer")
@@ -67,26 +82,20 @@ class AuthPage(BasePage):
 
     # ============================ Сингл таск функции ============================
     def navigate(self):
-        with self.page.expect_response(f'{config.app.app_url}/ru/s/auth/login/') as resp:
-            self.page.goto(f'{config.app.app_url}/ru/s/auth/login/')
+        with self.page.expect_response(f'**/ru/s/auth/login/') as resp:
+            self.page.goto(f'**/ru/s/auth/login/')
 
-        assert resp.value.status == 200, 'AuthPage: Страница не доступна'  # self.error_info(status=resp.value.status,
-        #  msg="AuthPage: Страница не доступна")
+        assert resp.value.status == 200, f'AuthPage: Страница не доступна {resp.value.status}'
 
     def click_auth_password_continue_btn(self):
         """
         Клик на продолжить при вводе пароля Авторизация
         :return:
         """
-        try:
-            with self.page.expect_response(f"{config.app.app_url}/s/auth/api/v1/auth/email/") as response_info:
-                self.PASSWORD_AUTH_BTN.click()
+        with self.page.expect_response(f'**/s/auth/api/v1/auth/email/') as response_info:
+            self.PASSWORD_AUTH_BTN.click()
 
-            assert response_info.value.status == 200, (
-                self.error_info(msg=f"LoginModal: Continue btn 2 clicked error", status=response_info.value.status))
-
-        except Exception as e:
-            assert 1 == 0, self.error_info(msg='Continue btn 2 error exception', status=400, exception=e)
+        assert response_info.value.status == 200, f"AuthPage: Continue btn 2 clicked error"
 
     def input_email_or_phone(self, value):
         """
@@ -97,224 +106,145 @@ class AuthPage(BasePage):
         input_field = self.LOGIN
         input_field.fill(value)
 
+    def click_auth_email_continue_btn(self, is_auth: bool = True):
+        """
+        Клик по кнопке продолжить при вводе почты в шаге Авторизация
+        :param is_auth: Bool: default True = шаг авторизация; False = шаг регистрация
+        """
+        with self.page.expect_response(f'**/s/auth/api/v1/auth/check/') as response_info:
+            self.EMAIL_AUTH_BTN.click()
+
+        assert response_info is not None, "AuthPage: Пустой ответ при заполнении почты"
+        assert response_info.value.status == 200, "AuthPage: Ошибка при клике продолжить"
+
+        if is_auth:
+            assert response_info.value.json()['user_exists'] is True, ("AuthPage: Ошибка при авторизации, "
+                                                                       "Юзер отсутвует")
+        else:
+            assert response_info.value.json()['user_exists'] is False, ("AuthPage: Ошибка при авторизации, "
+                                                                        "Юзер существует")
+
+    def click_reg_continue_btn(self, is_auth_step: bool = True):
+        with self.page.expect_response(f'**/s/auth/api/v1/auth/check/') as resp:
+            if is_auth_step:
+                self.EMAIL_AUTH_BTN.click()
+            else:
+                self.SIGNUP_SUBMIT.click()
+
+        assert resp is not None, "AuthPage: Пустой ответ при заполнении почты"
+        assert resp.value.status == 200, "AuthPage: Ошибка при клике продолжить"
+
     def input_password(self, password):
         """
         Ввод пароля при авторизации
-        :param password:
-        :return:
+        :param password: Пароль
         """
         input_field = self.PASSWORD
         input_field.fill(password)
 
-    #  ===================== Старые функции требующие рефакторинга =====================
-
-    def click_auth_email_continue_btn(self):
-        """
-        Клик по кнопке продолжить при вводе почты Авторизация
-        :return:
-        """
-        try:
-            with self.page.expect_response(f"{config.app.app_url}/s/auth/api/v1/auth/check/") as response_info:
-                self.EMAIL_AUTH_BTN.click()
-                # self.log.debug(f"Клик по кнопке продолжить при вводе почты Авторизация")
-            assert response_info.value.status == 200, (
-                self.error_info(msg=f"LoginModal: Continue btn clicked error", status=response_info.value.status))
-            return response_info
-        except Exception as e:
-            assert 1 == 0, self.error_info(msg='Continue btn error exception', status=400, exception=e)
-
-    def click_reg_join_btn(self):
+    def click_registration_span(self):
         """
         Нажатие на кнопку "Присоединиться к Astanahub..."
-        :return:
         """
         try:
-            self.join_btn.click()
+            self.JOIN_SPAN.click()
         except Exception as e:
-            assert 1 == 0, self.error_info(msg=f"Нажатие на кнопку \"Присоединиться к Astanahub...\"",
-                                           exception=e,
-                                           status=400)
+            assert 1 == 0, f"AuthPage: Ошибка при нажатии на кнопку \"Присоединиться к Astanahub...\" \n {e}"
 
-    def check_inputed_email(self):
+    def toggle_privacy_checkbox(self, always_checked: bool = True):
         """
-        Проверка введенной почты при регистарции
+        Отмечает чекбокс в политике конфиденциальности
+        :param always_checked: если True то чек бокс всегда отмечен, если False отмечает/снимает отметку
+        """
+        if not self.PRIVACY_CHECKBOX.is_checked() and always_checked:
+            self.PRIVACY_CHECKBOX.check()
+
+        if not always_checked:
+            self.PRIVACY_CHECKBOX.check()
+
+    def privacy_continue_btn_click(self, need_scroll: bool = True):
+        """
+        Метод отмечает чекбокс если не отмечен, делает скролл соглашения если необоходимо и нажимает на продолжить
+        Проверки на та что, если скролл не делается, выходит ли уведомление, если скролл сделан не выходит ли или
+        скрывается ли уведомление, а также при нажатии на продолжить, успешно ли выполняется запрос
+
+        :param need_scroll: если True то нужен скролл соглашения, в противном случаем клик по кнопке продолжить
         :return:
         """
-        try:
-            # if self.continue_btn_signup.is_enabled()
-            with self.page.expect_response(
-                    f'{config.app.app_url}/s/auth/api/v1/auth/email_registration/') as response:
-                self.continue_btn_signup.click()
 
-            assert response.value.status == 200, self.error_info(msg=f"Ошибка проверки почты, токен не получен",
-                                                                 status=response.value.status)
-            return response
-        except Exception as e:
-            assert 1 == 0, self.error_info(msg='Ошибка при нажатии Продолжить при регистрации (проверка почты)',
-                                           status=400,
-                                           exception=e)
+        self.toggle_privacy_checkbox()
 
-    def input_registration_code(self, code):
+        if need_scroll:
+            self.PRIVACY_SCROLL.evaluate('el => el.scrollTop = el.scrollHeight')
+            assert self.PRIVACY_READ.is_hidden(), ('AuthPage: Вышло уведомление, что необходимо прочесть политику '
+                                                   'конфиденциальности')
+            with self.page.expect_response(f'**/s/auth/api/v1/auth/privacy_policy_accept/') as resp:
+                self.PRIVACY_CONTINUE_BTN.click()
+
+            assert resp.value.status == 200, f'AuthPage: Политика конф-ти вернула {resp.value.status}'
+
+        else:
+            self.PRIVACY_CONTINUE_BTN.click()
+            assert self.PRIVACY_READ.is_visible(), (f'AuthPage: Не вышло уведомление, о необходимости прочесть '
+                                                    f'политику конфиденциальности')
+
+    def check_email_input_text(self, text):
+        """
+        Проверка что в инпуте введен верный текст
+        :param text: Ожидаемый текст
+        """
+        self.page.set_default_timeout(90000)
+
+        result = self.check_input_text_correct('form[data_tag=start_registration] input', text)
+        assert result == text, 'AuthPage: Подтянулась неверная почта'
+
+        self.page.set_default_timeout(30000)
+
+    def input_registration_code(self, code='111111'):
         """
         Ввод кода с почты при регистрации
         :param code:
-        :return:
         """
-        try:
-            self.otp_code_field.fill(code)
+        self.SIGNUP_ACTIVATION_EMAIL_CODE_INPUT.fill(code)
 
-            with self.page.expect_response(
-                    f'{config.app.app_url}/s/auth/api/v1/auth/activation_confirm/') as response:
-                self.send_code_btn.click()
-                # self.log.debug('Registration: Input code send')
+        with self.page.expect_response(
+                f'**/s/auth/api/v1/auth/activation_confirm/') as response:
+            self.SIGNUP_ACTIVATION_EMAIL_SUBMIT.click()
 
-            assert response.value.status == 200, 'Ошибка при отправке кода регистарции'
+        assert response.value.status == 200, (f'AuthPage: Ошибка активации почты '
+                                              f'при регистарции {response.value.status}')
 
-        except Exception as e:
-            self.error_info(status=400, msg='Registration: Input code error', exception=e)
-
-    def create_password(self, password):
+    def set_password(self, password):
         """
         Создание пароля при регистрации
-        :param password:
-        :return:
+        :param password: Пароль учетки
         """
-        try:
 
-            self.new_password_field_1.fill(password)
-            self.new_password_field_2.fill(password)
-            with self.page.expect_response(f'{config.app.app_url}/s/auth/api/v1/flow/set_password/') as response:
-                self.continue_reg_password_btn.click()
-                # self.log.debug(f'Registration: Password created')
+        for i in self.SIGNUP_PASSWORD_INPUT.all():
+            i.fill(password)
 
-            assert response.value.status == 200, self.error_info(status=response.value.status,
-                                                                 msg='AuthPage: Пароль не создан')
-        except Exception as e:
-            self.error_info(status=400, msg='Registration: Create password error', exception=e)
+        with self.page.expect_response(f'**/s/auth/api/v1/flow/set_password/') as response:
+            self.SIGNUP_PASSWORD_SUBMIT.click()
 
-    def input_user_info(self, name, surname):
+        assert response.value.status == 200, ('AuthPage: Ошибка при создании пароля '
+                                              f'{response.value.status} {response.value.json()}')
+
+    def fill_user_info(self, name, surname):
         """
         Ввод имени и фамилии при регистрации
-        :param name:
-        :param surname:
-        :return:
+        :param name: Имя юзера
+        :param surname: Фамилия юзера
         """
-        try:
-            self.name_field.fill(name)
-            self.surname_field.fill(surname)
-            with self.page.expect_response(f"{config.app.app_url}/s/auth/api/v1/flow/set_names/") as response:
-                self.continue_user_info_btn.click()
-                # self.log.debug(f'Registration: Set name completed')
+        self.SIGNUP_USER_INFO_NAME.fill(name)
+        self.SIGNUP_USER_INFO_SURNAME.fill(surname)
+        with (self.page.expect_response(f"**/s/auth/api/v1/flow/set_names/") as response,
+              self.page.expect_navigation(url=f"**/account/v2/main/**") as redirect):
+            self.SIGNUP_USER_INFO_SUBMIT.click()
 
-            assert response.value.status == 200, self.error_info(msg="AuthPage: ФИО не назначено",
-                                                                 status=response.value.status)
-
-            self.continue_user_info_btn.click()
-        except Exception as e:
-            self.error_info(status=400, msg='Registration: Set names error', exception=e)
-
-    def choose_role(self, is_role_select=False):
-        """
-
-        :param is_role_select:
-        :return:
-        """
-        try:
-            with self.page.expect_response(f"{config.app.app_url}/s/auth/api/v1/flow/set_completed/") as response:
-                if is_role_select is True:
-                    self.role_select_btn.click()
-                else:
-                    self.role_not_select_btn.click()
-
-            assert response.value.status == 200, self.error_info(status=response.value.status,
-                                                                 msg="Registration: Role choosed")
-
-        except Exception as e:
-            self.error_info(status=400,
-                            msg=f"Registration: Select role error(is_role_select={is_role_select}",
-                            exception=e)
-        finally:
-            self.page.goto(f"{config.app.app_url}/ru/")
-            user_id = self.page.locator('a.gamification-header').last.get_attribute('href').split('/')[-2]
-            # self.log.debug(user_id)
-            admin = AdminAPI()
-            admin.delete_user_by_id(user_id=user_id, service='auth')
-            try:
-                admin.delete_user_by_id(user_id=user_id, service='techhub')
-            except Exception as e:
-                pass
-
-    def auth_using_egov(self, iin, user_id):
-        """
-        Реализация авторизации с помощью ЭЦП
-        :param iin: ИИН
-        :param user_id: id юзера у которого меняем
-        :return:
-        """
-        admin = AdminAPI()
-        data = {'iin': iin}
-
-        reserved_user_id = admin.get_user_id_by_(data.get('iin'))
-
-        if reserved_user_id is None or reserved_user_id != user_id:
-            admin.change_user(change_mode=AdminAccountChangeType.IIN,
-                              data=data,
-                              user_id=user_id,
-                              functinonality=AdminFuncTypes.CHANGE)
-
-        with self.page.expect_response(f'{config.app.app_url}/s/auth/api/v1/auth/signature_xml/') as response:
-            self.ecp_auth_btn.click()
-
-        assert response.value.status == 200, self.error_info(msg=f'ЭЦП Авторизация: Клик по кнопке ЭЦП',
-                                                             status=response.value.status)
-
-        try:
-            with self.page.expect_response(f'{config.app.app_url}/s/auth/api/v1/auth/signature/') as response:
-                # SignXml().sign_xml() TODO: SignXml fix
-                pass
-
-            assert response.value.status == 200, self.error_info(msg='ЭЦП Авторизация: Авторизация не удалась',
-                                                                 status=response.value.status)
-        except playwright._impl._errors.TimeoutError as e:
-            assert None is not None, self.error_info(msg='ЭЦП Авторизация: Окно не найдено или неверные координаты',
-                                                     status=400,
-                                                     exception=e)
-
-    def set_photo_form(self):
-
-        with self.page.expect_response('') as response:
-            pass
-
-    def complete_registration(self):
-        with self.page.expect_response(f'{config.app.app_url}/account/v2/main/') as response:
-            self.success_btn.click()
-
-        assert response.value.status == 200, self.error_info(msg='Ошибка при завершении регистрации',
-                                                             status=response.value.status)
-
-    def skip_profile_photo(self):
-        with self.page.expect_response(f'https://{config.app.app_url}/s/auth/api/v1/flow/set_photo/') as response:
-            self.profile_photo_skip.click()
-
-        assert response.value.status == 200, self.error_info(msg='Ошибка пропуска шага',
-                                                             status=response.value.status)
-
-    def select_tag(self):
-        tag_count = self.tag_list.count()
-        # Select random tag
-        self.tag_list.nth(random.randint(0, tag_count)).click()
-
-        with (self.page.expect_response(
-                f'https://{config.app.app_url}/s/auth/api/v1/flow/set_community_role/') as set_response,
-            self.page.expect_response(
-                f'https://{config.app.app_url}/account/api/user/update_profile/') as profile_response):
-            self.tag_continue_btn.click()
-
-        assert set_response.value.status == 200, self.error_info(msg='Тэг не установился',
-                                                                 status=set_response.value.status)
-
-        assert profile_response.value.status == 200, self.error_info(msg='Профиль не обновился',
-                                                                     status=profile_response.value.status)
+        assert response.value.status == 200, f"AuthPage: ФИО не назначено [Код {response.value.status}]"
+        assert redirect.value.status == 200, f"AuthPage: Редирект не успешеый"
+        assert redirect.value.request.header_value('cookie').find('csrftoken') != -1, ("AuthPage: Регистраци не успешна"
+                                                                                       ", куки не пришли")
 
     #   ====================================== Обобщенные функции ======================================
 
@@ -329,22 +259,16 @@ class AuthPage(BasePage):
 
         self.input_email_or_phone(email)
 
-        response = self.click_auth_email_continue_btn()
+        self.click_auth_email_continue_btn()
 
-        assert response is not None, self.error_info(msg='Auth: Пустой ответ при заполнении почты')
-        assert response.value.status == 200, self.error_info(msg='Ошибка при авторизации через почту, этап ввод почты',
-                                                             status=response.value.status)
-        assert response.value.json()['user_exists'] is True, self.error_info(status=response.value.status,
-                                                                             msg="Ошибка при авторизации, Юзер "
-                                                                                 "отсутвует")
         self.input_password(password=password)
 
-        with self.page.expect_response(f'{config.app.app_url}/s/auth/api/v1/auth/email/') as response:
+        with self.page.expect_response(f'**/s/auth/api/v1/auth/email/') as response:
             self.click_auth_password_continue_btn()
 
         assert response.value.status == 200, 'AuthPage: Ошибка при авторизации (этап пароль)'
 
-        self.page.wait_for_url(f"{config.app.app_url}/account/v2/main/")
+        self.page.wait_for_url(f"**/account/v2/main/")
 
         self.page.wait_for_load_state("domcontentloaded")
         self.page.wait_for_load_state("load")

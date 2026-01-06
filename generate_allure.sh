@@ -5,9 +5,13 @@ rm -rf allure-results
 mkdir -p allure-results
 
 # Запуск нужных тестов
-#pytest --alluredir=allure-results tests/ui/test_events.py::TestEvents::test_event_save_single_scope
+pytest --alluredir=allure-results tests/ui/test_hubid.py::TestHubID::test_registration_from_auth
 #pytest --alluredir=allure-results tests/old_registration.py::TestRegistration::test_valid_reg_email
-pytest --alluredir=allure-results --tracing=on
+#pytest --alluredir=allure-results --tracing=on
+
+if [ -f "cookies.json" ]; then
+  rm cookies.json
+fi
 
 # Копируем историю отчета (если есть)
 if [ -d "allure-report/history" ]; then

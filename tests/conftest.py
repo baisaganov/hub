@@ -11,6 +11,12 @@ from api.admin_api import AdminAPI
 from pages import *
 from pages.events_page import EventPage
 
+from config import config
+
+from datetime import date, datetime
+
+from pages.main_page import MainPage
+
 
 @pytest.fixture
 def auth_page(page):
@@ -52,17 +58,41 @@ def event_page(page):
     return EventPage(page)
 
 
+@pytest.fixture
+def main_page(page):
+    return MainPage(page)
+
+
 # @pytest.fixture
 # def admin_api():
 #     return AdminAPI()
 
 
 @pytest.fixture
-def test_user():
-    """Тестовый пользователь"""
-    from config import Config
+def email_test_user():
+    """Тестовый пользователь почтой"""
     return {
-        "email": Config.app.test_user_email,
-        "password": Config.app.test_user_password,
+        "email": config.app.test_user_email,
+        "password": config.app.test_user_email,
         "company_id": 16226,
+    }
+
+
+@pytest.fixture
+def email_test_user_registration():
+    """Тестовый юзер для регистрации"""
+
+    return {
+        "email": f"{date.today()}-{datetime.now().hour}-{datetime.now().minute}@test.hub",
+        "password": config.app.test_user_password,
+        "name": "Autotest",
+        "surname": f"{date.today()}_{datetime.now().hour}",
+    }
+
+
+@pytest.fixture()
+def phone_test_user():
+    return {
+        "phone": 87777777777,
+        "password": config.app.test_user_email,
     }

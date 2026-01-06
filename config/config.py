@@ -45,7 +45,7 @@ class AppConfig:
 
     # Тестовые учетные данные (для локальной разработки!)
     test_user_email: str = get_env("TEST_USER_EMAIL", "test@example.com")
-    test_user_password: str = get_env("TEST_USER_PASSWORD", "password123")
+    test_user_password: str = get_env("TEST_USER_PASSWORD", "Pass1234!")
 
     # API токены
     api_token: str = get_env("API_TOKEN", None)
