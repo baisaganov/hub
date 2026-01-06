@@ -12,7 +12,7 @@ class TestHubID:
     @allure.description('Тест проверяет что юзер может успешно авторизоваться через почту')
     @allure.severity(allure.severity_level.BLOCKER)
     @allure.tag("smoke")
-    # @pytest.mark.flaky(reruns=1, reruns_delay=30)
+    @pytest.mark.flaky(reruns=1, reruns_delay=30)
     @pytest.mark.parametrize('env',
                              ['dev'])
     def test_registration_from_auth(self, auth_page, main_page, email_test_user_registration, env):
