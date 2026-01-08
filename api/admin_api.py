@@ -1,4 +1,3 @@
-from enum import Enum
 import requests
 from bs4 import BeautifulSoup
 import logging
