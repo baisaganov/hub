@@ -17,3 +17,4 @@ report
 allure-results
 logs_hub.log
 trash
+trash.py
