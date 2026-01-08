@@ -2,6 +2,9 @@ FROM python:3.12-slim
 
 WORKDIR /usr/workspace
 
+RUN echo "deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware" > /etc/apt/sources.list \
+    && apt-get update
+
 # Установи зависимости для Allure (Java)
 RUN apt-get update && \
     apt-get install -y default-jre && \
@@ -19,7 +22,7 @@ COPY requirements.txt .
 
 # Установи Python зависимости
 RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt
 
 # Установи Playwright
 RUN playwright install --with-deps chromium
