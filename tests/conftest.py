@@ -79,7 +79,7 @@ def email_test_user():
 
 
 @pytest.fixture
-def email_test_user_registration():
+def registration_user_creds():
     """Тестовый юзер для регистрации"""
 
     return {
@@ -87,6 +87,10 @@ def email_test_user_registration():
         "password": config.app.test_user_password,
         "name": "Autotest",
         "surname": f"{date.today()}_{datetime.now().hour}",
+        "phone": f"8705"
+                 f"{datetime.now().month if datetime.now().month > 9 else f'0{datetime.now().month}'}"
+                 f"{datetime.now().day if datetime.now().day > 9 else f'0{datetime.now().day}'}"
+                 f"{datetime.now().microsecond//1000}"
     }
 
 

@@ -3,6 +3,7 @@ import random
 import playwright._impl._errors
 
 from playwright.sync_api import Page
+from typing import Literal
 
 from commons.types import AdminFuncTypes, AdminAccountChangeType
 from api.admin_api import AdminAPI
@@ -39,12 +40,15 @@ class AuthPage(BasePage):
         self.SIGNUP_STEP = page.locator("div[x-show=\"step === 'signup'\"]")
         self.SIGNUP_EMAIL_INPUT = self.SIGNUP_STEP.locator("input")
         self.SIGNUP_SUBMIT = self.SIGNUP_STEP.locator("button[type=submit]")
-        self.SIGNUP_ACTIVATION_EMAIL_STEP = page.locator("div[x-show=\"step === 'confirm_email_register'\"]")
-        self.SIGNUP_ACTIVATION_EMAIL_CODE_INPUT = self.SIGNUP_ACTIVATION_EMAIL_STEP.locator("input[name=code]")
-        self.SIGNUP_ACTIVATION_EMAIL_SUBMIT = self.SIGNUP_ACTIVATION_EMAIL_STEP.locator("button[type=submit]")
+
+        self.OTP_STEP = page.locator("form[data_tag=submitOTP]:visible")
+        self.OTP_CODE_INPUT = self.OTP_STEP.locator("input[name=code]")
+        self.OTP_SUBMIT = self.OTP_STEP.locator("button[type=submit]")
+
         self.SIGNUP_PASSWORD_STEP = page.locator("form[data_tag=set_password]")
         self.SIGNUP_PASSWORD_INPUT = self.SIGNUP_PASSWORD_STEP.locator("input")
         self.SIGNUP_PASSWORD_SUBMIT = self.SIGNUP_PASSWORD_STEP.locator("button[type=submit]")
+
         self.SIGNUP_USER_INFO_STEP = page.locator("form[data_tag=set_names]")
         self.SIGNUP_USER_INFO_NAME = self.SIGNUP_USER_INFO_STEP.locator("input[name=first_name]")
         self.SIGNUP_USER_INFO_SURNAME = self.SIGNUP_USER_INFO_STEP.locator("input[name=last_name]")
@@ -52,33 +56,33 @@ class AuthPage(BasePage):
 
         # ============================ К исправлению ============================
 
-        self.continue_reg_password_btn = page.locator('form[data_tag=set_password] button[type=submit]')
-        self.name_field = page.locator("input[name='first_name']")
-        self.surname_field = page.locator("input[name='last_name']")
-        self.profile_photo_skip = page.locator('div[x-show="step === \'set_photo\'"] button[type=submit]')
-
-        # self.auth_password_continue_btn = page.locator("div[x-show=\"step === 'password'\"] button[type='submit']")
-        self.continue_btn_signup = page.locator("form[data_tag='start_registration'] > button")
-        self.send_code_btn = page.locator("div[x-show=\"step === 'confirm_email_register'\"] button")
-        self.resend_code_btn = page.locator("div[x-show=\"step === 'confirm_email_register'\"] "
-                                            "form > div > div > span.cursor-pointer")
-        self.continue_user_info_btn = page.locator("form[data_tag=set_names] button[type=submit]")
-        self.role_select_btn = page.locator('//html/body/div[2]/div[9]/div/div/div[1]')
-        self.role_not_select_btn = page.locator('//html/body/div[2]/div[9]/div/div/div[2]')
-        self.ecp_auth_btn = page.locator("div[x-show=\"step === 'login'\"] button").nth(1)
-
-        # Photo Form
-        self.set_photo_submit_btn = page.locator('form[data_tag="set_photo"] button[type="submit"]')
-        self.set_photo = page.locator('label.photo')
-
-        # Select Community Role
-        self.comunity_form = page.locator('form[data_tag=set_community_role]')
-        self.tag_list = self.comunity_form.locator('label')
-        self.tag_continue_btn = self.comunity_form.locator('button[type=submit]')
-
-        # Reg success
-        self.success_form = page.locator("div[x-show=\"step === 'success'\"]")
-        self.success_btn = self.success_form.locator('div.btn')
+        # self.continue_reg_password_btn = page.locator('form[data_tag=set_password] button[type=submit]')
+        # self.name_field = page.locator("input[name='first_name']")
+        # self.surname_field = page.locator("input[name='last_name']")
+        # self.profile_photo_skip = page.locator('div[x-show="step === \'set_photo\'"] button[type=submit]')
+        #
+        # # self.auth_password_continue_btn = page.locator("div[x-show=\"step === 'password'\"] button[type='submit']")
+        # self.continue_btn_signup = page.locator("form[data_tag='start_registration'] > button")
+        # self.send_code_btn = page.locator("div[x-show=\"step === 'confirm_email_register'\"] button")
+        # self.resend_code_btn = page.locator("div[x-show=\"step === 'confirm_email_register'\"] "
+        #                                     "form > div > div > span.cursor-pointer")
+        # self.continue_user_info_btn = page.locator("form[data_tag=set_names] button[type=submit]")
+        # self.role_select_btn = page.locator('//html/body/div[2]/div[9]/div/div/div[1]')
+        # self.role_not_select_btn = page.locator('//html/body/div[2]/div[9]/div/div/div[2]')
+        # self.ecp_auth_btn = page.locator("div[x-show=\"step === 'login'\"] button").nth(1)
+        #
+        # # Photo Form
+        # self.set_photo_submit_btn = page.locator('form[data_tag="set_photo"] button[type="submit"]')
+        # self.set_photo = page.locator('label.photo')
+        #
+        # # Select Community Role
+        # self.comunity_form = page.locator('form[data_tag=set_community_role]')
+        # self.tag_list = self.comunity_form.locator('label')
+        # self.tag_continue_btn = self.comunity_form.locator('button[type=submit]')
+        #
+        # # Reg success
+        # self.success_form = page.locator("div[x-show=\"step === 'success'\"]")
+        # self.success_btn = self.success_form.locator('div.btn')
 
     # ============================ Сингл таск функции ============================
     def navigate(self):
@@ -205,11 +209,11 @@ class AuthPage(BasePage):
         Ввод кода с почты при регистрации
         :param code:
         """
-        self.SIGNUP_ACTIVATION_EMAIL_CODE_INPUT.fill(code)
+        self.OTP_CODE_INPUT.fill(code)
 
         with self.page.expect_response(
                 f'**/s/auth/api/v1/auth/activation_confirm/') as response:
-            self.SIGNUP_ACTIVATION_EMAIL_SUBMIT.click()
+            self.OTP_SUBMIT.click()
 
         assert response.value.status == 200, (f'AuthPage: Ошибка активации почты '
                                               f'при регистарции {response.value.status}')
@@ -219,7 +223,6 @@ class AuthPage(BasePage):
         Создание пароля при регистрации
         :param password: Пароль учетки
         """
-
         for i in self.SIGNUP_PASSWORD_INPUT.all():
             i.fill(password)
 
