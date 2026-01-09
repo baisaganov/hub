@@ -13,16 +13,15 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Установка Allure (нужен npm и Java)
 RUN npm install -g allure-commandline && \
     npm cache clean --force
 
-# Копируем requirements и устанавливаем Python зависимости
 COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install --user --no-cache-dir -r requirements.txt
 
 # Установка Playwright
+ENV PATH=/root/.local/bin:$PATH
 RUN playwright install --with-deps chromium
 
 
