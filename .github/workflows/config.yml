@@ -37,7 +37,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run Tests via docker compose
-        run: docker compose up --exit-code-from tests
+        run: timeout 1800 docker compose up --exit-code-from tests
 
       - name: Upload Allure results
         if: always()
@@ -86,7 +86,7 @@ jobs:
       - name: Send to Telegram
         continue-on-error: true
         run: |
-          apt-get update && apt-get install -y jq
+          apt-get update && apt-get install -y jq --no-install-recommends
 
           # Найди файл со статистикой
           STAT_FILE=$(find allure-history -name "summary.json" -o -name "statistics.json" | head -1)
