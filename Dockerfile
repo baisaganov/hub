@@ -1,34 +1,57 @@
-FROM python:3.12-slim
+# ===== STAGE 1: Builder (для установки всех зависимостей) =====
+FROM python:3.12-slim as builder
 
-WORKDIR /usr/workspace
+WORKDIR /build
 
-# Обновляем sources.list с полным списком репозиториев (security, updates)
-RUN echo "deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware" > /etc/apt/sources.list && \
-    echo "deb http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware" >> /etc/apt/sources.list && \
-    echo "deb http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware" >> /etc/apt/sources.list
-
+# Установка инструментов сборки
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     default-jre \
     npm \
-    fonts-unifont && \
+    fonts-unifont \
+    build-essential && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Установка Allure через npm
+# Установка Allure (нужен npm и Java)
 RUN npm install -g allure-commandline && \
-    apt-get remove -y npm && \
-    apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/*
+    npm cache clean --force
 
+# Копируем requirements и устанавливаем Python зависимости
 COPY requirements.txt .
-
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --user --no-cache-dir -r requirements.txt
 
+# Установка Playwright
 RUN playwright install --with-deps chromium
 
-# Копируем весь код
+
+# ===== STAGE 2: Runtime (финальный образ) =====
+FROM python:3.12-slim
+
+WORKDIR /usr/workspace
+
+# Устанавливаем только runtime зависимости (без build-tools)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    default-jre-headless \
+    fonts-unifont \
+    curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Копируем Allure из builder
+COPY --from=builder /usr/local/lib/node_modules/allure-commandline /opt/allure
+RUN ln -s /opt/allure/bin/allure /usr/local/bin/allure
+
+# Копируем Python packages из builder
+COPY --from=builder /root/.local /root/.local
+ENV PATH=/root/.local/bin:$PATH
+
+# Копируем Playwright browsers из builder
+COPY --from=builder /root/.cache/ms-playwright /root/.cache/ms-playwright
+
+# Копируем исходный код
 COPY . .
 
 # Запуск тестов и генерация отчета
