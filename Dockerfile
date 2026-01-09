@@ -3,12 +3,13 @@ FROM ubuntu:24.04 AS builder
 
 WORKDIR /build
 
-# Обновляем репозитории (Ubuntu имеет больше пакетов)
+# ⭐ Установим python3-venv для поддержки виртуальных окружений
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     python3.12 \
-    python3-pip \
     python3.12-venv \
+    python3.12-dev \
+    python3-pip \
     default-jre \
     npm \
     fonts-unifont \
@@ -18,19 +19,22 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# ⭐ Создаем виртуальное окружение (главный ключ!)
+RUN python3.12 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
 # Установка Allure
 RUN npm install -g allure-commandline && \
     npm cache clean --force
 
-# Копируем requirements и устанавливаем Python зависимости
+# Копируем requirements
 COPY requirements.txt .
+
+# Теперь pip установится в виртуальное окружение, а не в систему
 RUN pip install --upgrade pip && \
-    pip install --user --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt
 
-# Обновляем PATH для playwright
-ENV PATH=/root/.local/bin:$PATH
-
-# Установка Playwright (fonts-unifont уже установлен!)
+# Установка Playwright
 RUN playwright install --with-deps chromium
 
 
@@ -39,10 +43,11 @@ FROM ubuntu:24.04
 
 WORKDIR /usr/workspace
 
-# Runtime зависимости (минимальные)
+# Минимальные runtime зависимости
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     python3.12 \
+    python3.12-minimal \
     default-jre-headless \
     fonts-unifont \
     curl \
@@ -51,22 +56,21 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# ⭐ Копируем ВЕСЬ виртуальный окружение из builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
 # Копируем Allure из builder
 COPY --from=builder /usr/local/lib/node_modules/allure-commandline /opt/allure
 RUN ln -s /opt/allure/bin/allure /usr/local/bin/allure
 
-# Копируем Python packages из builder
-COPY --from=builder /root/.local /root/.local
-
 # Копируем Playwright browsers из builder
 COPY --from=builder /root/.cache/ms-playwright /root/.cache/ms-playwright
-
-# Обновляем PATH
-ENV PATH=/root/.local/bin:$PATH \
-    PYTHONUNBUFFERED=1
 
 # Копируем исходный код
 COPY . .
 
+ENV PYTHONUNBUFFERED=1
+
 # Запуск тестов
-CMD ["/bin/sh", "-c", "python3 -m pytest -sv --alluredir=allure-results || true; allure generate allure-results --clean -o allure-report"]
+CMD ["/bin/sh", "-c", "pytest -sv --alluredir=allure-results || true; allure generate allure-results --clean -o allure-report"]
