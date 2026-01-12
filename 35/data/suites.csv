@@ -1,0 +1,5 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"Тест проверяет, что ивент с одной сферой корректно сохраняется","4","Сохранение ивента с одной сферой","tests.ui","Mon Jan 12 12:29:15 UTC 2026","broken","Mon Jan 12 12:29:15 UTC 2026","TestEvents","Events","",""
+"Тест проверяет что юзер может успешно зарегестрироваться через номер телефона","90008","Успешная регистрация с валидными кредами phone","tests.ui","Mon Jan 12 12:34:13 UTC 2026","broken","Mon Jan 12 12:35:43 UTC 2026","TestHubID","test_hubid","",""
+"Тест проверяет, что ивент с одной сферой корректно сохраняется","4","Сохранение ивента с одной сферой","tests.ui","Mon Jan 12 12:29:15 UTC 2026","broken","Mon Jan 12 12:29:15 UTC 2026","TestEvents","Events","",""
+"Тест проверяет что юзер может успешно зарегестрироваться через почту","90006","Успешная регистрация с валидными кредами email","tests.ui","Mon Jan 12 12:31:59 UTC 2026","broken","Mon Jan 12 12:33:29 UTC 2026","TestHubID","test_hubid","",""
