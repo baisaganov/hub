@@ -1,28 +1,43 @@
-FROM mcr.microsoft.com/playwright/python:v1.54.0-jammy
+FROM ubuntu:24.04
 
 WORKDIR /usr/workspace
 
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
+# Сначала базовые пакеты + curl
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    default-jre-headless \
-    npm && \
+    curl \
+    ca-certificates \
+    gnupg \
+    apt-transport-https && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Установка Allure CLI
-RUN npm install -g allure-commandline && \
-    npm cache clean --force
+# Node.js 20
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
 
-# Python зависимости
+# Основные пакеты
+RUN apt-get install -y --no-install-recommends \
+    nodejs \
+    default-jre-headless \
+    python3 \
+    python3-pip \
+    python3-venv && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# venv
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Allure CLI
+RUN npm install -g allure-commandline
+
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Копируем код
+RUN playwright install --with-deps chromium
+
 COPY . .
 
 ENV PYTHONUNBUFFERED=1
