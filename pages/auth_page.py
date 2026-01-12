@@ -79,7 +79,7 @@ class AuthPage(BasePage):
     # ============================ Сингл таск функции ============================
     def navigate(self):
         with self.page.expect_response(f'**/ru/s/auth/login/') as resp:
-            self.page.goto(f'**/ru/s/auth/login/')
+            self.page.goto(f'{self.config.app.app_url}/ru/s/auth/login/')
 
         assert resp.value.status == 200, f'AuthPage: Страница не доступна {resp.value.status}'
 

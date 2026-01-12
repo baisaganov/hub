@@ -34,7 +34,7 @@ class AppConfig:
 
 
     # URLs
-    app_url: str = None
+    app_url: str = "https://dev.astanahub.com"
     admin_url: str = get_env("ADMIN_URL", "astanahub.com/secretadmin")
 
     # Окружение
@@ -53,6 +53,7 @@ class AppConfig:
 
     def set_subdomain(self, subdomain: str):
         self.subdomain = subdomain
+        self.env = subdomain
 
     def update_app_url(self):
         """

@@ -1,9 +1,14 @@
 pytest==8.4.1
+pytest-rerunfailures>=12.0
+allure-pytest>=2.13.0
+pytest-base-url>=2.0.0
+pytest-timeout>=2.2.0
+pytest-xdist>=3.5.0
+
 python-dotenv==1.1.1
 playwright~=1.54.0
-
-pyautogui~=0.9.54
 keyboard~=0.13.5
 pandas~=2.3.1
 requests~=2.32.4
 beautifulsoup4~=4.13.4
+lorem-text>=3.0
