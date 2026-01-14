@@ -17,6 +17,7 @@ class MainPage(BasePage):
         self.page = page
         self.LOGIN_BTN = page.locator("a[href^='/s/auth/login/?']")
         self.SIGNUP_BTN = page.locator("a[href^='/s/auth/signup/?']")
+        self.INTRO_TOUR_CLOSE = page.locator("#intro-tour-modal_close")
 
     def navigate(self):
         self.page.set_default_timeout(90000)
@@ -25,6 +26,9 @@ class MainPage(BasePage):
             self.page.goto(f'{config.app.app_url}/ru')
 
         assert resp.value.status in [200, 301], f'MainPage: Страница не доступна {resp.value.status}'
+
+        if self.INTRO_TOUR_CLOSE.is_visible():
+            self.INTRO_TOUR_CLOSE.click()
 
         self.page.set_default_timeout(30000)
 
