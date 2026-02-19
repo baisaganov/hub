@@ -83,6 +83,12 @@ class AuthPage(BasePage):
 
         assert resp.value.status == 200, f'AuthPage: Страница не доступна {resp.value.status}'
 
+    def welcome_hubid(self):
+        if self.LOGIN.is_hidden():
+            self.page.wait_for_selector(selector='a.btn', timeout=5000)
+            if self.WELCOME.is_visible():
+                self.WELCOME.click()
+
     def click_auth_password_continue_btn(self):
         """
         Клик на продолжить при вводе пароля Авторизация
