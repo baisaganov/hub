@@ -25,6 +25,9 @@ class TestHubID:
         with allure.step('Клик по кнопке "Войти"'):
             main_page.login_click()
 
+        with allure.step("Клик по кнопке 'Перейти в HubID', если есть"):
+            auth_page.welcome_hubid()
+
         with allure.step('Ввод email которого нет в базе'):
             auth_page.input_email_or_phone(registration_user_creds['email'])
             auth_page.click_auth_email_continue_btn(is_auth=False)
