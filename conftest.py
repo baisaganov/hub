@@ -69,7 +69,6 @@ def context(browser):
 
 @pytest.fixture(scope="function")
 def page(request, context):
-    print(f"Config loaded: {config.print_config()}")
     """Function-scoped - новый контекст на каждый тест"""
     test_name = request.node.name
     logger.info(f"Starting test: {test_name}")
@@ -115,7 +114,7 @@ def page(request, context):
         logger.info(f"✅ TEST PASSED: {test_name}")
 
     context.close()
-    # page.close()
+    page.close()
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)

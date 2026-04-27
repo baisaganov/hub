@@ -1,35 +1,13 @@
 services:
-  tests:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  playwright:
+    build: .
     volumes:
       - ./:/usr/workspace
     working_dir: /usr/workspace
-    environment:
-      - BROWSER=${BROWSER}
-      - HEADLESS=${HEADLESS}
-      - NAVIGATION_TIMEOUT=${NAVIGATION_TIMEOUT}
-      - SCREENSHOT=${SCREENSHOT}
-      - SLOW_MO=${SLOW_MO}
-      - TIMEOUT=${TIMEOUT}
-      - TRACE=${TRACE}
-      - VIEWPORT_HEIGHT=${VIEWPORT_HEIGHT}
-      - VIEWPORT_WIDTH=${VIEWPORT_WIDTH}
-      - DOWNLOADS_PATH=${DOWNLOADS_PATH}
-      - USER_AGENT=${USER_AGENT}
-      - LOCALE=${LOCALE}
-      - TIMEZONE=${TIMEZONE}
-      - VIDEO=${VIDEO}
-      - API_BASE_URL=${API_BASE_URL}
-      - API_TIMEOUT=${API_TIMEOUT}
-      - API_RETRY_ATTEMPTS=${API_RETRY_ATTEMPTS}
-      - API_RETRY_DELAY=${API_RETRY_DELAY}
-      - BASE_DOMAIN=${BASE_DOMAIN}
-      - ADMIN_URL=${ADMIN_URL}
-      - ENV=${ENV}
-      - LOG_LEVEL=${LOG_LEVEL}
-      - TEST_USER_EMAIL=${TEST_USER_EMAIL}
-      - TEST_USER_PASSWORD=${TEST_USER_PASSWORD}
-      - API_TOKEN=${API_TOKEN}
-      - ADMIN_TOKEN=${ADMIN_TOKEN}
+    env_file:
+      - .env
+#    Постоянно запущенный контейнер
+#    stdin_open: true
+#    tty: true
+    command: uv run pytest --alluredir=allure-results tests/ui/test_hubid.py::TestHubID::test_email_registration_from_auth[dev]
+

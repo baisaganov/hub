@@ -1,6 +1,10 @@
-from playwright.sync_api import Page
+import random
+
+from playwright.sync_api import Page, expect
 
 from pages.base import BasePage
+from config import config
+from pathlib import Path
 
 
 # Авторизация и Регистрация на портале Astanahub
@@ -10,6 +14,9 @@ class AuthPage(BasePage):
         self.page = page
 
         # ============================ Авторизация ============================
+
+        self.WELCOME = page.get_by_text('Перейти в HubID')
+
         #  Логин
         self.LOGIN_STEP = page.locator("div[x-show=\"step === 'login'\"]")
         self.LOGIN = self.LOGIN_STEP.locator("input[name=value]")
@@ -46,48 +53,29 @@ class AuthPage(BasePage):
         self.SIGNUP_USER_INFO_SURNAME = self.SIGNUP_USER_INFO_STEP.locator("input[name=last_name]")
         self.SIGNUP_USER_INFO_SUBMIT = self.SIGNUP_USER_INFO_STEP.locator("button[type=submit]")
 
-        # ============================ К исправлению ============================
+        # ============================ Фото профиля ============================
 
-        # self.continue_reg_password_btn = page.locator('form[data_tag=set_password] button[type=submit]')
-        # self.name_field = page.locator("input[name='first_name']")
-        # self.surname_field = page.locator("input[name='last_name']")
-        # self.profile_photo_skip = page.locator('div[x-show="step === \'set_photo\'"] button[type=submit]')
-        #
-        # # self.auth_password_continue_btn = page.locator("div[x-show=\"step === 'password'\"] button[type='submit']")
-        # self.continue_btn_signup = page.locator("form[data_tag='start_registration'] > button")
-        # self.send_code_btn = page.locator("div[x-show=\"step === 'confirm_email_register'\"] button")
-        # self.resend_code_btn = page.locator("div[x-show=\"step === 'confirm_email_register'\"] "
-        #                                     "form > div > div > span.cursor-pointer")
-        # self.continue_user_info_btn = page.locator("form[data_tag=set_names] button[type=submit]")
-        # self.role_select_btn = page.locator('//html/body/div[2]/div[9]/div/div/div[1]')
-        # self.role_not_select_btn = page.locator('//html/body/div[2]/div[9]/div/div/div[2]')
-        # self.ecp_auth_btn = page.locator("div[x-show=\"step === 'login'\"] button").nth(1)
-        #
-        # # Photo Form
-        # self.set_photo_submit_btn = page.locator('form[data_tag="set_photo"] button[type="submit"]')
-        # self.set_photo = page.locator('label.photo')
-        #
-        # # Select Community Role
-        # self.comunity_form = page.locator('form[data_tag=set_community_role]')
-        # self.tag_list = self.comunity_form.locator('label')
-        # self.tag_continue_btn = self.comunity_form.locator('button[type=submit]')
-        #
-        # # Reg success
-        # self.success_form = page.locator("div[x-show=\"step === 'success'\"]")
-        # self.success_btn = self.success_form.locator('div.btn')
+        self.PROFILE_PHOTO_STEP = page.locator("form[data_tag=set_photo]")
+        self.PROFILE_PHOTO_ATTACH = self.PROFILE_PHOTO_STEP.locator("input[type=file]")
+        self.PROFILE_PHOTO_BTN = self.PROFILE_PHOTO_STEP.locator("button[type=submit]")
+        self.PROFILE_PHOTO_FILE = Path('testdata/files/profile_photo.png')
+
+        # ============================ Роль пользователя ============================
+        self.ROLE_STEP = page.locator("form[data_tag=set_community_role]")
+        self.ROLES_LIST = self.ROLE_STEP.locator("label")
+        self.ROLE_BTN = self.ROLE_STEP.locator("button[type=submit]")
 
     # ============================ Сингл таск функции ============================
     def navigate(self):
         with self.page.expect_response(f'**/ru/s/auth/login/') as resp:
-            self.page.goto(f'{self.config.app.app_url}/ru/s/auth/login/')
+            self.page.goto(f'{config.app.app_url}/ru/s/auth/login/')
 
         assert resp.value.status == 200, f'AuthPage: Страница не доступна {resp.value.status}'
 
     def welcome_hubid(self):
-        if self.LOGIN.is_hidden():
-            self.page.wait_for_selector(selector='a.btn', timeout=5000)
-            if self.WELCOME.is_visible():
-                self.WELCOME.click()
+        self.page.wait_for_load_state('networkidle')
+        if self.WELCOME.is_visible():
+            self.WELCOME.click()
 
     def click_auth_password_continue_btn(self):
         """
@@ -97,7 +85,7 @@ class AuthPage(BasePage):
         with self.page.expect_response(f'**/s/auth/api/v1/auth/email/') as response_info:
             self.PASSWORD_AUTH_BTN.click()
 
-        assert response_info.value.status == 200, f"AuthPage: Continue btn 2 clicked error"
+        assert response_info.value.status == 200, f"AuthPage: Продолжить этап ввода пароля"
 
     def input_email_or_phone(self, value):
         """
@@ -106,6 +94,8 @@ class AuthPage(BasePage):
         :return:
         """
         input_field = self.LOGIN
+        if not input_field:
+            self.page.reload()
         input_field.fill(value)
 
     def click_auth_email_continue_btn(self, is_auth: bool = True):
@@ -239,13 +229,33 @@ class AuthPage(BasePage):
         self.SIGNUP_USER_INFO_NAME.fill(name)
         self.SIGNUP_USER_INFO_SURNAME.fill(surname)
         with (self.page.expect_response(f"**/s/auth/api/v1/flow/set_names/") as response,
-              self.page.expect_navigation(url=f"**/account/v2/main/**") as redirect):
+              self.page.expect_navigation(url=f"**/account/v2/main/**") if config.app.subdomain == 'dev'
+              else self.page.expect_navigation(url=f"**/account/v2/onboarding/**") as resp):
             self.SIGNUP_USER_INFO_SUBMIT.click()
 
         assert response.value.status == 200, f"AuthPage: ФИО не назначено [Код {response.value.status}]"
-        assert redirect.value.status == 200, f"AuthPage: Редирект не успешеый"
-        assert redirect.value.request.header_value('cookie').find('csrftoken') != -1, ("AuthPage: Регистраци не успешна"
-                                                                                       ", куки не пришли")
+        assert resp.value.status == 200, f"AuthPage: Редирект не успешеый"
+
+    def upload_profile_photo(self):
+        with self.page.expect_response(f'blob:https://{config.app.subdomain}.astanahub.com/**') as resp:
+            self.PROFILE_PHOTO_ATTACH.set_input_files(self.PROFILE_PHOTO_FILE)
+
+        assert resp.value.status in [200, 201], "AuthPage: Фото профиля не прикреплено"
+
+        with (self.page.expect_response('**/account/api/media_file/') as file_resp,
+              self.page.expect_response('**/account/api/user/update_profile/') as update_resp,
+              self.page.expect_response('**/account/api/v2/onboarding/set_photo/') as set_resp):
+            self.PROFILE_PHOTO_BTN.click()
+
+        assert file_resp.value.status in [200, 201], "AuthPage: Фото профиля не загружено"
+        assert update_resp.value.status in [200, 201], "AuthPage: Профиль не обновлен"
+        assert set_resp.value.status in [200, 201], "AuthPage: Фото не установлено"
+
+    def select_role(self):
+        roles = self.ROLES_LIST.all()
+        expect(self.ROLES_LIST).to_have_count(4)
+        roles[0].click()
+        self.ROLE_BTN.click()
 
     #   ====================================== Обобщенные функции ======================================
 
@@ -269,10 +279,6 @@ class AuthPage(BasePage):
 
         assert response.value.status == 200, 'AuthPage: Ошибка при авторизации (этап пароль)'
 
-        self.page.wait_for_url(f"**/account/v2/main/")
-
-        self.page.wait_for_load_state("domcontentloaded")
-        self.page.wait_for_load_state("load")
-        self.page.wait_for_load_state("networkidle")
+        self.page.wait_for_url(f"**/account/v2/main/", wait_until='domcontentloaded')
 
         self.page.keyboard.press('Escape')

@@ -4,7 +4,6 @@ from config.environment import Environment
 # from config.links import Links
 
 config = Config()
-config.print_config()
 
 __all__ = [
     "config",
