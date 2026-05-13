@@ -49,7 +49,7 @@ class EventPage(BasePage):
         :return:
         """
         with self.page.expect_response(f'{config.app.app_url}/ru/event/') as resp:
-            self.page.goto(f'{config.app.app_url}/ru/event/')
+            self.page.goto(f'{config.app.app_url}/ru/event/', wait_until='domcontentloaded')
 
         assert resp.value.status == 200, "EventPage: Страница не доступна"
 
@@ -89,8 +89,8 @@ class EventPage(BasePage):
     # =============== Мульти таск функции ===============
     #     TODO: Добавить в функцию гибридный и оффлайн форматы
     #     TODO: Добавить в функцию выбор своей ссылки
+    #     TODO: ИСПРАВИТЬ ОШИБКУ
     def fill_form(self,
-                  company_id,
                   phone_number="+77777777777",
                   link="https://test.kz",
                   event_type: Literal["open_event", "closed_event"] = "open_event",
@@ -100,7 +100,6 @@ class EventPage(BasePage):
         """
 
         Заполнение формы создания мероприятий
-        :param company_id: ID компании в которой юзер Владелец или Советник
         :param phone_number: Номер телефона для связи  ( дефолтный +77777777777)
         :param link: Ссылка на конференцию
         :param event_type: Тип ивента (Открытый или Закрытый)
@@ -113,7 +112,7 @@ class EventPage(BasePage):
         data_month = today.month
         data_year = today.year
         tz = timezone(timedelta(hours=5))
-        self.COMPANY_SELECT.select_option(value=str(company_id))
+        self.COMPANY_SELECT.select_option(index=1) #.select_option(value=str(company_id))
         self.EVENT_TITLE.fill(f'Auto test {datetime.now(tz)}')
         self.EVENT_DESCRIPTION.click()
         self.page.keyboard.type(lorem.words(30))
@@ -139,11 +138,9 @@ class EventPage(BasePage):
 
         assert self.EVENT_EMAIL.get_attribute('value') not in [None, ''], 'EventPage: Почта не подтянулась'
 
-        for checkbox in self.AGREEMENT.all():
-            checkbox.check()
+        self.page.evaluate('let sel = document.'
+                           'querySelectorAll(\'div.event-form-section > div.label-checkbox input[type=checkbox]\');'
+                           'sel.forEach((el)=> el.click())')
 
-
-
-
-
-# <div class="datepicker--cell datepicker--cell-day -weekend-" data-date="8" data-month="10" data-year="2025">8</div>
+        # for checkbox in self.AGREEMENT.all():
+        #     checkbox.check()

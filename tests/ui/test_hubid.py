@@ -5,16 +5,16 @@ from playwright.sync_api import Page
 from config import config
 
 
-@allure.feature('HUB ID')
+@allure.suite('HUB ID')
+@pytest.mark.hubid
+@pytest.mark.order(1)
 class TestHubID:
-    @allure.story('User Registration')
     @allure.title('Успешная регистрация с валидными кредами email')
-    @allure.description('Тест проверяет что юзер может успешно зарегестрироваться через почту')
-    @allure.severity(allure.severity_level.BLOCKER)
-    @allure.tag("smoke")
-    @pytest.mark.flaky(reruns=1, reruns_delay=30)
+    @pytest.mark.critical
+    # @pytest.mark.flaky(reruns=1, reruns_delay=10)
     @pytest.mark.parametrize('env',
-                             ['dev'])
+                             ['qa', 'dev'])
+    @pytest.mark.skip
     def test_email_registration_from_auth(self, auth_page, main_page, registration_user_creds, env):
         config.app.subdomain = env
         config.app.update_app_url()
@@ -24,6 +24,9 @@ class TestHubID:
 
         with allure.step('Клик по кнопке "Войти"'):
             main_page.login_click()
+
+        with allure.step("Клик по кнопке 'Перейти в HubID', если есть"):
+            auth_page.welcome_hubid()
 
         with allure.step('Ввод email которого нет в базе'):
             auth_page.input_email_or_phone(registration_user_creds['email'])
@@ -49,22 +52,27 @@ class TestHubID:
             auth_page.set_password(registration_user_creds['password'])
 
         with allure.step('Заполнение информации о юзере'):
+
             auth_page.fill_user_info(
                 registration_user_creds['name'],
                 registration_user_creds['surname']
             )
 
-        with allure.step('Сохраняем куки для последующего использования'):
-            auth_page.save_cookies()
+        if env == 'qa':
+            with allure.step('Прикрепление фото профиля'):
+                auth_page.upload_profile_photo()
 
-    @allure.story('User Registration')
+            with allure.step('Выбор роли ()'):
+                auth_page.select_role()
+
+        with allure.step('Сохраняем контекст для последующего использования'):
+            auth_page.save_context(env)
+
     @allure.title('Успешная регистрация с валидными кредами phone')
-    @allure.description('Тест проверяет что юзер может успешно зарегестрироваться через номер телефона')
-    @allure.severity(allure.severity_level.BLOCKER)
-    @allure.tag("smoke")
-    # @pytest.mark.flaky(reruns=1, reruns_delay=30)
-    @pytest.mark.parametrize('env',
-                             ['dev'])
+    @pytest.mark.critical
+    @pytest.mark.flaky(reruns=1, reruns_delay=15)
+    @pytest.mark.parametrize('env', ['dev', 'qa'])
+    @pytest.mark.skip
     def test_phone_registration_from_auth(self, auth_page, main_page, registration_user_creds, env):
         config.app.subdomain = env
         config.app.update_app_url()
@@ -75,7 +83,10 @@ class TestHubID:
         with allure.step('Клик по кнопке "Войти"'):
             main_page.login_click()
 
-        with allure.step('Ввод email которого нет в базе'):
+        with allure.step("Клик по кнопке 'Перейти в HubID', если есть"):
+            auth_page.welcome_hubid()
+
+        with allure.step('Ввод phone которого нет в базе'):
             auth_page.input_email_or_phone(registration_user_creds['phone'])
             auth_page.click_auth_email_continue_btn(is_auth=False)
 
@@ -104,5 +115,33 @@ class TestHubID:
                 registration_user_creds['surname']
             )
 
-        with allure.step('Сохраняем куки для последующего использования'):
-            auth_page.save_cookies()
+    @allure.title('Авторизация с помощью почты')
+    @allure.label("level", "UI")
+    @pytest.mark.critical
+    @pytest.mark.parametrize('env', ['dev', ])
+    def test_email_auth(self, base_user_creds, auth_page, env):
+        with allure.step('Переход к HubID'):
+            auth_page.navigate()
+
+        with allure.step('Ввод почты'):
+            auth_page.input_email_or_phone(base_user_creds['email'])
+
+        with allure.step('Клик по кнопке продолжить (почта)'):
+            auth_page.click_auth_email_continue_btn()
+
+        with allure.step('Ввод пароля'):
+            auth_page.input_password(password=base_user_creds['password'])
+
+        with allure.step('Клик по кнопке продолжить (пароль)'):
+            with auth_page.page.expect_response(f'**/s/auth/api/v1/auth/email/') as response:
+                auth_page.click_auth_password_continue_btn()
+
+            assert response.value.status == 200, 'AuthPage: Ошибка при авторизации (этап пароль)'
+
+        with allure.step('Ожидание завершения загрузки страницы и сохранение куки'):
+            auth_page.page.wait_for_url(f"**/account/v2/main/", wait_until='domcontentloaded')
+            auth_page.page.keyboard.press('Escape')
+            auth_page.save_context(env)
+
+    def phone_auth(self, env, base_user_creds):
+        pass

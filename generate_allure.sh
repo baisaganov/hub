@@ -1,26 +1,12 @@
 #!/bin/bash
 
-# Очищаем предыдущие результаты
-rm -rf allure-results
-mkdir -p allure-results
+rm -rf allure-results allure-report
+mkdir -p allure-results testdata/account_data
 
-# Запуск нужных тестов
-pytest --alluredir=allure-results #tests/ui/test_hubid.py::TestHubID::test_phone_registration_from_auth
-#pytest --alluredir=allure-results tests/old_registration.py::TestRegistration::test_valid_reg_email
-#pytest --alluredir=allure-results --tracing=on
+pytest --alluredir=allure-results tests/ui/test_hubid.py::TestHubID::test_email_auth
 
-if [ -f "cookies.json" ]; then
-  rm cookies.json
-fi
+rm -rf testdata/account_data
 
-# Копируем историю отчета (если есть)
-if [ -d "allure-report/history" ]; then
-  mkdir -p allure-results/history
-  cp -r allure-report/history allure-results/
-fi
+allure generate --config ./config/allurerc.json --output allure-report allure-results
 
-# Генерация нового отчета
-allure generate allure-results --clean -o allure-report
-
-# Открытие отчета
 allure open allure-report

@@ -115,6 +115,7 @@ class Config:
         print("PLAYWRIGHT TEST CONFIGURATION")
         print("=" * 50)
         print(f"Environment: {cls.app.env}")
+        print(f"Subdomain: {cls.app.subdomain}")
         print(f"App URL: {cls.app.app_url}")
         print(f"API URL: {cls.api.base_url}")
         print(f"Browser: {cls.browser.browser_type}")
