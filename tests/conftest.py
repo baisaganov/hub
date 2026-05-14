@@ -33,6 +33,7 @@ def registration_user_creds():
 
 @pytest.fixture(scope='session')
 def base_user_creds():
+    """Зарегестрированный юзер"""
     return {
         'email': 'auto_test_base_user@hub.kz',
         'password': 'Pass1234!',
