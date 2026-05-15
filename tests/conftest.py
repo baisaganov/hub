@@ -5,7 +5,7 @@ from pages.auth_page import AuthPage
 
 from pages import *
 from pages.company_profile_page import CompanyProfilePage
-from pages.events_page import EventPage
+from pages.events_page import EventsPage
 
 from config import config
 
@@ -46,9 +46,13 @@ def auth_page(page):
     return AuthPage(page)
 
 
+# @pytest.fixture
+# def event_page(page):
+#     return EventPage(page)
+
 @pytest.fixture
-def event_page(page):
-    return EventPage(page)
+def events_page(page):
+    return EventsPage(page)
 
 
 @pytest.fixture

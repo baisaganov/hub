@@ -118,8 +118,11 @@ class TestHubID:
     @allure.title('Авторизация с помощью почты')
     @allure.label("level", "UI")
     @pytest.mark.critical
-    @pytest.mark.parametrize('env', ['dev', ])
+    @pytest.mark.parametrize('env', ['qa', ])
     def test_email_auth(self, base_user_creds, auth_page, env):
+        config.app.subdomain = env
+        config.app.update_app_url()
+
         with allure.step('Переход к HubID'):
             auth_page.navigate()
 

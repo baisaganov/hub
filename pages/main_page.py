@@ -19,6 +19,7 @@ class MainPage(BasePage):
         self.LOGIN_BTN = page.locator("a[href*='/login/?next=/']")
         self.SIGNUP_BTN = page.locator("a[href*='/signup/?next=/']")
         self.INTRO_TOUR_CLOSE = page.locator("#intro-tour-modal_close")
+        self.EVENTS_LINK = page.locator("a[href*='event']").nth(1)
 
         # ===== USER MENU DROPDOWN =====
         self.USER_MENU_DROPDOWN_OPEN = page.locator("#user-menu-dropdown-click")
@@ -59,4 +60,6 @@ class MainPage(BasePage):
             self.USER_MENU_DROPDOWN.locator('a').first.click()
 
         assert response.value.status == 200
+
+
 
