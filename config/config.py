@@ -14,7 +14,7 @@ class APIConfig:
     retry_delay: int = int(get_env("API_RETRY_DELAY", "10000"))
 
     # Headers
-    default_headers: dict = None
+    default_headers: dict|None = None
 
     def __post_init__(self):
         """Инициализация заголовков по умолчанию"""
@@ -30,7 +30,7 @@ class AppConfig:
     """Конфигурация приложения"""
 
     base_domain: str = get_env("BASE_DOMAIN", "astanahub.com")
-    subdomain: str = ""
+    subdomain: str = get_env("ENV", "dev")
 
 
     # URLs

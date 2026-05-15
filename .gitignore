@@ -19,3 +19,9 @@ logs_hub.log
 trash
 trash.py
 test-history
+allure-report
+logs
+screenshots
+history
+traces
+testdata/account_data
