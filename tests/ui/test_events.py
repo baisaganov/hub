@@ -13,11 +13,7 @@ class TestEvents:
 
     @allure.title('Events')
     @pytest.mark.critical
-    # @pytest.mark.parametrize('env', ['qa'])
     def test_participate_event(self, main_page, events_page):
-        # config.app.subdomain = env
-        # config.app.update_app_url()
-
         with allure.step('Подгружаем куки'):
             main_page.navigate()
             main_page.load_context()
