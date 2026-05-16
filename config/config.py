@@ -29,12 +29,12 @@ class APIConfig:
 class AppConfig:
     """Конфигурация приложения"""
 
-    base_domain: str = get_env("BASE_DOMAIN", "astanahub.com")
+    base_domain: str = get_env("BASE_DOMAIN", "https://astanahub.com")
     subdomain: str = get_env("ENV", "dev")
 
 
     # URLs
-    app_url: str = get_env('APP_URL', "https://astanahub.com")
+    app_url: str = f"https://{'' if subdomain == 'prod' else subdomain + '.'}'astanahub.com'"
     admin_url: str = get_env("ADMIN_URL", "astanahub.com/secretadmin")
 
     # Окружение
@@ -59,7 +59,7 @@ class AppConfig:
         """
         Обновить полный URL приложения с учетом поддомена.
         """
-        if self.subdomain:
+        if self.subdomain and self.env != 'prod':
             self.app_url = f"https://{self.subdomain}.{self.base_domain}"
             return
         self.app_url = f"https://{self.base_domain}"
