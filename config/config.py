@@ -34,7 +34,7 @@ class AppConfig:
 
 
     # URLs
-    app_url: str = f"https://{'' if subdomain == 'prod' else subdomain + '.'}'astanahub.com'"
+    app_url: str = f"https://{'' if subdomain == 'prod' else subdomain + '.'}astanahub.com"
     admin_url: str = get_env("ADMIN_URL", "astanahub.com/secretadmin")
 
     # Окружение

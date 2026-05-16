@@ -119,11 +119,8 @@ class TestHubID:
     @allure.label("level", "UI")
     @pytest.mark.critical
     @allure.id("2")
-    # @pytest.mark.parametrize('env', ['qa', ])
     @allure.label("owner", "aliwka")
     def test_email_auth(self, base_user_creds, auth_page):
-        # config.app.subdomain = env
-        # config.app.update_app_url()
 
         with allure.step('Переход к HubID'):
             auth_page.navigate()
