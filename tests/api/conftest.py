@@ -3,7 +3,6 @@ Fixtures для API тестов.
 """
 
 import pytest
-from api.admin_api import AdminAPI
 from config import config
 
 

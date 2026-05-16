@@ -5,8 +5,7 @@ import playwright._impl._errors
 
 from playwright.sync_api import Page, expect
 
-from commons.types import AdminFuncTypes, AdminAccountChangeType
-from api.admin_api import AdminAPI
+
 from pages.base import BasePage
 from config import config
 

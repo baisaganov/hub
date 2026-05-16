@@ -4,7 +4,6 @@ import logging as log
 import configparser
 from enum import Enum
 import allure
-from commons.types import FormButton
 from config.settings import config_path
 from typing import Literal
 from config import config
