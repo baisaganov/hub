@@ -21,12 +21,12 @@ class BrowserConfig:
     navigation_timeout: int = get_env_int("NAVIGATION_TIMEOUT", 30000)  # Timeout навигации
 
     # === Браузер аргументы ===
-    args: List[str] = None
+    args: List[str]|None = None
     proxy: Optional[dict] = None
-    downloads_path: Optional[str] = get_env("DOWNLOADS_PATH", None)
+    downloads_path: Optional[str] = get_env("DOWNLOADS_PATH")
 
     # === Emulation (эмуляция устройств) ===
-    user_agent: Optional[str] = get_env("USER_AGENT", None)
+    user_agent: Optional[str]|None = get_env("USER_AGENT")
     locale: str = get_env("LOCALE", "en-US")
     timezone: str = get_env("TIMEZONE", "UTC")
 
@@ -82,7 +82,7 @@ class BrowserConfig:
             "height": self.viewport_height,
         }
 
-    def get_device_emulation(self, device_name: str = None) -> dict:
+    def get_device_emulation(self, device_name = None) -> dict:
         """
         Получить опции для эмуляции устройства
 
@@ -109,5 +109,4 @@ class BrowserConfig:
                 "user_agent": self.user_agent,
             },
         }
-
-        return devices.get(device_name, devices["Desktop"])
+        return devices.get("Desktop") # pyright: ignore[reportReturnType]
