@@ -85,3 +85,4 @@ jobs:
         run: allurectl watch -- uv run pytest ./tests --alluredir=allure-results || true
         env:
           ALLURE_RESULTS: allure-results
+
