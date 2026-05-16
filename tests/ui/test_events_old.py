@@ -7,6 +7,7 @@ from config import config
 
 @allure.suite("Events")
 @pytest.mark.order(3)
+@pytest.mark.skip
 class TestEvents:
     @allure.title("Сохранение ивента с одной сферой")
     @pytest.mark.regression

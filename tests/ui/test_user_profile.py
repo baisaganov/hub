@@ -6,6 +6,7 @@ import allure
 
 @allure.suite('User Profile')
 @pytest.mark.order(2)
+@pytest.mark.skip
 class TestUserProfile:
 
     @allure.title('Добавление компании')

@@ -118,10 +118,12 @@ class TestHubID:
     @allure.title('Авторизация с помощью почты')
     @allure.label("level", "UI")
     @pytest.mark.critical
-    @pytest.mark.parametrize('env', ['qa', ])
-    def test_email_auth(self, base_user_creds, auth_page, env):
-        config.app.subdomain = env
-        config.app.update_app_url()
+    # @pytest.mark.parametrize('env', ['qa', ])
+    @allure.id("2")
+    @allure.label("owner", "aliwka")
+    def test_email_auth(self, base_user_creds, auth_page):
+        # config.app.subdomain = env
+        # config.app.update_app_url()
 
         with allure.step('Переход к HubID'):
             auth_page.navigate()
@@ -144,7 +146,7 @@ class TestHubID:
         with allure.step('Ожидание завершения загрузки страницы и сохранение куки'):
             auth_page.page.wait_for_url(f"**/account/v2/main/", wait_until='domcontentloaded')
             auth_page.page.keyboard.press('Escape')
-            auth_page.save_context(env)
+            auth_page.save_context()
 
     def phone_auth(self, env, base_user_creds):
         pass

@@ -34,7 +34,7 @@ class AppConfig:
 
 
     # URLs
-    app_url: str = "https://dev.astanahub.com"
+    app_url: str = get_env('APP_URL', "https://astanahub.com")
     admin_url: str = get_env("ADMIN_URL", "astanahub.com/secretadmin")
 
     # Окружение
