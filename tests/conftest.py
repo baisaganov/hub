@@ -35,9 +35,8 @@ def registration_user_creds():
 def base_user_creds():
     """Зарегестрированный юзер"""
     return {
-        'email': 'auto_test_base_user@hub.kz',
-        'password': 'Pass1234!',
-        'token': ''
+        'email': config.app.test_user_email,
+        'password': config.app.test_user_password
     }
 
 
