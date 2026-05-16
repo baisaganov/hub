@@ -115,11 +115,10 @@ class TestHubID:
                 registration_user_creds['surname']
             )
 
-    @allure.title('Авторизация с помощью почты')
+    @allure.title('Авторизация с помощью email')
     @allure.label("level", "UI")
     @pytest.mark.critical
     # @pytest.mark.parametrize('env', ['qa', ])
-    @allure.id("2")
     @allure.label("owner", "aliwka")
     def test_email_auth(self, base_user_creds, auth_page):
         # config.app.subdomain = env
