@@ -118,6 +118,7 @@ class TestHubID:
     @allure.title('Авторизация с помощью email')
     @allure.label("level", "UI")
     @pytest.mark.critical
+    @allure.id("2")
     # @pytest.mark.parametrize('env', ['qa', ])
     @allure.label("owner", "aliwka")
     def test_email_auth(self, base_user_creds, auth_page):
