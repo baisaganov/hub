@@ -53,7 +53,7 @@ jobs:
       API_RETRY_DELAY: ${{ secrets.API_RETRY_DELAY }}
       BASE_DOMAIN: ${{ secrets.BASE_DOMAIN }}
       ADMIN_URL: ${{ secrets.ADMIN_URL }}
-      ENV: ${{ secrets.ENV }}
+      ENV: ${{ secrets.ENV || 'dev' }}
       LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
       TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
       TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
@@ -84,9 +84,9 @@ jobs:
 
       - name: Check env
         run: |
-          env | grep -E "(ENV|BROWSER|BASE_DOMAIN|DOWNLOADS_PATH)"
+          env | grep -E "(ENV)"
 
       - name: Run tests
-        run: env | grep -E "(ENV|BROWSER)" && allurectl watch --env ALLURE_ENV=$ENV -- uv run pytest ./tests --alluredir=allure-results || true
+        run: allurectl watch -- uv run pytest ./tests --alluredir=allure-results || true
         env:
           ALLURE_RESULTS: allure-results
