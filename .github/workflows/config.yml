@@ -1,166 +1,41 @@
-name: Tests
+name: run-and-upload-to-testops
 
-on: [push]
+on:
+  workflow_dispatch:
+    inputs:
+      ALLURE_JOB_RUN_ID:
+        description: 'TestOps service parameter. Leave blank'
+        required: false
+      ALLURE_USERNAME:
+        description: 'TestOps service parameter. Leave blank'
+        required: false
 
 env:
-  HEADLESS: ${{ secrets.HEADLESS }}
-  BROWSER: ${{ secrets.BROWSER }}
-  SLOW_MO: ${{ secrets.SLOW_MO }}
-  TIMEOUT: ${{ secrets.TIMEOUT }}
-  NAVIGATION_TIMEOUT: ${{ secrets.NAVIGATION_TIMEOUT }}
-  VIEWPORT_WIDTH: ${{ secrets.VIEWPORT_WIDTH }}
-  VIEWPORT_HEIGHT: ${{ secrets.VIEWPORT_HEIGHT }}
-  USER_AGENT: ${{ secrets.USER_AGENT }}
-  LOCALE: ${{ secrets.LOCALE }}
-  TIMEZONE: ${{ secrets.TIMEZONE }}
-  TRACE: ${{ secrets.TRACE }}
-  SCREENSHOT: ${{ secrets.SCREENSHOT }}
-  VIDEO: ${{ secrets.VIDEO }}
-  DOWNLOADS_PATH: ${{ secrets.DOWNLOADS_PATH}}
-  API_BASE_URL: ${{ secrets.API_BASE_URL }}
-  API_TIMEOUT: ${{ secrets.API_TIMEOUT }}
-  API_RETRY_ATTEMPTS: ${{ secrets.API_RETRY_ATTEMPTS }}
-  API_RETRY_DELAY: ${{ secrets.API_RETRY_DELAY }}
-  BASE_DOMAIN: ${{ secrets.BASE_DOMAIN }}
-  ADMIN_URL: ${{ secrets.ADMIN_URL }}
-  ENV: ${{ secrets.ENV }}
-  LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
-  TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
-  TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
-  API_TOKEN: ${{ secrets.API_TOKEN }}
-  ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/tests
+  ALLURE_RESULTS: 'allure-results'
+  ALLURE_JOB_RUN_ID: ${{ github.event.inputs.ALLURE_JOB_RUN_ID }}
 
 jobs:
-  build:
+  all-tests:
     runs-on: ubuntu-latest
-    outputs:
-      image-tag: ${{ steps.meta.outputs.tags }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
+      - uses: actions/setup-python@v4
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          python-version: '3.11'
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix={{branch}}-
-            type=semver,pattern={{version}}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  test:
-    needs: build
-    runs-on: ubuntu-latest
-    env:
-      IMAGE_TAG: ${{ needs.build.outputs.image-tag }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run Tests via docker compose
-        run: timeout 1800 docker compose up --exit-code-from tests
-
-      - name: Upload Allure results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-results
-          path: allure-results
-          retention-days: 30
-
-
-  generate-report:
-    runs-on: ubuntu-latest
-    needs: test
-    if: always()
-    steps:
-      - name: Download Allure results
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-results
-          path: allure-results/
-
-      - name: Get Allure history
-        uses: actions/checkout@v4
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
-
-      - name: Generate Allure Report
-        uses: simple-elf/allure-report-action@master
-        id: allure-report
-        with:
-          allure_results: allure-results
-          gh_pages: gh-pages
-          allure_report: allure-report
-          allure_history: allure-history
-          keep_reports: 30
-
-      - name: Deploy to Github Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: allure-history
-
-      - name: Send to Telegram
-        continue-on-error: true
+      - name: Install dependencies
         run: |
-          apt-get update && apt-get install -y jq --no-install-recommends
+          python -m pip install --upgrade pip
+          pip install allure-pytest pytest
 
-          # Найди файл со статистикой
-          STAT_FILE=$(find allure-history -name "summary.json" -o -name "statistics.json" | head -1)
+      - name: Install and configure allurectl
+        uses: allure-framework/setup-allurectl@v1
+        with:
+          allure-endpoint: https://astanahub.testops.cloud # URL твоего TestOps
+          allure-token: ${{ secrets.ALLURE_TOKEN }}
+          allure-project-id: 1 # ID проекта в TestOps
 
-          if [ -z "$STAT_FILE" ]; then
-            echo "Statistic file not found, trying alternative paths..."
-            STAT_FILE=$(find allure-history -type f -name "*.json" | grep -E "(summary|statistic)" | head -1)
-          fi
-
-          echo "Using stat file: $STAT_FILE"
-
-          if [ ! -z "$STAT_FILE" ] && [ -f "$STAT_FILE" ]; then
-            STAT=$(cat "$STAT_FILE")
-            echo "Raw data: $STAT"
-
-            PASSED=$(echo "$STAT" | jq '.statistic.passed // .passed // 0' 2>/dev/null)
-            FAILED=$(echo "$STAT" | jq '.statistic.failed // .failed // 0' 2>/dev/null)
-            SKIPPED=$(echo "$STAT" | jq '.statistic.skipped // .skipped // 0' 2>/dev/null)
-            BROKEN=$(echo "$STAT" | jq '.statistic.broken // .broken // 0' 2>/dev/null)
-          else
-            echo "No statistic file found!"
-            PASSED="?"
-            FAILED="?"
-            SKIPPED="?"
-            BROKEN="?"
-          fi
-
-          NOW=$(date -d "+5 hours" +"%Y-%m-%d %H:%M:%S")
-          URL="https://baisaganov.github.io/hub/"
-          TEXT="📊 <b>Allure report updated at $NOW</b>%0A%0A🟢Passed: $PASSED%0A🔴Failed: $FAILED%0A🔘Skipped: $SKIPPED%0A🟡️Broken: $BROKEN%0ALink: $URL"
-
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TG_BOT_TOKEN }}/sendMessage" \
-            -d "chat_id=-1002962410919" \
-            -d "text=$TEXT" \
-            -d "parse_mode=HTML"
+      - name: Run pytest tests
+        run: |
+          allurectl watch -- pytest ./tests --alluredir=${ALLURE_RESULTS} --capture=no || true
