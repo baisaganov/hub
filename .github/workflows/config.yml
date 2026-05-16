@@ -10,8 +10,20 @@ on:
         description: 'TestOps service parameter. Leave blank'
         required: false
 
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed # только при merge (не при открытии PR)
+
+permissions:
+  actions: write
+  contents: read
+
 jobs:
   all-tests:
+    # Для pull_request запускаем только если PR был смёрджен
+    if: github.event_name != 'pull_request' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     env:
@@ -33,7 +45,7 @@ jobs:
       TRACE: ${{ secrets.TRACE }}
       SCREENSHOT: ${{ secrets.SCREENSHOT }}
       VIDEO: ${{ secrets.VIDEO }}
-      DOWNLOADS_PATH: ${{ secrets.DOWNLOADS_PATH}}
+      DOWNLOADS_PATH: ${{ secrets.DOWNLOADS_PATH }}
       API_BASE_URL: ${{ secrets.API_BASE_URL }}
       API_TIMEOUT: ${{ secrets.API_TIMEOUT }}
       API_RETRY_ATTEMPTS: ${{ secrets.API_RETRY_ATTEMPTS }}
@@ -54,26 +66,21 @@ jobs:
         with:
           python-version: '3.11'
 
-      # Установка uv
       - name: Install uv
         run: pip install uv
 
-      # Установка зависимостей из твоего pyproject.toml / uv.lock
       - name: Install dependencies
         run: uv sync
 
-      # Установка браузеров Playwright
       - name: Install Playwright browsers
         run: uv run playwright install chromium --with-deps
 
-      # Установка allurectl
       - uses: allure-framework/setup-allurectl@v1
         with:
           allure-endpoint: https://astanahub.testops.cloud
           allure-token: ${{ secrets.ALLURE_TOKEN }}
           allure-project-id: 1
 
-      # Запуск тестов с передачей результатов в TestOps
       - name: Run tests
         run: allurectl watch -- uv run pytest ./tests --alluredir=allure-results || true
         env:
