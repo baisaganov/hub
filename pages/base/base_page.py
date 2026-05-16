@@ -21,14 +21,14 @@ class BasePage:
         self.NEXT_BTN = page.locator('#nextStep > div.btn')
 
     #  ============== Готовые функции ==============
-    def get_context_path(self, env):
+    def get_context_path(self, env=''):
         return {
             'COOKIES_PATH': Path(f'testdata/account_data/cookies_{env}.json'),
             'LOCALSTORAGE_PATH': Path(f'testdata/account_data/localstorage_{env}.json'),
             'SESSIONSTORAGE_PATH': Path(f'testdata/account_data/sessionstorage_{env}.json')
         }
 
-    def save_context(self, env):
+    def save_context(self, env=''):
         paths = self.get_context_path(env)
         COOKIES_PATH = paths.get('COOKIES_PATH')
         LOCALSTORAGE_PATH = paths.get('LOCALSTORAGE_PATH')
@@ -43,7 +43,7 @@ class BasePage:
         session_data = self._page.evaluate("() => Object.fromEntries(Object.entries(sessionStorage))")
         SESSIONSTORAGE_PATH.write_text(json.dumps(session_data))
 
-    def load_context(self, env):
+    def load_context(self, env=''):
         paths = self.get_context_path(env)
         COOKIES_PATH = paths.get('COOKIES_PATH')
         LOCALSTORAGE_PATH = paths.get('LOCALSTORAGE_PATH')
