@@ -11,31 +11,43 @@ on:
         required: false
 
 env:
-  ALLURE_RESULTS: 'allure-results'
+  ALLURE_ENDPOINT: https://astanahub.testops.cloud
+  ALLURE_PROJECT_ID: 1
+  ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
   ALLURE_JOB_RUN_ID: ${{ github.event.inputs.ALLURE_JOB_RUN_ID }}
+  ALLURE_RESULTS: allure-results
 
 jobs:
   all-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
+      # Установка uv
+      - name: Install uv
+        run: pip install uv
+
+      # Установка зависимостей из твоего pyproject.toml / uv.lock
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install allure-pytest pytest
+        run: uv sync
 
-      - name: Install and configure allurectl
-        uses: allure-framework/setup-allurectl@v1
+      # Установка браузеров Playwright
+      - name: Install Playwright browsers
+        run: uv run playwright install chromium --with-deps
+
+      # Установка allurectl
+      - uses: allure-framework/setup-allurectl@v1
         with:
-          allure-endpoint: https://astanahub.testops.cloud # URL твоего TestOps
+          allure-endpoint: https://astanahub.testops.cloud
           allure-token: ${{ secrets.ALLURE_TOKEN }}
-          allure-project-id: 1 # ID проекта в TestOps
+          allure-project-id: 1
 
-      - name: Run pytest tests
-        run: |
-          allurectl watch -- pytest ./tests --alluredir=${ALLURE_RESULTS} --capture=no || true
+      # Запуск тестов с передачей результатов в TestOps
+      - name: Run tests
+        run: allurectl watch -- uv run pytest ./tests --alluredir=allure-results || true
+        env:
+          ALLURE_RESULTS: allure-results
