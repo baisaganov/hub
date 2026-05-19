@@ -9,6 +9,12 @@ on:
       ALLURE_USERNAME:
         description: 'TestOps service parameter. Leave blank'
         required: false
+      ENV:
+        description: 'Environment (dev/qa/prod)'
+        required: true
+
+
+
 
   pull_request:
     branches:
@@ -53,7 +59,7 @@ jobs:
       API_RETRY_DELAY: ${{ secrets.API_RETRY_DELAY }}
       BASE_DOMAIN: ${{ secrets.BASE_DOMAIN }}
       ADMIN_URL: ${{ secrets.ADMIN_URL }}
-      ENV: ${{ secrets.ENV || 'dev' }}
+      ENV: ${{ github.event.inputs.ENV || secrets.ENV || 'dev' }}
       LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
       TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
       TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
@@ -66,6 +72,9 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
+      
+      - name: Print runner IP
+        run: curl -s https://api.ipify.org && echo
 
       - name: Install uv
         run: pip install uv
