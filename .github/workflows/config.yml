@@ -90,3 +90,7 @@ jobs:
         run: allurectl watch -- uv run pytest ./tests --alluredir=allure-results || true
         env:
           ALLURE_RESULTS: allure-results
+          ALLURE_JOB_RUN_ID: ${{ github.event.inputs.ALLURE_JOB_RUN_ID }}
+          ALLURE_TOKEN: ${{ secrets.ALLURE_TOKEN }}
+          ALLURE_ENDPOINT: https://astanahub.testops.cloud
+          ALLURE_PROJECT_ID: 1
