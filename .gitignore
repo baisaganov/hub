@@ -25,6 +25,7 @@ screenshots
 history
 traces
 testdata/account_data/*
+!testdata/account_data/.gitkeep
 .vscode
 .DS_Store
 *.p12
