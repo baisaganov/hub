@@ -24,7 +24,7 @@ logs
 screenshots
 history
 traces
-testdata/account_data
+testdata/account_data/*
 .vscode
 .DS_Store
 *.p12

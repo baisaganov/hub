@@ -74,11 +74,13 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Debug inputs
+      - name: Debug paths
         run: |
-          echo "Input ENV: ${{ github.event.inputs.ENV }}"
-          echo "Final ENV: $ENV"
-      
+          pwd
+          ls -la
+          ls -la testdata || true
+          ls -la testdata/account_data || true
+            
       - name: Print runner IP
         run: curl -s https://api.ipify.org && echo
 
@@ -96,10 +98,6 @@ jobs:
           allure-endpoint: https://astanahub.testops.cloud
           allure-token: ${{ secrets.ALLURE_TOKEN }}
           allure-project-id: 1
-
-      - name: Check env
-        run: |
-          env | grep -E "(ENV)"
 
       - name: Run tests
         run: allurectl watch -- uv run pytest ./tests --alluredir=allure-results || true
