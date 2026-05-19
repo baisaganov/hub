@@ -11,7 +11,7 @@ on:
         required: false
       ENV:
         description: 'Environment (dev/qa/prod)'
-        required: true
+        required: false
 
 
 
