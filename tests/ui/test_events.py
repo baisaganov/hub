@@ -4,43 +4,40 @@ from config import config
 from playwright.sync_api import Page
 
 
-
-
-@allure.suite('Events')
+@allure.suite("Events")
 @pytest.mark.events
 class TestEvents:
 
-
-    @allure.title('Events')
+    @allure.title("Events")
     @pytest.mark.critical
     def test_participate_event(self, main_page, events_page):
-        with allure.step('Подгружаем куки'):
+        with allure.step("Подгружаем куки"):
             main_page.navigate()
             main_page.load_context()
             main_page.page.reload()
-            main_page.page.keyboard.press('Escape')
+            main_page.page.keyboard.press("Escape")
 
-        with allure.step('Переход к Мероприятиям'):
+        with allure.step("Переход к Мероприятиям"):
 
-            with main_page.page.expect_response('**/event/') as response:
-                main_page.page.keyboard.press('Escape')
+            with main_page.page.expect_response("**/event/") as response:
+                main_page.page.keyboard.press("Escape")
                 main_page.EVENTS_LINK.click()
                 try:
                     main_page.EVENTS_LINK.click()
                 except:
                     pass
 
-            assert response.value.status == 200, 'Event Page does not open'
+            assert response.value.status == 200, "Event Page does not open"
 
-        with allure.step('Открытие Мероприятия'):
+        with allure.step("Открытие Мероприятия"):
             events_page.open_event_card(0)
 
         with allure.step('Клик на "Участвовать"'):
             events_page.click_participate_btn()
-            main_page.page.pause()
+            # main_page.page.pause()
 
-        with allure.step('Заполнение формы'):
+        with allure.step("Заполнение формы"):
             pass
 
-        with allure.step('Отправка'):
+        with allure.step("Отправка"):
             pass
