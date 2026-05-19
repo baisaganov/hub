@@ -12,6 +12,7 @@ on:
       ENV:
         description: 'Environment (dev/qa/prod)'
         required: false
+        default: 'dev'
 
 
 
@@ -59,7 +60,7 @@ jobs:
       API_RETRY_DELAY: ${{ secrets.API_RETRY_DELAY }}
       BASE_DOMAIN: ${{ secrets.BASE_DOMAIN }}
       ADMIN_URL: ${{ secrets.ADMIN_URL }}
-      ENV: ${{ github.event.inputs.ENV || secrets.ENV || 'dev' }}
+      ENV: ${{ github.event.inputs.ENV || 'dev' }}
       LOG_LEVEL: ${{ secrets.LOG_LEVEL }}
       TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
       TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
@@ -72,6 +73,11 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
+
+      - name: Debug inputs
+        run: |
+          echo "Input ENV: ${{ github.event.inputs.ENV }}"
+          echo "Final ENV: $ENV"
       
       - name: Print runner IP
         run: curl -s https://api.ipify.org && echo
