@@ -1,24 +1,17 @@
-"""
-Fixtures для API тестов.
-"""
-
 import pytest
+
 from config import config
 
 
-# @pytest.fixture
-# def authenticated_admin():
-#     """
-#     API клиент с авторизацией.
-#     Специфично для API тестов.
-#     """
-#     api = config.api.get
-#     token = await api.login()
-#     api.set_token(token)
-
-#     yield api
-
-#     # Cleanup (опционально)
-#     await api.logout()
+@pytest.fixture(scope='session')
+def api_base_url():
+    """Базовый URL для API-тестов."""
+    return config.api.base_url.rstrip('/')
 
 
+@pytest.fixture(scope='session')
+def api_headers():
+    """Заголовки по умолчанию для API-запросов."""
+    headers = config.api.default_headers.copy() if config.api.default_headers else {}
+    headers.setdefault('Accept', 'application/json')
+    return headers
