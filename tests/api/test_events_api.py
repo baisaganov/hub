@@ -8,8 +8,8 @@ from config import config
 
 
 @pytest.mark.api
-@allure.suite("Events API")
-@allure.label("level", "API")
+@allure.suite("Events")
+@allure.tag("api")
 class TestEventsAPI:
     @staticmethod
     def assert_event_item_structure(event_item: dict) -> None:
