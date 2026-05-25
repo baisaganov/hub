@@ -3,6 +3,9 @@ import pytest
 from config import config
 from playwright.sync_api import Page
 
+from pages import base
+from pages.auth_page import AuthPage
+
 
 @allure.suite("Events")
 @pytest.mark.events
@@ -10,11 +13,14 @@ class TestEvents:
 
     @allure.title("Events")
     @pytest.mark.critical
-    def test_participate_event(self, main_page, events_page):
-        with allure.step("Подгружаем куки"):
-            main_page.navigate()
-            main_page.load_context()
-            main_page.page.reload()
+    def test_participate_event(
+        self, main_page, events_page, auth_page: AuthPage, base_user_creds
+    ):
+        with allure.step("Авторизация"):
+
+            auth_page.email_auth(
+                base_user_creds["email"], password=base_user_creds["password"]
+            )
             main_page.page.keyboard.press("Escape")
 
         with allure.step("Переход к Мероприятиям"):
@@ -30,14 +36,14 @@ class TestEvents:
             assert response.value.status == 200, "Event Page does not open"
 
         with allure.step("Открытие Мероприятия"):
-            events_page.open_event_card(0)
+            events_page.open_event_card()
 
         with allure.step('Клик на "Участвовать"'):
             events_page.click_participate_btn()
-            # main_page.page.pause()
 
         with allure.step("Заполнение формы"):
-            pass
+            events_page.get_result()
+            events_page.checkbox_click()
 
         with allure.step("Отправка"):
-            pass
+            events_page.send_form()
