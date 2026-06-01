@@ -37,7 +37,7 @@ class TestEvents:
             assert response.value.status == 200, "Event Page does not open"
 
         with allure.step("Открытие Мероприятия"):
-            events_page.open_event_card(0)
+            events_page.open_event_card()
 
         with allure.step('Клик на "Участвовать"'):
             events_page.click_participate_btn()

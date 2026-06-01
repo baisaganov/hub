@@ -2,11 +2,13 @@ import random
 
 from playwright.sync_api import expect
 from pages.base import BasePage
+import random
+import json
 
 
 class EventsPage(BasePage):
     def __init__(self, page):
-        self.page = page
+        self.page: Page = page
 
         self.EVENT_CARD = page.locator("div.event-card")
 
