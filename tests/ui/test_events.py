@@ -32,16 +32,19 @@ class TestEvents:
             assert response.value.status == 200, "Event Page does not open"
 
         with allure.step("Открытие Мероприятия"):
-            events_page.open_event_card(0)
+            events_page.open_event_card()
 
         with allure.step('Клик на "Участвовать"'):
             events_page.click_participate_btn()
 
         with allure.step("Заполнение формы"):
-            # events_page.checkbox_click()
-            events_page.get_result()
-            events_page.page.pause()
+            events_page.checkbox_click()
+            email, name, role, agreement = events_page.get_result()
 
+            assert email != ""
+            assert name != ""
+            assert role != ""
+            assert agreement is True
 
         with allure.step("Отправка"):
-            pass
+            events_page.submit_form()
