@@ -33,7 +33,12 @@ class HubMarketPage(BasePage):
         if liked_svg.is_visible():
             return False
 
-        favorite.click()
+        with self.page.expect_response("**/product_like/**/like/") as response_info:
+            favorite.click()
+
+        response = response_info.value
+        assert response.status == 200
+
         expect(liked_svg).to_be_visible()
 
         return True
