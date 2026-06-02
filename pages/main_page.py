@@ -19,6 +19,8 @@ class MainPage(BasePage):
         self.SIGNUP_BTN = page.locator("a[href*='/signup/?next=/']")
         self.INTRO_TOUR_CLOSE = page.locator("#intro-tour-modal_close")
         self.EVENTS_LINK = page.locator("a[href*='event']").nth(1)
+        self.VACANCY_LINK = page.locator("a[href*='vacancy']").nth(1)
+
 
         # ===== USER MENU DROPDOWN =====
         self.USER_MENU_DROPDOWN_OPEN = page.locator("#user-menu-dropdown-click")

@@ -13,6 +13,7 @@ from datetime import date, datetime
 
 from pages.main_page import MainPage
 from pages.user_profile_page import UserProfilePage
+from pages.vacancy_page import VacancyPage
 
 
 @pytest.fixture(scope="session")
@@ -70,3 +71,7 @@ def user_profile_page(page):
 @pytest.fixture
 def company_profile_page(page):
     return CompanyProfilePage(page)
+
+@pytest.fixture
+def vacancy_page(page):
+    return VacancyPage(page)
