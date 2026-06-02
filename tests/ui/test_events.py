@@ -43,10 +43,13 @@ class TestEvents:
             events_page.click_participate_btn()
 
         with allure.step("Заполнение формы"):
-            selected_role = events_page.choose_random_role_event()
             events_page.checkbox_click()
+            email, name, role, agreement = events_page.get_result()
 
-            print(f"Выбрана роль: {selected_role}")
+            assert email != ""
+            assert name != ""
+            assert role != ""
+            assert agreement is True
 
         with allure.step("Отправка"):
-            events_page.submit_participation_form()
+            events_page.submit_form()
