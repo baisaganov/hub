@@ -1,4 +1,8 @@
 import random
+from operator import truediv
+from xml.sax.xmlreader import Locator
+
+from playwright.sync_api import Page, expect
 
 from playwright.sync_api import expect
 from pages.base import BasePage
@@ -18,32 +22,23 @@ class EventsPage(BasePage):
             "#ParticipationRequestModal #event-modal__container"
         )
 
-        self.FULL_NAME = page.locator(
-            "#ParticipationRequestModal input[name='full_name']"
-        )
+        # Все локаторы формы — внутри модалки!
+        self.FULL_NAME = self.MODAL_EVENT.locator("input[name=full_name]")
+        self.EMAIL = self.MODAL_EVENT.locator("input[name=email]")
+        self.ROLE = self.MODAL_EVENT.locator("select[name=role]")
+        self.AGREEMENT_CHECKBOX = self.MODAL_EVENT.locator("input[name='agreement']")
+        self.submit_button = self.MODAL_EVENT.locator("button[type=submit]")
 
-        self.EMAIL = page.locator(
-            "#ParticipationRequestModal input[name='email']"
-        )
+        # Добавление в избранное
+        self.FAVORITE_BTN = page.locator("div.favoriteEvent")
+        self.FAVORITE_ACTIVE = page.locator("div.favoriteEvent span.liked-icon")
+        self.FAVORITE_INACTIVE = page.locator("div.favoriteEvent span.unliked-icon")
 
-        self.CHOOSE_ROLE_EVENT = page.locator(
-            "#ParticipationRequestModal select[name='role']"
-        )
+    def open_event_card(self, card_number: int = None):
+        if card_number is None:
+            x = self.EVENT_CARD.all()
+            card_number = random.randint(0, len(x) - 1)
 
-        self.AGREEMENT_CHECKBOX = page.locator(
-            "#ParticipationRequestModal input[name='agreement']"
-        )
-
-        self.AGREEMENT_CHECKBOX_LABEL = page.locator(
-            "#ParticipationRequestModal #event-label-checkbox-2 label"
-        )
-
-        self.SUBMIT_PARTICIPATE_BTN = page.locator(
-            "#ParticipationRequestModal button[type='submit']"
-        )
-
-    def open_event_card(self, card_number: int):
-        expect(self.EVENT_CARD.nth(card_number)).to_be_visible()
         self.EVENT_CARD.nth(card_number).click()
 
     def click_participate_btn(self):
@@ -79,31 +74,45 @@ class EventsPage(BasePage):
         return random_role
 
     def checkbox_click(self):
-        expect(self.AGREEMENT_CHECKBOX).to_be_attached()
-
-        self.AGREEMENT_CHECKBOX_LABEL.scroll_into_view_if_needed()
-        self.AGREEMENT_CHECKBOX_LABEL.click()
-
-        if not self.AGREEMENT_CHECKBOX.is_checked():
-            self.AGREEMENT_CHECKBOX.set_checked(True, force=True)
-
-        expect(self.AGREEMENT_CHECKBOX).to_be_checked()
-
-    def submit_participation_form(self):
-        expect(self.SUBMIT_PARTICIPATE_BTN).to_be_visible()
-        expect(self.SUBMIT_PARTICIPATE_BTN).to_be_enabled()
-
-        self.SUBMIT_PARTICIPATE_BTN.scroll_into_view_if_needed()
-        self.SUBMIT_PARTICIPATE_BTN.click()
+        self.AGREEMENT_CHECKBOX.check(force=True)
 
     def get_result(self):
-        name = self.FULL_NAME.input_value()
         email = self.EMAIL.input_value()
+        name = self.FULL_NAME.input_value()
+        role = self.ROLE.input_value()
+        agreement = self.AGREEMENT_CHECKBOX.is_checked()
 
-        print(f"ФИО: {name}")
-        print(f"Email: {email}")
+        print(email)
+        print(name)
+        print(role)
+        print(agreement)
 
-        return {
-            "name": name,
-            "email": email,
-        }
+        return email, name, role, agreement
+
+    def submit_button(self):
+        self.submit_button.click(force=True)
+
+    def submit_form(self):
+        self.submit_button.click(force=True)
+
+    def get_cards_count(self) -> int:
+        return self.EVENT_CARD.count()
+
+    def is_current_event_favorite(self) -> bool:
+        return self.FAVORITE_ACTIVE.is_visible()
+
+    def add_to_favorite(self):
+        self.FAVORITE_BTN.click()
+        expect(self.FAVORITE_ACTIVE).to_be_visible()
+
+    def remove_from_favorite(self):
+        self.FAVORITE_BTN.click()
+        expect(self.FAVORITE_INACTIVE).to_be_visible()
+
+    def is_favorite_active(self) -> bool:
+        return self.FAVORITE_ACTIVE.is_visible()
+
+
+
+
+
