@@ -81,9 +81,5 @@ def hubmarket_page(page):
     return HubMarketPage(page)
 
 @pytest.fixture
-def vacancy_page(page):
-    return VacancyPage(page)
-
-@pytest.fixture
 def vacancy_create_post_page(page):
     return VacancyCreatePostPage(page)
