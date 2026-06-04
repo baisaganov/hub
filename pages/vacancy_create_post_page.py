@@ -1,6 +1,6 @@
 import random
 
-from playwright.sync_api import expect
+from playwright.sync_api import expect, Page, Locator
 from pages.base import BasePage
 import random
 import json
@@ -30,10 +30,10 @@ class VacancyCreatePostPage(BasePage):
         self.TYPE_EMPLOYMENT = self.FORM.locator('select[x-model="form.vacancy_type"]')
         self.CITY = self.FORM.locator('select[x-model="form.region"]')
 
-        self.PUBLICATION_POLICY_CHECKBOX = self.page.locator('input#publication_policy_accepted')
+        self.PUBLICATION_POLICY_CHECKBOX: Locator = self.page.locator('input#publication_policy_accepted')
         self.AGREEMENT_CHECKBOX = self.page.locator('input[x-model="form.agreement"]')
 
-        self.PUBLISH_BUTTON = self.page.locator("button.btn.btn--primary.w-full")
+        self.PUBLISH_BUTTON = self.page.locator(selector="button.btn.btn--primary.w-full")
 
         self.TRANSLATION_MODAL = self.page.locator('div[x-show="showTranslationModal"]')
         self.TRANSLATE_BUTTON = self.TRANSLATION_MODAL.locator('button.btn--primary')
@@ -50,12 +50,12 @@ class VacancyCreatePostPage(BasePage):
 
         assert response.value.status == 200, "не удалось открыть страницу"
 
-    def fill_vacancy(self, email,name,text,number):
+    def fill_vacancy(self, email, name, text, number):
         x=self.SELECT_COMPANY.locator("option").nth(1).get_attribute("value")
         self.SELECT_COMPANY.select_option(value=x)
 
         self.EMAIL_VACANCY.fill(email)
-        self.NAME_VACANCY.fill(name)
+        self.NAME_VACANCY.fill(value=name)
 
         options = self.SELECT_DIRECTION.locator("option")
         count = options.count()

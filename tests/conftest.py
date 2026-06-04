@@ -16,7 +16,7 @@ from pages.user_profile_page import UserProfilePage
 from pages.vacancy_page import VacancyPage
 from pages.hubmarket_page import HubMarketPage
 from pages.vacancy_page import VacancyPage
-from pages.vacancy_create_post import VacancyCreatePostPage
+from pages.vacancy_create_post_page import VacancyCreatePostPage
 
 @pytest.fixture(scope="session")
 def registration_user_creds():
