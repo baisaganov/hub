@@ -8,16 +8,24 @@ class CommunityPage(BasePage):
         self.page = page
         self.COMMUNITY_TAP = page.locator('a[href="/ru/community/"]').first
         self.CREATE_POST = page.locator('a[href="/account/v2/blog/create/"]')
-        self.AUTHOR = page.get_by_label('Автор')
-        self.title_input = page.get_by_placeholder("Например: Инновации встречаются с возможностями")
-        self.CATEGORY = page.locator('select.text-select').nth(1)
-        self.cover_upload_tab = page.get_by_text("Загрузить")
-        self.cover_unsplash_tab = page.get_by_text("Unsplash")
-        self.cover_youtube_tab = page.locator('span.community-tab', has_text="Youtube")
-        self.YOUTUBE_T = page.get_by_placeholder("Вставьте ссылку на YouTube-видео")
-        self.TEXT = page.locator('#editorRU .codex-editor__redactor')
-        self.publish_btn = page.get_by_role("button", name="Опубликовать")
-        self.confirm_btn = page.locator('button.btn--primary.rounded-md', has_text="Подтвердить")
+        self.AUTHOR = page.locator('select[x-model="form.company"]')
+        self.title_input = page.get_by_placeholder(
+            "Например: Инновации встречаются с возможностями"
+        )  # TODO: Заменить
+        self.CATEGORY = page.locator("select.text-select").nth(1)
+        self.cover_upload_tab = page.get_by_text("Загрузить")  # TODO: Заменить
+        self.cover_unsplash_tab = page.get_by_text("Unsplash")  # TODO: Заменить
+        self.cover_youtube_tab = page.locator("span.community-tab", has_text="Youtube")
+        self.YOUTUBE_T = page.get_by_placeholder(
+            "Вставьте ссылку на YouTube-видео"
+        )  # TODO: Заменить
+        self.TEXT = page.locator("#editorRU .codex-editor__redactor")
+        self.publish_btn = page.get_by_role(
+            "button", name="Опубликовать"
+        )  # TODO: Заменить
+        self.confirm_btn = page.locator(
+            "button.btn--primary.rounded-md", has_text="Подтвердить"
+        )  # TODO: Заменить
 
     # ↓ все методы внутри класса — 4 пробела отступа!
     def go_to_community(self):
@@ -46,6 +54,9 @@ class CommunityPage(BasePage):
 
     def publish(self):
         self.publish_btn.click()
-        self.page.wait_for_timeout(1000)
-        self.confirm_btn.click()
-        expect(self.page).to_have_url(re.compile("/success/"))
+        with self.page.expect_response("**/success/") as response:
+            self.confirm_btn.click()
+
+        assert (
+            response.value.status == 200
+        ), f"Пост не создан статус {response.value.status}"
