@@ -17,6 +17,7 @@ class EventsPage(BasePage):
         self.EVENT_CARD = page.locator("div.event-card")
 
         self.PARTICIPATE_BTN = page.locator("#participate-button")
+        self.CREATE_EVENT_BUTTON = page.locator('a[href*="/event/create"]').first
 
         self.MODAL_EVENT = page.locator(
             "#ParticipationRequestModal #event-modal__container"
@@ -111,6 +112,16 @@ class EventsPage(BasePage):
 
     def is_favorite_active(self) -> bool:
         return self.FAVORITE_ACTIVE.is_visible()
+
+    def create_event_click(self):
+
+        with self.page.expect_response("**/account/event/create/") as response:
+            self.CREATE_EVENT_BUTTON.click()
+
+        assert (
+            response.value.status == 200
+        ), f"EventCreatePage: Стрница создания не открылась. Статус: {response.value.status}"
+
 
 
 

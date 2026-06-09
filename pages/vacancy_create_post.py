@@ -51,7 +51,7 @@ class VacancyCreatePostPage(BasePage):
         assert response.value.status == 200, "не удалось открыть страницу"
 
     def fill_vacancy(self, email,name,text,number):
-        x=self.SELECT_COMPANY.locator("option").nth(1).get_attribute("value")
+        x = self.SELECT_COMPANY.locator("option").nth(1).get_attribute("value")
         self.SELECT_COMPANY.select_option(value=x)
 
         self.EMAIL_VACANCY.fill(email)

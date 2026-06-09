@@ -19,7 +19,7 @@ def test_add_event_to_favorite(main_page, events_page, auth_page: AuthPage, even
         assert response.value.status == 200, "Events page does not open"
 
     with allure.step("Проверка наличия кнопки 'Создать мероприятие'"):
-        events_create_page.create_event_click()
+        events_page.create_event_click()
 
     with allure.step("Заполнение формы"):
-        events_create_page.fill_required_fields()
+        events_create_page.fill_phone("+77778999937")

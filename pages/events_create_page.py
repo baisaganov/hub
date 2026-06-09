@@ -5,6 +5,9 @@ from playwright.sync_api import Page, expect
 from pages.base import BasePage
 from config import config
 from pathlib import Path
+import random
+import json
+
 
 
 class EventCreatePage(BasePage):
@@ -12,71 +15,23 @@ class EventCreatePage(BasePage):
         super().__init__(page)
         self.page = page
 
-        # ============================ Компания (1) ============================
-        self.COMPANY_DROPDOWN = page.locator("")  # TODO: add locator
-
-        # ============================ Название мероприятия (2) ============================
-        self.EVENT_TITLE_INPUT = page.locator("")  # TODO: add locator
-
-        # ============================ Описание мероприятия (3) ============================
-        self.EVENT_DESCRIPTION_INPUT = page.locator("")  # TODO: add locator
-
-        # ============================ Обложка (4) ============================
-        self.COVER_UPLOAD_INPUT = page.locator("")  # TODO: add locator
+        self.FORM = self.page.locator("div[x-show='!loader']")
+        self.COMPANY_DROPDOWN = self.FORM.locator('select[x-model="form.company"]')
+        self.EVENT_TITLE_INPUT = self.FORM.locator('[x-model ="form.title[lang]"]')
+        self.EVENT_DESCRIPTION_INPUT = self.FORM.locator("div.ce-paragraph")  # TODO: need to verify locator 1/3
+        self.COVER_UPLOAD_INPUT = self.FORM.locator("input[type=tel]")  # TODO: add locator
         self.COVER_FILE = Path("testdata/files/event_cover.png")
-
-        # ============================ Формат (5) ============================
-        self.FORMAT_ONLINE_BTN = page.locator("")  # TODO: add locator
-        self.FORMAT_OFFLINE_BTN = page.locator("")  # TODO: add locator
-        self.FORMAT_HYBRID_BTN = page.locator("")  # TODO: add locator
-
-        # ============================ Дата и время начала (6) ============================
-        self.START_DATE_INPUT = page.locator("")  # TODO: add locator
-
-        # ============================ Дата и время окончания (7) ============================
-        self.END_DATE_INPUT = page.locator("")  # TODO: add locator
-
-        # ============================ Ссылка на онлайн-мероприятие (8) ============================
-        self.ONLINE_LINK_INPUT = page.locator("")  # TODO: add locator
-
-        # ============================ Сфера (9) ============================
-        self.SPHERE_DROPDOWN = page.locator("")  # TODO: add locator
-
-        # ============================ Приём заявок (10) ============================
-        self.OWN_LINK_TOGGLE = page.locator(
-            ""
-        )  # TODO: add locator - "Использовать собственную ссылку для приёма заявок"
-        self.IIN_TOGGLE = page.locator(
-            ""
-        )  # TODO: add locator - "Запрашивать ИИН для пропуска на мероприятие"
-
-        # ============================ Тип мероприятия (11) ============================
-        self.EVENT_TYPE_DROPDOWN = page.locator("")  # TODO: add locator
-
-        # ============================ Телефон (12) ============================
-        self.PHONE_INPUT = page.locator("")  # TODO: add locator
-
-        # ============================ Электронная почта (13) ============================
-        self.EMAIL_INPUT = page.locator("")  # TODO: add locator
-
-        # ============================ Боковая панель — статус и кнопки ============================
-        self.STATUS_LABEL = page.locator("")  # TODO: add.  locator - "Черновик"
-        self.STATE_LABEL = page.locator("")  # TODO: add locator - "Не сохранено"
-        self.SAVE_DRAFT_BTN = page.locator(
-            ""
-        )  # TODO: add locator - "Сохранить как черновик"
-        self.PUBLISH_BTN = page.locator("")  # TODO: add locator - green "Опубликовать"
-
-        # ============================ Чекбоксы публикации ============================
-        self.PUBLISH_RULES_CHECKBOX = page.locator(
-            ""
-        )  # TODO: add locator - "Я ознакомлен(а) с «Правилами публикации»"
-        self.PUBLISH_PERMIT_CHECKBOX = page.locator(
-            ""
-        )  # TODO: add locator - "Я даю разрешение на публикацию указанных данных..."
-
-    # ============================ Навигация ============================
-
+        self.FORMAT_OFFLINE_BTN = self.FORM.locator('[x-text="opt.label"]')  # TODO: need to verify locator 2/3
+        self.START_DATE_INPUT = self.FORM.locator("input[type=tel]")  # TODO: add locator
+        self.END_DATE_INPUT = self.FORM.locator("input[type=tel]")  # TODO: add locator
+        self.ONLINE_LINK_INPUT = self.FORM.locator("input[type=tel]")  # TODO: add locator
+        self.SPHERE_LIST_ITEMS = self.FORM.locator('ul li span[x-text="item.value"]')
+        self.EVENT_TYPE_DROPDOWN = self.FORM.locator("select[x-model='form.event_type']")  # TODO: add locator
+        self.PHONE_INPUT = self.page.locator('input[type=tel]')
+        self.EMAIL_INPUT = self.page.locator('input[x-model="form.email"]')
+        self.SAVE_DRAFT_BTN = self.FORM.locator('button.btn.btn--secondary')
+        self.PUBLISH_RULES_CHECKBOX = self.page.locator('input#publication_policy_accepted')
+        self.PUBLISH_PERMIT_CHECKBOX = self.page.locator('input#agreement')
     def navigate(self):
         with self.page.expect_response("**/events/create/") as resp:
             self.page.goto(f"{config.app.app_url}/ru/events/create/")
@@ -85,26 +40,15 @@ class EventCreatePage(BasePage):
             resp.value.status == 200
         ), f"EventCreatePage: Страница не доступна [{resp.value.status}]"
 
-    # ============================ Одиночные действия ============================
 
-    def create_event_click(self):
-        assert (
-            self.CREATE_EVENT_BUTTON.is_visible()
-        ), "Кнопка 'Создать мероприятие' не отображается для авторизованного пользователя"
-        with self.page.expect_response("**/account/event/create/") as response:
-            self.CREATE_EVENT_BUTTON.click()
-
-        assert (
-            response.value.status == 200
-        ), f"EventCreatePage: Стрница создания не открылась. Статус: {response.value.status}"
-
-    def select_company(self, company_name: str):
+    def select_company(self):
         """
         Выбор компании из дропдауна (поле 1)
         :param company_name: Название компании
         """
-        self.COMPANY_DROPDOWN.click()
-        self.page.get_by_text(company_name).click()
+        x = self.COMPANY_DROPDOWN.locator("option").nth(1).get_attribute("value")
+        self.COMPANY_DROPDOWN.select_option(value=x)
+
 
     def fill_event_title(self, title: str):
         """
