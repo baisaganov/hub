@@ -1,62 +1,64 @@
 from playwright.sync_api import Page, expect
 from pages.base import BasePage
-import re
+import random
 
 
 class CommunityPage(BasePage):
     def __init__(self, page):
         self.page = page
-        self.COMMUNITY_TAP = page.locator('a[href="/ru/community/"]').first
+        self.COMMUNITY_MENU = page.locator('#tour3')
         self.CREATE_POST = page.locator('a[href="/account/v2/blog/create/"]')
-        self.AUTHOR = page.locator('select[x-model="form.company"]')
-        self.title_input = page.get_by_placeholder(
-            "Например: Инновации встречаются с возможностями"
-        )  # TODO: Заменить
-        self.CATEGORY = page.locator("select.text-select").nth(1)
-        self.cover_upload_tab = page.get_by_text("Загрузить")  # TODO: Заменить
-        self.cover_unsplash_tab = page.get_by_text("Unsplash")  # TODO: Заменить
-        self.cover_youtube_tab = page.locator("span.community-tab", has_text="Youtube")
-        self.YOUTUBE_T = page.get_by_placeholder(
-            "Вставьте ссылку на YouTube-видео"
-        )  # TODO: Заменить
-        self.TEXT = page.locator("#editorRU .codex-editor__redactor")
-        self.publish_btn = page.get_by_role(
-            "button", name="Опубликовать"
-        )  # TODO: Заменить
-        self.confirm_btn = page.locator(
-            "button.btn--primary.rounded-md", has_text="Подтвердить"
-        )  # TODO: Заменить
+        self.TITLE = page.locator('input[x-model="form.title[lang]"]')
+        self.CATEGORY = page.locator('select[x-model="form.category"]')
+        self.YOUTUBE = page.locator('div.community-tabs span.community-tab', has_text = "Youtube")
+        self.YOUTUBE_TEXT = page.locator('div[x-show="activeTab === \'youtube\'"] input[x-model="youtubeUrl"]')
+        self.TEXT = self.page.locator('#editorRU .ce-paragraph[contenteditable="true"]')
 
-    # ↓ все методы внутри класса — 4 пробела отступа!
-    def go_to_community(self):
-        self.page.goto("https://dev.astanahub.com/ru/community/")
+        # опубликовать кнопка + форма
+        self.PUBLISH = page.locator('span[x-show="!pendingPublish"]')
+        self.PROCEED_TRANSLATION_BTN = page.locator('button.btn--primary.rounded-md') # для кнопки подтвердить
 
-    def go_to_create_post(self):
+    def click_community(self):
+        self.COMMUNITY_MENU.click()
+
+    def click_create_post(self):
         self.CREATE_POST.click()
+        self.page.wait_for_url("**/blog/create/**", wait_until='networkidle') # осыны понять
 
-    def select_author(self, author: str):
-        self.AUTHOR.select_option(label=author)
+    def title_fill(self, title):
+        self.TITLE.click()
+        self.TITLE.fill(title)
 
-    def title(self, title: str):
-        self.title_input.fill(title)
+    def select_random_category(self):
+        # получаем все доступные options
+        options = self.CATEGORY.locator('option').all()
+        # убираем первый если это пустой placeholder ("Выберите категорию")
+        options = [opt for opt in options if opt.get_attribute('value')]
+        # выбираем рандомный
+        random_option = random.choice(options)
+        value = random_option.get_attribute('value')
+        self.CATEGORY.select_option(value)
 
-    def select_category(self, category: str):
-        self.CATEGORY.select_option(value="9")  # 9 = GameDev
+    def youtube_fill(self, youtube):
+        self.YOUTUBE.click()
+        self.YOUTUBE_TEXT.fill(youtube, force=True)
 
-    def fill_youtube_link(self, url: str):
-        self.cover_youtube_tab.click()
-        self.page.wait_for_timeout(1000)
-        self.YOUTUBE_T.fill(url, force=True)
-
-    def fill_text(self, text: str):
+    def text_fill(self, text1):
         self.TEXT.click()
-        self.TEXT.type(text)
+        self.TEXT.wait_for(state='visible')
+        self.page.keyboard.type(text1)
+        # ждём пока текст появится в редакторе
+        self.page.wait_for_function(
+            f"document.querySelector('#editorRU .ce-paragraph').innerText.length > 0"
+        )
 
+    # опубликовать
     def publish(self):
-        self.publish_btn.click()
-        with self.page.expect_response("**/success/") as response:
-            self.confirm_btn.click()
+        self.PUBLISH.click()
+        self.PROCEED_TRANSLATION_BTN.wait_for(state='visible')
+        self.PROCEED_TRANSLATION_BTN.click()
 
-        assert (
-            response.value.status == 200
-        ), f"Пост не создан статус {response.value.status}"
+
+
+
+

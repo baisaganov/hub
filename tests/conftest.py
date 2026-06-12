@@ -5,6 +5,7 @@ from pages.auth_page import AuthPage
 
 from pages import *
 from pages.company_profile_page import CompanyProfilePage
+from pages.create_post_page import CreatePostPage
 from pages.events_page import EventsPage
 
 from config import config
@@ -14,6 +15,8 @@ from datetime import date, datetime
 from pages.main_page import MainPage
 from pages.user_profile_page import UserProfilePage
 from pages.community_page import CommunityPage
+from pages.notification_page import NotificationPage
+
 
 
 @pytest.fixture(scope="session")
@@ -73,5 +76,17 @@ def company_profile_page(page):
     return CompanyProfilePage(page)
 
 @pytest.fixture
-def create_post(page):
+def community_page(page):
     return CommunityPage(page)
+
+@pytest.fixture
+def create_post_page(page):
+    return CreatePostPage(page)
+
+@pytest.fixture
+def notification_page(page):
+    return NotificationPage(page)
+
+
+
+
