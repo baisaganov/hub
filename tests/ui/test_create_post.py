@@ -9,7 +9,7 @@ from pages.community_page import CommunityPage
 
 @allure.suite("Post creation")
 @pytest.mark.events
-class creatPost:
+class CreatPost:
     @allure.title("Создание поста")
     def test_create_post(self, page, auth_page: AuthPage, base_user_creds, main_page, community_page):
         with allure.step("Авторизация"):
