@@ -92,7 +92,7 @@ pytest tests/ui/ -v -s
 ```bash
 pytest tests/ui/ -v -s -k login
 pytest tests/ui/ -m smoke
-pytest tests/ui/ --alluredir=allure-results
+pytest tests/ui/ --alluredir=logs/allure-results
 ```
 
 Pytest можно запускать по маркерам, а результаты Allure обычно сохраняют в папку `allure-results` для последующего просмотра через `allure serve`.[1][4]
@@ -102,13 +102,13 @@ Pytest можно запускать по маркерам, а результа�
 Сформировать результаты:
 
 ```bash
-pytest tests/ui/ --alluredir=allure-results
+pytest tests/ui/ --alluredir=logs/allure-results
 ```
 
 Открыть отчет локально:
 
 ```bash
-allure serve allure-results
+allure serve logs/allure-results
 ```
 
 Во многих примерах с Pytest и Playwright локальный просмотр Allure запускают именно через `allure serve allure-results`.[1][4]
@@ -175,3 +175,11 @@ git commit -m "add: API tests for /auth endpoint"
 git push origin feature/new-tests
 ```
 
+
+
+Clients
+Занимается только http
+Условия:
+- если действие нужно многим тестам — выноси в клиент,
+- если это просто одна редкая проверка — можно оставить ближе к тесту,
+- если метод в клиенте начинает содержать половину тестовой логики — ты перегрузил клиент

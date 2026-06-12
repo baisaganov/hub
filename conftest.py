@@ -14,8 +14,8 @@ import os
 
 logger = Logger().get_logger(__name__)
 
-TRACES_DIR = Path("traces")
-SCREENSHOTS_DIR = Path("screenshots")
+TRACES_DIR = Path("logs/traces")
+SCREENSHOTS_DIR = Path("logs/screenshots")
 LOGS_DIR = Path("logs")
 
 TRACES_DIR.mkdir(exist_ok=True)
