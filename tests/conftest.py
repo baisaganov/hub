@@ -5,7 +5,6 @@ from pages.auth_page import AuthPage
 
 from pages import *
 from pages.company_profile_page import CompanyProfilePage
-from pages.create_post_page import CreatePostPage
 from pages.events_page import EventsPage
 
 from config import config
@@ -78,10 +77,6 @@ def company_profile_page(page):
 @pytest.fixture
 def community_page(page):
     return CommunityPage(page)
-
-@pytest.fixture
-def create_post_page(page):
-    return CreatePostPage(page)
 
 @pytest.fixture
 def notification_page(page):
