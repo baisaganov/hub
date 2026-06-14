@@ -175,3 +175,9 @@ git commit -m "add: API tests for /auth endpoint"
 git push origin feature/new-tests
 ```
 
+git restore -- .
+git reset --hard
+git clean -fd
+git stash
+git stash pop
+git stash clear
