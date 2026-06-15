@@ -8,6 +8,7 @@ dependencies = [
     "allure-pytest>=2.15.3",
     "allure-python-commons>=2.15.3",
     "beautifulsoup4~=4.13.4",
+    "faker>=40.23.0",
     "httpx>=0.28.1",
     "keyboard~=0.13.5",
     "lorem-text>=3.0",
