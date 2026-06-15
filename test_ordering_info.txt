@@ -1,3 +1,0 @@
-1. TestHubID
-2. TestUserProfile
-3. TestEvents
