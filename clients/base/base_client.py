@@ -4,6 +4,10 @@ from typing import Any
 import allure
 import httpx
 
+from utils.logger import Logger
+
+logger = Logger().get_logger(__name__)
+
 
 class ApiError(Exception):
     def __init__(
@@ -12,7 +16,15 @@ class ApiError(Exception):
         super().__init__(message)
         self.status_code = status_code
         self.response_body = response_body
-        
+
+    def __str__(self) -> str:
+        extras = []
+        if self.status_code is not None:
+            extras.append(f"status_code={self.status_code}")
+        if self.response_body is not None:
+            extras.append(f"response_body={self.response_body}")
+        suffix = f" ({'; '.join(extras)})" if extras else ""
+        return f"{super().__str__()}{suffix}"
 
 
 class BaseClient:
@@ -77,10 +89,16 @@ class BaseClient:
                     else set(expected_status)
                 )
                 if response.status_code not in expected:
+                    error_message = f"{method} {url} returned {response.status_code}, expected {expected}."
+                    response_body = self._safe_json(response)
+                    logger.error(error_message)
+                    logger.error("Response body: %s", response_body)
+                    print(error_message)
+                    print("Response body:", response_body)
                     raise ApiError(
-                        message=f"{method} {url} returned {response.status_code}, expected {expected}",
+                        message=error_message,
                         status_code=response.status_code,
-                        response_body=self._safe_json(response),
+                        response_body=response_body,
                     )
 
             return response

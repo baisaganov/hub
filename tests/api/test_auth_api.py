@@ -7,24 +7,20 @@ pytestmark = [pytest.mark.api]
 class TestAuthAPI:
     @allure.title('Valid authorization')
     @pytest.mark.asyncio
-    async def test_valid_authorization(self, auth_client):
-        response, cookies = await auth_client.login(email='auto_test_base_user@hub.kz', password='Pass1234!')
-
-        print(cookies.get("dasessionid"))
-        print(cookies.get("csrftoken"))
+    async def test_valid_authorization(self, authorized_http_client):
+        # response, cookies = await auth_client.login(email='a.baisaganov@astanahub.com', password='Pass1234!')
+        # assert response['user']['email'] == 'auto_test_base_user@hub.kz'
 
 
-
-        assert response['user']['email'] == 'auto_test_base_user@hub.kz'
-
-        csrf_token = cookies.get("csrftoken")
-        session_id = cookies.get("dasessionid")
-        
-
-        response = await auth_client.get(
-                            "/s/auth/api/v1/external/token/exchange/",
-                            headers={"X-CSRFToken": csrf_token}
-                        )
+        response = await authorized_http_client.post(
+                    's/auth/api/v1/has_permissions/',
+                    json_body={
+                        "permissions": [
+                                        "ai_moderation"
+                                    ]
+                    },
+                    expected_status=200,
+                )
 
         print(response.json())
 

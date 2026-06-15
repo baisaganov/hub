@@ -1,7 +1,7 @@
 import httpx
 import pytest
 
-from clients.auth_client import AuthClient
+from clients.auth.auth_client import AuthClient
 from config import config
 
 API_EMAIL = config.app.test_user_email
@@ -10,6 +10,7 @@ API_BASE_URL = config.app.app_url
 REQUEST_TIMEOUT = config.api.timeout
 
 
+# TODO: Fix
 @pytest.fixture
 async def anonymous_http_client():
     async with httpx.AsyncClient(
@@ -25,46 +26,19 @@ async def auth_client(anonymous_http_client):
 
 
 @pytest.fixture
-async def access_token(auth_client):
-    token = await auth_client.login(
+async def get_cookies(auth_client):
+    response = await auth_client.login(
         email=API_EMAIL,
         password=API_PASSWORD,
     )
-    return token
+    return response.client.cookies
 
 
 @pytest.fixture
-def auth_headers(access_token):
-    return {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json",
-    }
-
-
-@pytest.fixture
-async def authorized_http_client(auth_headers):
+async def authorized_http_client(auth_client):
     """Авторизованный клиент"""
-    async with httpx.AsyncClient(
-        base_url=API_BASE_URL,
-        headers=auth_headers,
-        timeout=REQUEST_TIMEOUT,
-    ) as client:
-        yield client
-
-
-@pytest.fixture
-async def users_client(authorized_http_client):
-    yield AuthClient(authorized_http_client)
-
-
-@pytest.fixture
-async def created_user(users_client):
-    user = await users_client.create_user(
-        name="Test User",
-        email="test_user@example.com",
-        role="user",
+    await auth_client.login(
+        email=config.app.test_user_email,
+        password=config.app.test_user_password,
     )
-
-    yield user
-
-    await users_client.delete_user(user["id"])
+    yield auth_client

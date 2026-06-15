@@ -14,4 +14,4 @@ class AuthClient(BaseClient):
         body = response.json()
         headers = response.cookies
         
-        return body, headers
+        return (body, headers)
