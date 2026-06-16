@@ -12,4 +12,4 @@ class AuthClient(BaseClient):
             expected_status=expected_status,
         )
         
-        return response.json()
+        return response
