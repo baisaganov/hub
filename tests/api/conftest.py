@@ -3,6 +3,7 @@ import pytest
 
 from clients.auth.auth_client import AuthClient
 from config import config
+from clients.user.user_client import UserClient
 
 API_EMAIL = config.app.test_user_email
 API_PASSWORD = config.app.test_user_password
@@ -21,6 +22,17 @@ async def anonymous_http_client():
 
 
 @pytest.fixture
+async def authorized_http_client(get_cookies):
+    cookies = get_cookies
+
+    async with httpx.AsyncClient(
+        base_url=API_BASE_URL,
+        timeout=REQUEST_TIMEOUT,
+        cookies=cookies
+    ) as client:
+        yield client
+
+@pytest.fixture
 async def auth_client(anonymous_http_client):
     yield AuthClient(anonymous_http_client)
 
@@ -31,14 +43,9 @@ async def get_cookies(auth_client):
         email=API_EMAIL,
         password=API_PASSWORD,
     )
-    return response.client.cookies
+    return response.cookies
 
 
-@pytest.fixture
-async def authorized_http_client(auth_client):
-    """Авторизованный клиент"""
-    await auth_client.login(
-        email=config.app.test_user_email,
-        password=config.app.test_user_password,
-    )
-    yield auth_client
+@pytest.fixture 
+async def user_client(authorized_http_client):
+    yield UserClient(authorized_http_client)
