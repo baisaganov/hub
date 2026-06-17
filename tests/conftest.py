@@ -77,6 +77,8 @@ def company_profile_page(page):
 @pytest.fixture
 def vacancy_page(page):
     return VacancyPage(page)
+
+@pytest.fixture
 def hubmarket_page(page):
     return HubMarketPage(page)
 

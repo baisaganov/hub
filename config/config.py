@@ -8,11 +8,6 @@ from dataclasses import dataclass, field
 class APIConfig:
     """Конфигурация для API тестов"""
 
-    base_url: str = get_env("API_BASE_URL", "https://astanahub.com")
-    subdomain: str = get_env("ENV", "dev")
-    api_base_url: str = f"https://{'' if subdomain == 'prod' else subdomain + '.'}astanahub.com"
-
-
     timeout: int = int(get_env("API_TIMEOUT", "30000"))
     retry_attempts: int = int(get_env("API_RETRY_ATTEMPTS", "3"))
     retry_delay: int = int(get_env("API_RETRY_DELAY", "10000"))
