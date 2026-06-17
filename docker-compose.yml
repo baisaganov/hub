@@ -9,5 +9,5 @@ services:
 #    Постоянно запущенный контейнер
 #    stdin_open: true
 #    tty: true
-    command: uv run pytest --alluredir=allure-results tests/ui/test_hubid.py::TestHubID::test_email_registration_from_auth[dev]
+    command: uv run pytest --alluredir=logs/allure-results tests/ui/test_hubid.py::TestHubID::test_email_registration_from_auth[dev]
 

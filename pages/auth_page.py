@@ -68,7 +68,8 @@ class AuthPage(BasePage):
     # ============================ Сингл таск функции ============================
     def navigate(self):
         with self.page.expect_response(f'**/ru/s/auth/login/') as resp:
-            self.page.goto(f'{config.app.app_url}/ru/s/auth/login/')
+            print(f'{config.app.app_url}/ru/s/auth/login/')
+            self.page.goto(f'{config.app.app_url}/ru/s/auth/login/', wait_until='domcontentloaded')
 
         assert resp.value.status == 200, f'AuthPage: Страница не доступна {resp.value.status}'
 
@@ -279,6 +280,6 @@ class AuthPage(BasePage):
 
         assert response.value.status == 200, 'AuthPage: Ошибка при авторизации (этап пароль)'
 
-        self.page.wait_for_url(f"**/account/v2/main/", wait_until='domcontentloaded')
+        self.page.wait_for_url(f"**/account/v2/main/", wait_until='commit')
 
         self.page.keyboard.press('Escape')

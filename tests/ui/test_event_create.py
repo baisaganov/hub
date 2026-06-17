@@ -1,11 +1,18 @@
 import allure
 
+from pages.auth_page import AuthPage
 from tests.conftest import events_page
 
 
-def test_add_event_to_favorite(main_page, events_page, auth_page: AuthPage, events_create_page, base_user_creds):
+def test_event_create(
+    main_page, events_page, auth_page: AuthPage, events_create_page, base_user_creds
+):
     with allure.step("Авторизация"):
-        auth_page.email_auth(base_user_creds['email'], password=base_user_creds['password'])
+        auth_page.email_auth(
+            base_user_creds["email"], password=base_user_creds["password"]
+        )
+        main_page.page.pause()
+
         main_page.page.keyboard.press("Escape")
 
     with allure.step("Переход к Мероприятиям"):
