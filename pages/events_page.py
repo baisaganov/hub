@@ -1,13 +1,11 @@
 import random
-from operator import truediv
-from xml.sax.xmlreader import Locator
 
 from playwright.sync_api import Page, expect
 
 from playwright.sync_api import expect
 from pages.base import BasePage
 import random
-import json
+from config import config
 
 
 class EventsPage(BasePage):
@@ -15,12 +13,11 @@ class EventsPage(BasePage):
         self.page: Page = page
 
         self.EVENT_CARD = page.locator("div.event-card")
-
         self.PARTICIPATE_BTN = page.locator("#participate-button")
-
         self.MODAL_EVENT = page.locator(
             "#ParticipationRequestModal #event-modal__container"
         )
+        self.CREATE_EVENT_BUTTON = page.locator('a[href^="/account/event/create/"]')
 
         # Все локаторы формы — внутри модалки!
         self.FULL_NAME = self.MODAL_EVENT.locator("input[name=full_name]")
@@ -33,6 +30,21 @@ class EventsPage(BasePage):
         self.FAVORITE_BTN = page.locator("div.favoriteEvent")
         self.FAVORITE_ACTIVE = page.locator("div.favoriteEvent span.liked-icon")
         self.FAVORITE_INACTIVE = page.locator("div.favoriteEvent span.unliked-icon")
+
+    def navigate(self):
+        self.page.set_default_timeout(90000)
+
+        with self.page.expect_response(f"**/event/") as resp:
+            self.page.goto(
+                f"{config.app.app_url}/ru/event/", wait_until="domcontentloaded"
+            )
+
+        assert resp.value.status in [
+            200,
+            301,
+        ], f"EventPage: Страница не доступна {resp.value.status}"
+
+        self.page.set_default_timeout(30000)
 
     def open_event_card(self, card_number: int = None):
         if card_number is None:
@@ -112,7 +124,12 @@ class EventsPage(BasePage):
     def is_favorite_active(self) -> bool:
         return self.FAVORITE_ACTIVE.is_visible()
 
+    def create_event_click(self):
+        expect(self.CREATE_EVENT_BUTTON).to_be_visible()
 
+        with self.page.expect_response("**/account/event/create/") as response:
+            self.CREATE_EVENT_BUTTON.click()
 
-
-
+        assert (
+            response.value.status == 200
+        ), f"EventCreatePage: Страница создания не открылась. Статус: {response.value.status}"

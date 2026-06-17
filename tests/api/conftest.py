@@ -11,7 +11,6 @@ API_BASE_URL = config.app.app_url
 REQUEST_TIMEOUT = config.api.timeout
 
 
-# TODO: Fix
 @pytest.fixture
 async def anonymous_http_client():
     async with httpx.AsyncClient(

@@ -5,6 +5,7 @@ from pages.auth_page import AuthPage
 
 from pages import *
 from pages.company_profile_page import CompanyProfilePage
+from pages.events_create_page import EventCreatePage
 from pages.events_page import EventsPage
 
 from config import config
@@ -49,11 +50,6 @@ def auth_page(page):
     return AuthPage(page)
 
 
-# @pytest.fixture
-# def event_page(page):
-#     return EventPage(page)
-
-
 @pytest.fixture
 def events_page(page):
     return EventsPage(page)
@@ -85,3 +81,7 @@ def hubmarket_page(page):
 @pytest.fixture
 def vacancy_create_post_page(page):
     return VacancyCreatePostPage(page)
+
+@pytest.fixture
+def events_create_page(page):
+    return EventCreatePage(page)
