@@ -50,11 +50,6 @@ def auth_page(page):
     return AuthPage(page)
 
 
-# @pytest.fixture
-# def event_page(page):
-#     return EventPage(page)
-
-
 @pytest.fixture
 def events_page(page):
     return EventsPage(page)

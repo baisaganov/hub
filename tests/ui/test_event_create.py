@@ -1,32 +1,30 @@
 import allure
+import pytest
 
-from pages.auth_page import AuthPage
-from tests.conftest import events_page
+from config import config
 
 
-def test_event_create(
-    main_page, events_page, auth_page: AuthPage, events_create_page, base_user_creds
-):
-    with allure.step("Авторизация"):
-        auth_page.email_auth(
-            base_user_creds["email"], password=base_user_creds["password"]
-        )
-        main_page.page.pause()
+@allure.suite("Events")
+class TestEventsCreate:
+    @allure.title("Сохранение ивента с одной сферой")
+    @pytest.mark.regression
+    def test_event_send(
+        self, auth_page, events_page, events_create_page, base_user_creds
+    ):
 
-        main_page.page.keyboard.press("Escape")
+        with allure.step("Авторизация на портале"):
+            auth_page.email_auth(
+                base_user_creds["email"], base_user_creds["password"]
+            )
 
-    with allure.step("Переход к Мероприятиям"):
-        with main_page.page.expect_response("**/event/") as response:
-            main_page.page.keyboard.press("Escape")
-            main_page.EVENTS_LINK.click()
-            try:
-                main_page.EVENTS_LINK.click()
-            except:
-                pass
-        assert response.value.status == 200, "Events page does not open"
+        with allure.step("Переход на страницу мероприятий"):
+            events_page.navigate()
 
-    with allure.step("Проверка наличия кнопки 'Создать мероприятие'"):
-        events_create_page.create_event_click()
+        with allure.step("Переход к форме создания"):
+            events_page.create_event_click()
 
-    with allure.step("Заполнение формы"):
-        events_create_page.fill_required_fields()
+        with allure.step("Заполнение формы"):
+            events_create_page.fill_form(scope_count=1)
+
+        with allure.step("Отправка заявки"):
+            events_create_page.action_buttons("submit-create-event")
