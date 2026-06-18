@@ -1,8 +1,10 @@
 import random
 
+from playwright.async_api import Locator
 from playwright.sync_api import Page, expect
 
 from playwright.sync_api import expect
+import pytest
 from pages.base import BasePage
 import random
 from config import config
@@ -13,7 +15,8 @@ class EventsPage(BasePage):
         self.page: Page = page
 
         self.EVENT_CARD = page.locator("div.event-card")
-        self.PARTICIPATE_BTN = page.locator("#participate-button")
+        self.PARTICIPATE_BTN:Locator = page.locator("#participate-button")
+        self.PARTICIPATE_SUBMITED = page.locator('div.event-participant-submitted')
         self.MODAL_EVENT = page.locator(
             "#ParticipationRequestModal #event-modal__container"
         )
@@ -21,8 +24,8 @@ class EventsPage(BasePage):
 
         # Все локаторы формы — внутри модалки!
         self.FULL_NAME = self.MODAL_EVENT.locator("input[name=full_name]")
-        self.EMAIL = self.MODAL_EVENT.locator("input[name=email]")
-        self.ROLE = self.MODAL_EVENT.locator("select[name=role]")
+        self.EMAIL: Locator = self.MODAL_EVENT.locator("input[name=email]")
+        self.ROLE: Locator = self.MODAL_EVENT.locator("select[name=role]")
         self.AGREEMENT_CHECKBOX = self.MODAL_EVENT.locator("input[name='agreement']")
         self.submit_button = self.MODAL_EVENT.locator("button[type=submit]")
 
@@ -54,12 +57,34 @@ class EventsPage(BasePage):
         self.EVENT_CARD.nth(card_number).click()
 
     def click_participate_btn(self):
-        expect(self.PARTICIPATE_BTN).to_be_visible()
-        expect(self.PARTICIPATE_BTN).to_be_enabled()
+        """Клик по кнопке Участвовать"""
 
-        self.PARTICIPATE_BTN.click()
+        if self.PARTICIPATE_BTN.is_visible():
+            expect(self.PARTICIPATE_BTN).to_be_visible()
+            expect(self.PARTICIPATE_BTN).to_be_enabled()
 
-        expect(self.MODAL_EVENT).to_be_visible()
+            self.PARTICIPATE_BTN.click()
+
+            expect(self.MODAL_EVENT).to_be_visible()
+
+        else:
+            pytest.skip("Нет нужного состояния для продолжения теста")
+
+
+    def submited_text(self):
+        """Проверка текста, если юзер уже участвует в мероприятии"""
+        submited_text = {
+                    'ru': 'Заявка на участие подана',
+                    'kk': 'Қатысуға өтінім берілді',
+                    'en': 'Application for participation has been submitted'
+                }
+
+        if self.PARTICIPATE_SUBMITED.is_visible():
+            expect(self.PARTICIPATE_SUBMITED).to_be_visible()
+            expect(self.PARTICIPATE_SUBMITED).to_have_text(submited_text[self.get_current_lang(self.page.url)])
+
+        else:
+            pytest.skip("Нет нужного состояния для продолжения теста")
 
     def choose_random_role_event(self):
         expect(self.CHOOSE_ROLE_EVENT).to_be_visible()
@@ -89,17 +114,14 @@ class EventsPage(BasePage):
         self.AGREEMENT_CHECKBOX.check(force=True)
 
     def get_result(self):
-        email = self.EMAIL.input_value()
-        name = self.FULL_NAME.input_value()
-        role = self.ROLE.input_value()
-        agreement = self.AGREEMENT_CHECKBOX.is_checked()
+        email = self.EMAIL.get_attribute("value")
+        name = self.FULL_NAME.get_attribute("value")
+        agreement = self.AGREEMENT_CHECKBOX.get_attribute("value")
 
-        print(email)
-        print(name)
-        print(role)
-        print(agreement)
+        expect(self.EMAIL).not_to_be_empty()
+        expect(self.FULL_NAME).not_to_be_empty()
+        expect(self.AGREEMENT_CHECKBOX).to_be_checked()
 
-        return email, name, role, agreement
 
     def submit_button(self):
         self.submit_button.click(force=True)

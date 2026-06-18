@@ -21,15 +21,15 @@ class VacancyPage(BasePage):
             name="Вакансии",
             exact=True,
         )
-    def open_vacancy_from_menu(self):
-       expect(self.VACANCY_LINK).to_be_visible()
-       
-       with self.page.expect_response("**/ru/vacancy/") as response:
-                  self.VACANCY_LINK.click()
-       assert response.value.status == 200, "Страница не открылась"
 
-        # VACANCY LIST
-       self.VACANCY_CARD_LIST: Locator = self.page.locator("div.card-item.gap-3.cursor-pointer.w-full.vacancy-item")
+        self.VACANCY_CARD_LIST: Locator = self.page.locator("div.card-item")
+
+    def open_vacancy_from_menu(self):
+        expect(self.VACANCY_LINK).to_be_visible()
+
+        with self.page.expect_response("**/ru/vacancy/") as response:
+            self.VACANCY_LINK.click()
+        assert response.value.status == 200, "Страница не открылась"
 
     def add_vacancy_to_favorites(self, card_number: int = None):
         if card_number is None:

@@ -3,11 +3,12 @@ import pytest
 from config import config
 from playwright.sync_api import Page
 
-from pages import base
 from pages.auth_page import AuthPage
 
 @allure.suite("Vacancy")
+@allure.label("level", "UI")
 @pytest.mark.vacancy
+@pytest.mark.ui
 class TestVacancy:
 
     @allure.title("Добавление вакансии в избранное")

@@ -15,7 +15,7 @@ class TestAuthAPI:
         response = await auth_client.login(
             email=config.app.test_user_email, password=config.app.test_user_password
         )
-        assert response["user"]["email"] == config.app.test_user_email
+        assert response.json()["user"]["email"] == config.app.test_user_email
 
     @allure.title("")
     @pytest.mark.asyncio
@@ -26,7 +26,7 @@ class TestAuthAPI:
         )
         
         assert (
-            response["email"][0] == "Введите правильный адрес электронной почты."
+            response.json()["email"][0] == "Введите правильный адрес электронной почты."
         ), "Ввод почты не правильного формата пропускается системой"
 
    
