@@ -15,7 +15,7 @@ class BasePage:
     logging = log.getLogger(__name__)  # Подхватываем логгер
 
     def __init__(self, page: Page):
-        self._page = page
+        self._page: Page = page
         self.SAVE_BTN = page.locator('#saveForm[type=submit]')
         self.SUBMIT_ECP_BTN = page.locator('#sendEcp')
         self.NEXT_BTN = page.locator('#nextStep > div.btn')
@@ -27,6 +27,15 @@ class BasePage:
             'LOCALSTORAGE_PATH': Path(f'testdata/account_data/localstorage_{env}.json'),
             'SESSIONSTORAGE_PATH': Path(f'testdata/account_data/sessionstorage_{env}.json')
         }
+
+    def get_current_lang(self, url) -> str | None:
+        match = re.search(r'https?:\/\/dev\.astanahub\.com\/(en|kk|ru)(?=\/|$)', url)
+        if match:
+            lang = match.group(1)
+            return lang
+
+        return None
+
 
     def save_context(self, env=''):
         paths = self.get_context_path(env)
@@ -108,3 +117,4 @@ class BasePage:
 
         assert response.value.status == 200, f'BasePage: Ошибка запроса {response.value.status}, json {response.value.json()}'
 
+    

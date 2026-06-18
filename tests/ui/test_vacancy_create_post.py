@@ -2,10 +2,12 @@ import allure
 import pytest
 
 from pages.auth_page import AuthPage
-from pages.vacancy_page import VacancyPage
+from pages.vacancy.vacancy_page import VacancyPage
 
 @allure.suite("Vacancy")
+@allure.label("level", "UI")
 @pytest.mark.vacancy
+@pytest.mark.ui
 class TestVacancy:
     @allure.title("Vacancy")
     @pytest.mark.critical

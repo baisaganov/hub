@@ -5,6 +5,9 @@ from config import config
 
 
 @allure.suite("Events")
+@allure.label("level", "UI")
+@pytest.mark.ui
+@pytest.mark.events
 class TestEventsCreate:
     @allure.title("Сохранение ивента с одной сферой")
     @pytest.mark.regression
@@ -13,9 +16,7 @@ class TestEventsCreate:
     ):
 
         with allure.step("Авторизация на портале"):
-            auth_page.email_auth(
-                base_user_creds["email"], base_user_creds["password"]
-            )
+            auth_page.email_auth(base_user_creds["email"], base_user_creds["password"])
 
         with allure.step("Переход на страницу мероприятий"):
             events_page.navigate()

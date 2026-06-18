@@ -5,6 +5,9 @@ from pages.auth_page import AuthPage
 
 
 @allure.suite("Hub Market")
+@allure.label("level", "UI")
+@pytest.mark.ui
+@pytest.mark.hubmarket
 class TestHubMarket:
 
     @allure.title("Добавление популярного листинга в избранное")

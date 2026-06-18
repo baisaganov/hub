@@ -4,10 +4,17 @@ from pages.auth_page import AuthPage
 
 
 @allure.title("Добавление мероприятия в избранное")
+@allure.label("level", "UI")
 @pytest.mark.critical
-def test_add_event_to_favorite(main_page, events_page, auth_page: AuthPage, base_user_creds):
+@pytest.mark.ui
+@pytest.mark.events
+def test_add_event_to_favorite(
+    main_page, events_page, auth_page: AuthPage, base_user_creds
+):
     with allure.step("Авторизация"):
-        auth_page.email_auth(base_user_creds['email'], password=base_user_creds['password'])
+        auth_page.email_auth(
+            base_user_creds["email"], password=base_user_creds["password"]
+        )
         main_page.page.keyboard.press("Escape")
 
     with allure.step("Переход к Мероприятиям"):
@@ -31,11 +38,15 @@ def test_add_event_to_favorite(main_page, events_page, auth_page: AuthPage, base
             if not events_page.is_current_event_favorite():
                 with allure.step(f"Открыт ивент #{i} — не в избранном, добавляем"):
                     events_page.add_to_favorite()
-                    assert events_page.is_favorite_active(), "Не удалось добавить в избранное"
+                    assert (
+                        events_page.is_favorite_active()
+                    ), "Не удалось добавить в избранное"
                     added = True
                     break
             else:
-                with allure.step(f"Ивент #{i} уже в избранном — переходим к следующему"):
+                with allure.step(
+                    f"Ивент #{i} уже в избранном — переходим к следующему"
+                ):
                     events_page.page.go_back()  # ← возвращаемся на список карточек
 
         if not added:
@@ -44,9 +55,13 @@ def test_add_event_to_favorite(main_page, events_page, auth_page: AuthPage, base
 
 @allure.title("Удаление мероприятия из избранного")
 @pytest.mark.critical
-def test_remove_event_from_favorite(main_page, events_page, auth_page: AuthPage, base_user_creds):
+def test_remove_event_from_favorite(
+    main_page, events_page, auth_page: AuthPage, base_user_creds
+):
     with allure.step("Авторизация"):
-        auth_page.email_auth(base_user_creds['email'], password=base_user_creds['password'])
+        auth_page.email_auth(
+            base_user_creds["email"], password=base_user_creds["password"]
+        )
         main_page.page.keyboard.press("Escape")
 
     with allure.step("Переход к Мероприятиям"):
@@ -70,7 +85,9 @@ def test_remove_event_from_favorite(main_page, events_page, auth_page: AuthPage,
             if events_page.is_current_event_favorite():
                 with allure.step(f"Открыт ивент #{i} — в избранном, убираем лайк"):
                     events_page.remove_from_favorite()
-                    assert not events_page.is_favorite_active(), "Не удалось убрать из избранного"
+                    assert (
+                        not events_page.is_favorite_active()
+                    ), "Не удалось убрать из избранного"
                     removed = True
                     break
             else:
@@ -80,18 +97,15 @@ def test_remove_event_from_favorite(main_page, events_page, auth_page: AuthPage,
         if not removed:
             pytest.skip("Нет мероприятий в избранном — нечего убирать")
 
+
 @allure.title("Проверка всех карточек мероприятий")
 @pytest.mark.critical
 def test_check_all_events_favorite_status(
-        main_page,
-        events_page,
-        auth_page: AuthPage,
-        base_user_creds
+    main_page, events_page, auth_page: AuthPage, base_user_creds
 ):
     with allure.step("Авторизация"):
         auth_page.email_auth(
-            base_user_creds['email'],
-            password=base_user_creds['password']
+            base_user_creds["email"], password=base_user_creds["password"]
         )
         main_page.page.keyboard.press("Escape")
 
@@ -120,8 +134,9 @@ def test_check_all_events_favorite_status(
                 with allure.step(f"Ивент #{i} не в избранном — добавляем"):
                     events_page.add_to_favorite()
 
-                    assert events_page.is_favorite_active(), \
-                        "Не удалось добавить в избранное"
+                    assert (
+                        events_page.is_favorite_active()
+                    ), "Не удалось добавить в избранное"
 
                     found_not_favorite = True
 
