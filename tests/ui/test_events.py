@@ -10,7 +10,6 @@ from pages.auth_page import AuthPage
 @allure.suite("Events")
 @pytest.mark.events
 class TestEvents:
-
     @allure.title("Events")
     @pytest.mark.critical
     def test_participate_event(self, main_page, events_page, auth_page: AuthPage, base_user_creds):

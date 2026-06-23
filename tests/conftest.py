@@ -11,6 +11,7 @@ from config import config
 
 from datetime import date, datetime
 
+from pages.hubmarket_page import HubmarketPage
 from pages.main_page import MainPage
 from pages.user_profile_page import UserProfilePage
 from pages.community_page import CommunityPage
@@ -81,6 +82,10 @@ def community_page(page):
 @pytest.fixture
 def notification_page(page):
     return NotificationPage(page)
+
+@pytest.fixture
+def hubmarket_page(page):
+    return HubmarketPage(page)
 
 
 
