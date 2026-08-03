@@ -44,9 +44,22 @@ class AppConfig:
     test_user_email: str = get_env("TEST_USER_EMAIL", "test@example.com")
     test_user_password: str = get_env("TEST_USER_PASSWORD", "Pass1234!")
 
+    _users_raw: str = get_env("TEST_USERS", "")
+
     # API токены
     api_token: str = get_env("API_TOKEN", None)
     admin_token: str = get_env("ADMIN_TOKEN", None)
+
+
+    @property
+    def user_pool(self) -> list[tuple[str, str]]:
+        if not self._users_raw:
+            # Пул не задан — работаем как раньше, с одним пользователем
+            return [(self.test_user_email, self.test_user_password)]
+        return [
+            tuple(pair.split(":", 1))
+            for pair in self._users_raw.split(",")
+        ]
 
     def set_subdomain(self, subdomain: str):
         self.subdomain = subdomain

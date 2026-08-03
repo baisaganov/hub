@@ -123,11 +123,8 @@ def page(request, context):
 
 
 @pytest.fixture(scope="session")
-def auth_cookies():
-    """
-    Логин через API один раз за всю сессию.
-    Возвращает куки в формате Playwright для подстановки в контекст браузера.
-    """
+def auth_cookies(test_user):
+    email, password = test_user
 
     async def _login():
         async with httpx.AsyncClient(
@@ -135,8 +132,8 @@ def auth_cookies():
             timeout=config.api.timeout,
         ) as client:
             response = await AuthClient(client).login(
-                email=config.app.test_user_email,
-                password=config.app.test_user_password,
+                email=email,
+                password=password,
             )
             return response.cookies
 
@@ -189,3 +186,28 @@ def pytest_sessionstart(session):
 def pytest_sessionfinish(session, exitstatus):
     """Вызывается в конце сессии"""
     logger.info(f"PYTEST SESSION END - Exit status: {exitstatus}")
+
+@pytest.fixture(scope="session")
+def test_user(worker_id):
+    """
+    Учётка для текущего xdist-воркера.
+    worker_id — встроенная фикстура pytest-xdist:
+    "gw0", "gw1", ... при -n N, и "master" при обычном запуске.
+    """
+    pool = config.app.user_pool
+
+    if worker_id == "master":
+        index = 0
+    else:
+        index = int(worker_id.removeprefix("gw"))
+
+    if index >= len(pool):
+        pytest.fail(
+            f"Воркеров больше, чем пользователей в пуле: "
+            f"воркер {worker_id}, в TEST_USERS всего {len(pool)}. "
+            f"Уменьшите -n или добавьте учётки."
+        )
+
+    email, password = pool[index]
+    logger.info(f"Воркер {worker_id} использует пользователя {email}")
+    return email, password

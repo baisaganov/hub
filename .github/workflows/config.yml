@@ -98,7 +98,13 @@ jobs:
           allure-project-id: 1
 
       - name: Run tests
-        run: allurectl watch -- uv run pytest ./tests --alluredir=logs/allure-results || true
+        # API и UI — отдельными процессами: sync-Playwright держит event loop,
+        # asyncio-тесты в том же процессе после него падают
+        run: |
+          allurectl watch -- bash -c "
+            uv run pytest tests/api --alluredir=logs/allure-results
+            uv run pytest tests/ui --alluredir=logs/allure-results
+          " || true
         env:
           ALLURE_RESULTS: logs/allure-results
           ALLURE_JOB_RUN_ID: ${{ github.event.inputs.ALLURE_JOB_RUN_ID }}
