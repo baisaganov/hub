@@ -120,6 +120,10 @@ class EventsPage(BasePage):
         self.SUBMIT_BUTTON.click(force=True)
 
     def get_cards_count(self) -> int:
+        try:
+            self.EVENT_CARD.first.wait_for(state="visible", timeout=5000)
+        except Exception:
+            pass 
         return self.EVENT_CARD.count()
 
     def is_current_event_favorite(self) -> bool:

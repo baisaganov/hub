@@ -3,8 +3,10 @@
 rm -rf logs/allure-results logs/allure-report
 mkdir -p logs/allure-results testdata/account_data
 
-# pytest --alluredir=logs/allure-results tests/ui/ -v
-pytest --alluredir=logs/allure-results tests/ -v -s
+# API и UI гоняются отдельными процессами: sync-Playwright держит запущенный
+# event loop в главном потоке, и asyncio-тесты в том же процессе после него падают.
+pytest --alluredir=logs/allure-results tests/api -v -s
+pytest --alluredir=logs/allure-results tests/ui -v -s
 
 
 #rm -rf testdata/account_data

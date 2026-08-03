@@ -34,6 +34,8 @@ class MainPage(BasePage):
                 except Exception:
                     pass
 
+        # expect_response срабатывает по заголовкам ответа — дожидаемся самой навигации
+        self.page.wait_for_url(f"**/{page_name}/")
         return response
         
 
