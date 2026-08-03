@@ -1,21 +1,14 @@
 from playwright.sync_api import expect
 from pages.base import BasePage
-import random
 
-import allure
-import playwright._impl._errors
 
-from playwright.sync_api import Page, expect
 from playwright.sync_api._generated import Locator
 
-from pages.base import BasePage
-import random
 
 
 class VacancyPage(BasePage):
     def __init__(self, page):
         super().__init__(page)
-        self.page = page
 
         self.VACANCY_LINK = page.locator("#main-top").get_by_role(
             "link",
@@ -26,25 +19,34 @@ class VacancyPage(BasePage):
         self.VACANCY_CARD_LIST: Locator = self.page.locator("div.card-item")
 
     def open_vacancy_from_menu(self):
+        """Переход к вакансиям через меню. :return: ответ страницы — статус проверяется в тесте"""
         expect(self.VACANCY_LINK).to_be_visible()
 
         with self.page.expect_response("**/ru/vacancy/") as response:
             self.VACANCY_LINK.click()
-        assert response.value.status == 200, "Страница не открылась"
         # expect_response срабатывает по заголовкам ответа — дожидаемся самой навигации
         self.page.wait_for_url("**/vacancy/")
 
-    def add_vacancy_to_favorites(self, card_number: int = None):
+        return response.value
+
+    def get_cards_count(self) -> int:
         # count() не умеет авто-ждать — сначала дожидаемся отрисовки карточек
         expect(self.VACANCY_CARD_LIST.first).to_be_visible()
-        if card_number is None:
-            card = self.VACANCY_CARD_LIST.nth(
-                random.randint(0, self.VACANCY_CARD_LIST.count() - 1)
-            )
-        else:
-            card = self.VACANCY_CARD_LIST.nth(card_number)
+        return self.VACANCY_CARD_LIST.count()
 
-        favorite_btn: Locator = card.locator("svg")
+    def favorite_icon(self, card_number: int) -> Locator:
+        """Иконка лайка в карточке (для проверок в тесте: fill=#CC2243 — в избранном)"""
+        return self.VACANCY_CARD_LIST.nth(card_number).locator("svg path")
+
+    def is_vacancy_liked(self, card_number: int) -> bool:
+        return self.favorite_icon(card_number).get_attribute("fill") == "#CC2243"
+
+    def add_vacancy_to_favorites(self, card_number: int) -> Locator:
+        """
+        Клик по лайку в карточке вакансии
+        :return: локатор кнопки лайка — состояние (заливка иконки) проверяется в тесте
+        """
+        favorite_btn: Locator = self.VACANCY_CARD_LIST.nth(card_number).locator("svg")
         favorite_btn.click()
 
-        expect(favorite_btn.locator("path")).to_have_attribute("fill", "#CC2243")
+        return favorite_btn

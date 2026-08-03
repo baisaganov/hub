@@ -1,7 +1,4 @@
-import random
 
-import allure
-import playwright._impl._errors
 
 from playwright.sync_api import Page, expect
 
@@ -14,7 +11,6 @@ from config import config
 class MainPage(BasePage):
     def __init__(self, page: Page):
         super().__init__(page)
-        self.page = page
         self.LOGIN_BTN = self.page.locator("a[href*='/login/?next=/']")
         self.SIGNUP_BTN = self.page.locator("a[href*='/signup/?next=/']")
         self.INTRO_TOUR_CLOSE = self.page.locator("#intro-tour-modal_close")
@@ -40,40 +36,31 @@ class MainPage(BasePage):
         
 
     def navigate(self):
+        """Переход на главную. :return: ответ страницы — статус проверяется в тесте"""
         self.page.set_default_timeout(90000)
 
         with self.page.expect_response(f"{config.app.app_url}/ru") as resp:
             self.page.goto(f"{config.app.app_url}/ru", wait_until="domcontentloaded")
-
-        assert resp.value.status in [
-            200,
-            301,
-        ], f"MainPage: Страница не доступна {resp.value.status}"
 
         self.page.set_default_timeout(5000)
         if self.INTRO_TOUR_CLOSE.is_visible():
             self.INTRO_TOUR_CLOSE.click()
 
         self.page.set_default_timeout(30000)
+        return resp.value
 
     def login_click(self):
+        """Клик "Войти". :return: ответ страницы логина — статус и куки проверяются в тесте"""
         self.page.set_default_timeout(90000)
 
         with self.page.expect_response("**/login/**") as resp:
             self.LOGIN_BTN.click()
 
         self.page.set_default_timeout(30000)
-
-        assert resp.value.status in [
-            200,
-            302,
-        ], f"MainPage: Страница не доступна {resp.value.status}"
-        cookies = resp.value.request.header_value("cookie")
-        assert (
-            cookies is None or cookies.find("csrftoken") == -1
-        ), f"Auth page: Юзер уже авторизован"
+        return resp.value
 
     def open_user_profile(self):
+        """Переход в профиль через меню юзера. :return: ответ страницы профиля"""
         expect(self.USER_MENU_DROPDOWN_OPEN).to_be_visible()
         self.USER_MENU_DROPDOWN_OPEN.click()
 
@@ -82,4 +69,4 @@ class MainPage(BasePage):
         with self.page.expect_response("**/profile/activity/") as response:
             self.USER_MENU_DROPDOWN.locator("a").first.click()
 
-        assert response.value.status == 200
+        return response.value

@@ -26,3 +26,26 @@ dependencies = [
     "requests~=2.32.4",
     "respx>=0.23.1",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.1",
+]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+# E4/E7/E9 + F — базовые ошибки и pyflakes для всего проекта.
+# S101 (assert) и TID251 (запрещённые импорты) включены глобально,
+# но через per-file-ignores действуют только в pages/ —
+# page objects выполняют действия и возвращают данные, проверки живут в тестах.
+select = ["E4", "E7", "E9", "F", "S101", "TID251"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"pytest".msg = "pages/ не должны зависеть от pytest: skip и проверки — ответственность теста"
+
+[tool.ruff.lint.per-file-ignores]
+"!pages/**" = ["S101", "TID251"]
+# Реэкспорты в пакетах (from config import config и т.п.)
+"**/__init__.py" = ["F401"]

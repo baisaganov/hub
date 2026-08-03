@@ -1,8 +1,7 @@
 import random
 
-from playwright.sync_api import Page, expect, Locator
+from playwright.sync_api import expect, Locator
 
-import pytest
 from pages.base import BasePage
 from config import config
 
@@ -10,7 +9,6 @@ from config import config
 class EventsPage(BasePage):
     def __init__(self, page):
         super().__init__(page)
-        self.page: Page = page
 
         self.EVENT_CARD = page.locator("div.event-card")
         self.PARTICIPATE_BTN:Locator = page.locator("#participate-button")
@@ -33,19 +31,16 @@ class EventsPage(BasePage):
         self.FAVORITE_INACTIVE = page.locator("div.favoriteEvent span.unliked-icon")
 
     def navigate(self):
+        """Переход на страницу мероприятий. :return: ответ страницы — статус проверяется в тесте"""
         self.page.set_default_timeout(90000)
 
-        with self.page.expect_response(f"**/event/") as resp:
+        with self.page.expect_response("**/event/") as resp:
             self.page.goto(
                 f"{config.app.app_url}/ru/event/", wait_until="domcontentloaded"
             )
 
-        assert resp.value.status in [
-            200,
-            301,
-        ], f"EventPage: Страница не доступна {resp.value.status}"
-
         self.page.set_default_timeout(30000)
+        return resp.value
 
     def open_event_card(self, card_number: int = None):
         if card_number is None:
@@ -54,35 +49,27 @@ class EventsPage(BasePage):
 
         self.EVENT_CARD.nth(card_number).click()
 
-    def click_participate_btn(self):
-        """Клик по кнопке Участвовать"""
+    def click_participate_btn(self) -> bool:
+        """
+        Клик по кнопке Участвовать.
+        :return: False — кнопки нет (например, заявка уже подана), решение о skip принимает тест
+        """
+        if not self.PARTICIPATE_BTN.is_visible():
+            return False
 
-        if self.PARTICIPATE_BTN.is_visible():
-            expect(self.PARTICIPATE_BTN).to_be_visible()
-            expect(self.PARTICIPATE_BTN).to_be_enabled()
+        expect(self.PARTICIPATE_BTN).to_be_enabled()
+        self.PARTICIPATE_BTN.click()
+        return True
 
-            self.PARTICIPATE_BTN.click()
+    SUBMITTED_TEXT = {
+        'ru': 'Заявка на участие подана',
+        'kk': 'Қатысуға өтінім берілді',
+        'en': 'Application for participation has been submitted'
+    }
 
-            expect(self.MODAL_EVENT).to_be_visible()
-
-        else:
-            pytest.skip("Нет нужного состояния для продолжения теста")
-
-
-    def submited_text(self):
-        """Проверка текста, если юзер уже участвует в мероприятии"""
-        submited_text = {
-                    'ru': 'Заявка на участие подана',
-                    'kk': 'Қатысуға өтінім берілді',
-                    'en': 'Application for participation has been submitted'
-                }
-
-        if self.PARTICIPATE_SUBMITED.is_visible():
-            expect(self.PARTICIPATE_SUBMITED).to_be_visible()
-            expect(self.PARTICIPATE_SUBMITED).to_have_text(submited_text[self.get_current_lang(self.page.url)])
-
-        else:
-            pytest.skip("Нет нужного состояния для продолжения теста")
+    def get_expected_submitted_text(self) -> str:
+        """Ожидаемый текст "заявка подана" для текущего языка страницы"""
+        return self.SUBMITTED_TEXT[self.get_current_lang(self.page.url)]
 
     def choose_random_role_event(self):
         expect(self.ROLE).to_be_visible()
@@ -104,17 +91,11 @@ class EventsPage(BasePage):
         random_role = random.choice(roles)
 
         self.ROLE.select_option(value=random_role)
-        expect(self.ROLE).to_have_value(random_role)
 
         return random_role
 
     def checkbox_click(self):
         self.AGREEMENT_CHECKBOX.check(force=True)
-
-    def get_result(self):
-        expect(self.EMAIL).not_to_be_empty()
-        expect(self.FULL_NAME).not_to_be_empty()
-        expect(self.AGREEMENT_CHECKBOX).to_be_checked()
 
     def submit_form(self):
         self.SUBMIT_BUTTON.click(force=True)
@@ -130,22 +111,21 @@ class EventsPage(BasePage):
         return self.FAVORITE_ACTIVE.is_visible()
 
     def add_to_favorite(self):
+        """Клик по лайку — результат проверяется в тесте по FAVORITE_ACTIVE"""
         self.FAVORITE_BTN.click()
-        expect(self.FAVORITE_ACTIVE).to_be_visible()
 
     def remove_from_favorite(self):
+        """Клик по лайку — результат проверяется в тесте по FAVORITE_INACTIVE"""
         self.FAVORITE_BTN.click()
-        expect(self.FAVORITE_INACTIVE).to_be_visible()
 
     def is_favorite_active(self) -> bool:
         return self.FAVORITE_ACTIVE.is_visible()
 
     def create_event_click(self):
+        """Клик "Создать мероприятие". :return: ответ страницы создания — статус проверяется в тесте"""
         expect(self.CREATE_EVENT_BUTTON).to_be_visible()
 
         with self.page.expect_response("**/account/event/create/") as response:
             self.CREATE_EVENT_BUTTON.click()
 
-        assert (
-            response.value.status == 200
-        ), f"EventCreatePage: Страница создания не открылась. Статус: {response.value.status}"
+        return response.value

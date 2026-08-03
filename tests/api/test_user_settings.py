@@ -1,11 +1,11 @@
 import pytest
 import allure
-from config import config
 
 pytestmark = [pytest.mark.api]
 
 
 @allure.suite("UserSettings")
+@allure.label("owner", "aliwka")
 class TestUserSettings:
     @allure.title(test_title="UserSettings contact")
     @pytest.mark.asyncio
@@ -15,6 +15,8 @@ class TestUserSettings:
         )
 
     
+    @allure.title("UserSettings empty contact returns 400")
+    @pytest.mark.asyncio
     async def test_user_settings_none(self,user_client):
         response=  await user_client.save_contact(
             phone=None, email=None, url=None, expected_status=400

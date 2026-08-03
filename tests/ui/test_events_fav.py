@@ -1,7 +1,11 @@
 import allure
 import pytest
 
+from playwright.sync_api import expect
 
+
+@allure.suite("Events")
+@allure.label("owner", "aliwka")
 @allure.title("Добавление мероприятия в избранное")
 @allure.label("level", "UI")
 @pytest.mark.regression
@@ -9,7 +13,10 @@ import pytest
 @pytest.mark.events
 def test_add_event_to_favorite(main_page, events_page, api_login):
     with allure.step("Авторизация через API и открытие главной"):
-        main_page.navigate()
+        main_resp = main_page.navigate()
+        assert main_resp.status in (200, 301), (
+            f"Главная страница не доступна: {main_resp.status}"
+        )
 
     with allure.step("Переход к Мероприятиям"):
         response = main_page.open_page_from_menu('event')
@@ -27,9 +34,9 @@ def test_add_event_to_favorite(main_page, events_page, api_login):
             if not events_page.is_current_event_favorite():
                 with allure.step(f"Открыт ивент #{i} — не в избранном, добавляем"):
                     events_page.add_to_favorite()
-                    assert (
-                        events_page.is_favorite_active()
-                    ), "Не удалось добавить в избранное"
+                    expect(
+                        events_page.FAVORITE_ACTIVE, "Не удалось добавить в избранное"
+                    ).to_be_visible()
                     added = True
                     break
             else:
@@ -42,11 +49,16 @@ def test_add_event_to_favorite(main_page, events_page, api_login):
             pytest.skip("Все мероприятия уже добавлены в избранное")
 
 
+@allure.suite("Events")
+@allure.label("owner", "aliwka")
 @allure.title("Удаление мероприятия из избранного")
 @pytest.mark.critical
 def test_remove_event_from_favorite(main_page, events_page, api_login):
     with allure.step("Авторизация через API и открытие главной"):
-        main_page.navigate()
+        main_resp = main_page.navigate()
+        assert main_resp.status in (200, 301), (
+            f"Главная страница не доступна: {main_resp.status}"
+        )
 
     with allure.step("Переход к Мероприятиям"):
         response = main_page.open_page_from_menu('event')
@@ -64,9 +76,9 @@ def test_remove_event_from_favorite(main_page, events_page, api_login):
             if events_page.is_current_event_favorite():
                 with allure.step(f"Открыт ивент #{i} — в избранном, убираем лайк"):
                     events_page.remove_from_favorite()
-                    assert (
-                        not events_page.is_favorite_active()
-                    ), "Не удалось убрать из избранного"
+                    expect(
+                        events_page.FAVORITE_INACTIVE, "Не удалось убрать из избранного"
+                    ).to_be_visible()
                     removed = True
                     break
             else:
@@ -77,11 +89,16 @@ def test_remove_event_from_favorite(main_page, events_page, api_login):
             pytest.skip("Нет мероприятий в избранном — нечего убирать")
 
 
+@allure.suite("Events")
+@allure.label("owner", "aliwka")
 @allure.title("Проверка всех карточек мероприятий")
 @pytest.mark.critical
 def test_check_all_events_favorite_status(main_page, events_page, api_login):
     with allure.step("Авторизация через API и открытие главной"):
-        main_page.navigate()
+        main_resp = main_page.navigate()
+        assert main_resp.status in (200, 301), (
+            f"Главная страница не доступна: {main_resp.status}"
+        )
 
     with allure.step("Переход к Мероприятиям"):
         response = main_page.open_page_from_menu('event')
@@ -101,9 +118,9 @@ def test_check_all_events_favorite_status(main_page, events_page, api_login):
                 with allure.step(f"Ивент #{i} не в избранном — добавляем"):
                     events_page.add_to_favorite()
 
-                    assert (
-                        events_page.is_favorite_active()
-                    ), "Не удалось добавить в избранное"
+                    expect(
+                        events_page.FAVORITE_ACTIVE, "Не удалось добавить в избранное"
+                    ).to_be_visible()
 
                     found_not_favorite = True
 

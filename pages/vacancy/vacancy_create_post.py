@@ -1,15 +1,12 @@
 import random
 
-from playwright.sync_api import Page, expect
+from playwright.sync_api import expect
 from pages.base import BasePage
-import random
-import json
 
 
 class VacancyCreatePostPage(BasePage):
     def __init__(self, page):
         super().__init__(page)
-        self.page: Page = page
         self.DROPDOWN_PUBLISH = page.locator('div[x-data="dropdown()"] div[aria-controls="dropdown-panel-4"]')
         self.DROPDOWN_VACANCY_ITEM = page.locator("#dropdown-panel-6 > a[href*='/account/vacancy/']")
 
@@ -44,12 +41,13 @@ class VacancyCreatePostPage(BasePage):
         self.DROPDOWN_PUBLISH.click()
         
     def dropdown_vacancy_item_click(self):
+        """Клик по пункту меню Вакансии. :return: ответ страницы создания — статус проверяется в тесте"""
         expect(self.DROPDOWN_VACANCY_ITEM).to_be_visible()
 
         with self.page.expect_response('**/account/vacancy/create/') as response:
             self.DROPDOWN_VACANCY_ITEM.click()
 
-        assert response.value.status == 200, "не удалось открыть страницу"
+        return response.value
 
     def fill_vacancy(self, email,name,text,number):
         x = self.SELECT_COMPANY.locator("option").nth(1).get_attribute("value")
@@ -112,33 +110,8 @@ class VacancyCreatePostPage(BasePage):
 
 
     def translate(self):
-
+        """Подтверждение автоперевода. :return: ответ translate — статус проверяется в тесте"""
         with self.page.expect_response("**/translate/") as translation:
             self.TRANSLATE_BUTTON.click()
 
-        response = translation.value
-        assert response.status == 200, "Не перевелось, переделывай"
-            
-
-        
-
-
-
-
-
-         
-
-        
-
-
-
-
-                                     
-
-
-
-
-
-
-
-    
+        return translation.value

@@ -177,6 +177,34 @@ def pytest_runtest_makereport(item, call):
     setattr(item, f"rep_{rep.when}", rep)
 
 
+def pytest_collection_modifyitems(items):
+    """
+    Валидация Allure-метаданных: каждый тест обязан иметь
+    @allure.suite, @allure.title и владельца @allure.label("owner", ...).
+    Нарушения валят запуск ещё на этапе коллекции.
+    """
+    from allure_pytest.utils import allure_title, allure_label
+
+    errors = []
+    for item in items:
+        missing = []
+        title = allure_title(item)
+        if not title or not title.strip():
+            missing.append("@allure.title")
+        if not allure_label(item, "suite"):
+            missing.append("@allure.suite")
+        if not allure_label(item, "owner"):
+            missing.append('@allure.label("owner", ...)')
+
+        if missing:
+            errors.append(f"{item.nodeid}: {', '.join(missing)}")
+
+    if errors:
+        raise pytest.UsageError(
+            "У тестов не хватает Allure-метаданных:\n  " + "\n  ".join(errors)
+        )
+
+
 def pytest_sessionstart(session):
     """Вызывается в начале сессии"""
     logger.info("PYTEST SESSION START")

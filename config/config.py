@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from config.browser_config import BrowserConfig
 from config.environment import get_env
-from dataclasses import dataclass, field
 
 
 class APIConfig:

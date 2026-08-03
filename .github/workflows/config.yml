@@ -88,6 +88,12 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
+      - name: Lint (ruff)
+        run: uv run ruff check .
+
+      - name: Check Allure metadata (suite/title/owner)
+        run: uv run pytest tests --collect-only -q
+
       - name: Install Playwright browsers
         run: uv run playwright install chromium --with-deps
 

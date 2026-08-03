@@ -2,6 +2,7 @@ import allure
 import pytest
 
 @allure.suite('Events')
+@allure.label("owner", "aliwka")
 class TestEvents:
 
 

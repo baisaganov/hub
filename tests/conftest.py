@@ -3,7 +3,6 @@ import pytest
 
 from pages.auth_page import AuthPage
 
-from pages import *
 from pages.company_profile_page import CompanyProfilePage
 from pages.events_create_page import EventCreatePage
 from pages.events_page import EventsPage
@@ -16,7 +15,6 @@ from pages.main_page import MainPage
 from pages.user_profile_page import UserProfilePage
 from pages.vacancy.vacancy_page import VacancyPage
 from pages.hubmarket_page import HubMarketPage
-from pages.vacancy.vacancy_page import VacancyPage
 from pages.vacancy.vacancy_create_post import VacancyCreatePostPage
 
 
