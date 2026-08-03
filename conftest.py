@@ -3,10 +3,15 @@ Root conftest.py
 Fixtures здесь доступны для ВСЕ тестов в проекте.
 """
 
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+
 import pytest
+import httpx
 from playwright.sync_api import sync_playwright
 from pathlib import Path
 
+from clients.auth.auth_client import AuthClient
 from config import config
 from utils.logger import Logger
 import allure
@@ -115,6 +120,56 @@ def page(request, context):
 
     context.close()
     page.close()
+
+
+@pytest.fixture(scope="session")
+def auth_cookies():
+    """
+    Логин через API один раз за всю сессию.
+    Возвращает куки в формате Playwright для подстановки в контекст браузера.
+    """
+
+    async def _login():
+        async with httpx.AsyncClient(
+            base_url=config.app.app_url,
+            timeout=config.api.timeout,
+        ) as client:
+            response = await AuthClient(client).login(
+                email=config.app.test_user_email,
+                password=config.app.test_user_password,
+            )
+            return response.cookies
+
+    # Логин выполняется в отдельном потоке: sync-Playwright держит запущенный
+    # event loop в главном потоке, и asyncio.run() здесь упал бы с RuntimeError.
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        cookies = executor.submit(asyncio.run, _login()).result()
+
+    playwright_cookies = []
+    for c in cookies.jar:
+        cookie = {
+            "name": c.name,
+            "value": c.value,
+            "domain": c.domain,
+            "path": c.path or "/",
+            "secure": bool(c.secure),
+        }
+        if c.expires:
+            cookie["expires"] = c.expires
+        playwright_cookies.append(cookie)
+
+    logger.info(f"API login OK, получено куки: {len(playwright_cookies)}")
+    return playwright_cookies
+
+
+@pytest.fixture
+def api_login(context, auth_cookies):
+    """
+    Авторизует контекст браузера куками из API-логина, минуя UI-форму.
+    Использование: добавить фикстуру в параметры теста и сразу переходить
+    на нужную страницу (main_page.navigate() / events_page.navigate()).
+    """
+    context.add_cookies(auth_cookies)
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)

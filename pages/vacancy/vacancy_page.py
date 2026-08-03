@@ -14,6 +14,7 @@ import random
 
 class VacancyPage(BasePage):
     def __init__(self, page):
+        super().__init__(page)
         self.page = page
 
         self.VACANCY_LINK = page.locator("#main-top").get_by_role(
@@ -30,8 +31,12 @@ class VacancyPage(BasePage):
         with self.page.expect_response("**/ru/vacancy/") as response:
             self.VACANCY_LINK.click()
         assert response.value.status == 200, "Страница не открылась"
+        # expect_response срабатывает по заголовкам ответа — дожидаемся самой навигации
+        self.page.wait_for_url("**/vacancy/")
 
     def add_vacancy_to_favorites(self, card_number: int = None):
+        # count() не умеет авто-ждать — сначала дожидаемся отрисовки карточек
+        expect(self.VACANCY_CARD_LIST.first).to_be_visible()
         if card_number is None:
             card = self.VACANCY_CARD_LIST.nth(
                 random.randint(0, self.VACANCY_CARD_LIST.count() - 1)

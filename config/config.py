@@ -4,7 +4,6 @@ from config.environment import get_env
 from dataclasses import dataclass, field
 
 
-# @dataclass
 class APIConfig:
     """Конфигурация для API тестов"""
 
@@ -13,9 +12,9 @@ class APIConfig:
     retry_delay: int = int(get_env("API_RETRY_DELAY", "10000"))
 
     # Headers
-    default_headers: dict|None = None
+    default_headers: dict | None = None
 
-    def __post_init__(self):
+    def __init__(self):
         """Инициализация заголовков по умолчанию"""
         if self.default_headers is None:
             self.default_headers = {
@@ -24,11 +23,10 @@ class APIConfig:
             }
 
 
-# @dataclass
 class AppConfig:
     """Конфигурация приложения"""
 
-    base_domain: str = get_env("BASE_DOMAIN", "https://astanahub.com")
+    base_domain: str = get_env("BASE_DOMAIN", "astanahub.com")
     subdomain: str = get_env("ENV", "dev")
 
 
@@ -53,15 +51,17 @@ class AppConfig:
     def set_subdomain(self, subdomain: str):
         self.subdomain = subdomain
         self.env = subdomain
+        self.update_app_url()
 
     def update_app_url(self):
         """
         Обновить полный URL приложения с учетом поддомена.
         """
+        domain = self.base_domain.removeprefix("https://").removeprefix("http://")
         if self.subdomain and self.env != 'prod':
-            self.app_url = f"https://{self.subdomain}.{self.base_domain}"
+            self.app_url = f"https://{self.subdomain}.{domain}"
             return
-        self.app_url = f"https://{self.base_domain}"
+        self.app_url = f"https://{domain}"
 
 
 @dataclass
@@ -75,7 +75,6 @@ class Config:
 
         browser_config = Config.browser
         app_url = Config.app.app_url
-        api_base_url = Config.api.base_url
     """
 
     browser: BrowserConfig = BrowserConfig()  # field(default_factory=BrowserConfig)
@@ -103,11 +102,6 @@ class Config:
         return cls.app.app_url
 
     @classmethod
-    def get_api_base_url(cls) -> str:
-        """Получить базовый URL API"""
-        return cls.api.base_url
-
-    @classmethod
     def print_config(cls) -> None:
         """Вывести конфиг"""
         print("\n" + "=" * 50)
@@ -116,7 +110,7 @@ class Config:
         print(f"Environment: {cls.app.env}")
         print(f"Subdomain: {cls.app.subdomain}")
         print(f"App URL: {cls.app.app_url}")
-        print(f"API URL: {cls.api.base_url}")
+        print(f"API timeout: {cls.api.timeout}ms")
         print(f"Browser: {cls.browser.browser_type}")
         print(f"Headless: {cls.browser.headless}")
         print(f"Viewport: {cls.browser.viewport_width}x{cls.browser.viewport_height}")

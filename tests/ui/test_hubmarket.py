@@ -1,8 +1,6 @@
 import allure
 import pytest
 
-from pages.auth_page import AuthPage
-
 
 @allure.suite("Hub Market")
 @allure.label("level", "UI")
@@ -16,15 +14,10 @@ class TestHubMarket:
         self,
         main_page,
         hubmarket_page,
-        auth_page: AuthPage,
-        base_user_creds,
+        api_login,
     ):
-        with allure.step("Авторизация"):
-            auth_page.email_auth(
-                base_user_creds["email"],
-                password=base_user_creds["password"],
-            )
-            main_page.page.keyboard.press("Escape")
+        with allure.step("Авторизация через API и открытие главной"):
+            main_page.navigate()
 
         with allure.step("Переход на страницу Hub Market"):
             hubmarket_page.open_hub_market_from_menu()

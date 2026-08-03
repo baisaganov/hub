@@ -1,7 +1,6 @@
 import allure
 import pytest
 
-from pages.auth_page import AuthPage
 from pages.vacancy.vacancy_page import VacancyPage
 
 @allure.suite("Vacancy")
@@ -16,17 +15,13 @@ class TestVacancy:
         self,
         main_page,
         vacancy_page: VacancyPage,
-        auth_page: AuthPage,
         base_user_creds,
-        vacancy_create_post_page
+        vacancy_create_post_page,
+        api_login,
     ):
-         with allure.step("Авторизация"):
-            auth_page.email_auth(
-                base_user_creds["email"],
-                password=base_user_creds["password"],
-            )
-            main_page.page.keyboard.press("Escape")      
-    
+         with allure.step("Авторизация через API и открытие главной"):
+            main_page.navigate()
+
          with allure.step("Вакансии"):
              vacancy_page.open_vacancy_from_menu()
 

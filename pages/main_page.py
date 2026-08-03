@@ -25,6 +25,20 @@ class MainPage(BasePage):
         self.USER_MENU_DROPDOWN_OPEN = self.page.locator("#user-menu-dropdown-click")
         self.USER_MENU_DROPDOWN = self.page.locator("#user-menu-dropdown")
 
+    def open_page_from_menu(self, page_name: str):
+        with self.page.expect_response(f"**/{page_name}/") as response:
+                self.page.keyboard.press("Escape")
+                self.EVENTS_LINK.click()
+                try:
+                    self.EVENTS_LINK.click()
+                except Exception:
+                    pass
+
+        # expect_response срабатывает по заголовкам ответа — дожидаемся самой навигации
+        self.page.wait_for_url(f"**/{page_name}/")
+        return response
+        
+
     def navigate(self):
         self.page.set_default_timeout(90000)
 

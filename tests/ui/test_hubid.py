@@ -20,7 +20,7 @@ class TestHubID:
         self, auth_page, main_page, registration_user_creds
     ):
 
-        with allure.step("Переход на главную страницу"):
+        with allure.step(title="Переход на главную страницу"):
             main_page.navigate()
 
         with allure.step('Клик по кнопке "Войти"'):

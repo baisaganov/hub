@@ -1,6 +1,4 @@
 import pytest
-from playwright.sync_api import Page
-from config import config
 import allure
 
 
@@ -13,18 +11,16 @@ class TestUserProfile:
     @pytest.mark.regression
     def test_create_company(
         self,
-        auth_page,
         main_page,
         user_profile_page,
         company_profile_page,
         registration_user_creds,
-        base_user_creds,
+        api_login,
     ):
-        env = config.app.env
-        company_name = registration_user_creds.get("company_name") 
+        company_name = registration_user_creds.get("company_name")
 
-        with allure.step("Авторизация на портале c Базового пользователя"):
-            auth_page.email_auth(base_user_creds["email"], base_user_creds["password"])
+        with allure.step("Авторизация через API и открытие главной"):
+            main_page.navigate()
 
         with allure.step("Переход к профилю"):
             main_page.open_user_profile()

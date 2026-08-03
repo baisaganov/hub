@@ -11,14 +11,9 @@ from config import config
 class TestEventsCreate:
     @allure.title("Сохранение ивента с одной сферой")
     @pytest.mark.regression
-    def test_event_send(
-        self, auth_page, events_page, events_create_page, base_user_creds
-    ):
+    def test_event_send(self, events_page, events_create_page, api_login):
 
-        with allure.step("Авторизация на портале"):
-            auth_page.email_auth(base_user_creds["email"], base_user_creds["password"])
-
-        with allure.step("Переход на страницу мероприятий"):
+        with allure.step("Переход на страницу мероприятий (авторизация через API)"):
             events_page.navigate()
 
         with allure.step("Переход к форме создания"):

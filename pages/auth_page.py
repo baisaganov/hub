@@ -79,7 +79,6 @@ class AuthPage(BasePage):
     def navigate(self):
         self.page.set_default_timeout(100000)
         with self.page.expect_response(f"**/ru/s/auth/login/") as resp:
-            print(f"{config.app.app_url}/ru/s/auth/login/")
             self.page.goto(f"{config.app.app_url}/ru/s/auth/login/", wait_until="load")
 
         self.page.set_default_timeout(30000)

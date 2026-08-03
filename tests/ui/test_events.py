@@ -1,8 +1,6 @@
 import allure
 import pytest
 
-from pages.auth_page import AuthPage
-
 
 @allure.suite("Events")
 @allure.label("level", "UI")
@@ -12,39 +10,23 @@ class TestEvents:
 
     @allure.title("Events")
     @pytest.mark.critical
-    def test_participate_event(
-        self,
-        main_page,
-        events_page,
-        auth_page: AuthPage,
-        base_user_creds,
-    ):
-        with allure.step("Авторизация"):
-            auth_page.email_auth(
-                base_user_creds["email"],
-                password=base_user_creds["password"],
-            )
-            main_page.page.keyboard.press("Escape")
+    def test_participate_event(self, main_page, events_page, api_login):
+        with allure.step("Авторизация через API и открытие главной"):
+            main_page.navigate()
 
         with allure.step("Переход к Мероприятиям"):
-            with main_page.page.expect_response("**/event/") as response:
-                main_page.page.keyboard.press("Escape")
-                main_page.EVENTS_LINK.click()
-
-                try:
-                    main_page.EVENTS_LINK.click()
-                except Exception:
-                    pass
-
+            response = main_page.open_page_from_menu('event')
             assert response.value.status == 200, "Event Page does not open"
 
         with allure.step("Открытие Мероприятия"):
+            if events_page.get_cards_count() == 0:
+                pytest.skip("Нет доступных мероприятий")
             events_page.open_event_card()
 
         with allure.step('Клик на "Участвовать"'):
             events_page.click_participate_btn()
 
-        with allure.step("Заполнение формы"):  # TODO: fix
+        with allure.step("Заполнение формы"):
             events_page.checkbox_click()
             events_page.get_result()
 

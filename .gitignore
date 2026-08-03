@@ -29,3 +29,4 @@ testdata/account_data/*
 .vscode
 .DS_Store
 *.p12
+allure-report-out
