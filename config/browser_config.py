@@ -3,7 +3,6 @@ from typing import Optional, List
 from config.environment import get_env_bool, get_env_int, get_env
 
 
-# @dataclass
 class BrowserConfig:
     """Конфигурация браузера"""
 
@@ -18,15 +17,17 @@ class BrowserConfig:
 
     # === Timeouts (ожидания) ===
     timeout: int = get_env_int("TIMEOUT", 30000)  # 30 сек - глобальный timeout
-    navigation_timeout: int = get_env_int("NAVIGATION_TIMEOUT", 30000)  # Timeout навигации
+    navigation_timeout: int = get_env_int(
+        "NAVIGATION_TIMEOUT", 30000
+    )  # Timeout навигации
 
     # === Браузер аргументы ===
-    args: List[str]|None = None
+    args: List[str] | None = None
     proxy: Optional[dict] = None
     downloads_path: Optional[str] = get_env("DOWNLOADS_PATH")
 
     # === Emulation (эмуляция устройств) ===
-    user_agent: Optional[str]|None = get_env("USER_AGENT")
+    user_agent: Optional[str] | None = get_env("USER_AGENT")
     locale: str = get_env("LOCALE", "en-US")
     timezone: str = get_env("TIMEZONE", "UTC")
 
@@ -35,8 +36,7 @@ class BrowserConfig:
     screenshot: str = get_env("SCREENSHOT", "off")  # off, only-on-failure, on
     video: str = get_env("VIDEO", "off")  # off, retain-on-failure, on
 
-    def __post_init__(self):
-        """Инициализация после создания dataclass"""
+    def __init__(self):
         # Если args не установлены, создаем пустой список
         if self.args is None:
             self.args = []
@@ -82,7 +82,7 @@ class BrowserConfig:
             "height": self.viewport_height,
         }
 
-    def get_device_emulation(self, device_name = None) -> dict:
+    def get_device_emulation(self, device_name=None) -> dict:
         """
         Получить опции для эмуляции устройства
 
@@ -109,4 +109,4 @@ class BrowserConfig:
                 "user_agent": self.user_agent,
             },
         }
-        return devices.get("Desktop") # pyright: ignore[reportReturnType]
+        return devices.get("Desktop")  # pyright: ignore[reportReturnType]

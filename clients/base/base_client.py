@@ -93,8 +93,6 @@ class BaseClient:
                     response_body = self._safe_json(response)
                     logger.error(error_message)
                     logger.error("Response body: %s", response_body)
-                    print(error_message)
-                    print("Response body:", response_body)
                     raise ApiError(
                         message=error_message,
                         status_code=response.status_code,

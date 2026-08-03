@@ -2,6 +2,7 @@ import httpx
 import pytest
 
 from clients.auth.auth_client import AuthClient
+from clients.events_client import EventsClient
 from config import config
 from clients.user.user_client import UserClient
 
@@ -48,3 +49,8 @@ async def get_cookies(auth_client):
 @pytest.fixture 
 async def user_client(authorized_http_client):
     yield UserClient(authorized_http_client)
+
+
+@pytest.fixture
+async def events_client(anonymous_http_client):
+    yield EventsClient(anonymous_http_client)

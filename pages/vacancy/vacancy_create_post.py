@@ -1,13 +1,14 @@
 import random
 
-from playwright.sync_api import expect
+from playwright.sync_api import Page, expect
 from pages.base import BasePage
 import random
 import json
 
 
 class VacancyCreatePostPage(BasePage):
-    def __init__(self,page):
+    def __init__(self, page):
+        super().__init__(page)
         self.page: Page = page
         self.DROPDOWN_PUBLISH = page.locator('div[x-data="dropdown()"] div[aria-controls="dropdown-panel-4"]')
         self.DROPDOWN_VACANCY_ITEM = page.locator("#dropdown-panel-6 > a[href*='/account/vacancy/']")

@@ -4,8 +4,8 @@ from pages.auth_page import AuthPage
 
 
 @allure.title("Добавление мероприятия в избранное")
-@allure.label("level", "UI")
-@pytest.mark.critical
+@allure.label(label_type="level", "UI")
+@pytest.mark.regression
 @pytest.mark.ui
 @pytest.mark.events
 def test_add_event_to_favorite(
@@ -18,13 +18,7 @@ def test_add_event_to_favorite(
         main_page.page.keyboard.press("Escape")
 
     with allure.step("Переход к Мероприятиям"):
-        with main_page.page.expect_response("**/event/") as response:
-            main_page.page.keyboard.press("Escape")
-            main_page.EVENTS_LINK.click()
-            try:
-                main_page.EVENTS_LINK.click()
-            except:
-                pass
+        response = main_page.open_page_from_menu('event')
         assert response.value.status == 200, "Events page does not open"
 
     with allure.step("Поиск ивента не в избранном и добавление"):

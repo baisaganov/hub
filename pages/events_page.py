@@ -1,17 +1,15 @@
 import random
 
-from playwright.async_api import Locator
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Page, expect, Locator
 
-from playwright.sync_api import expect
 import pytest
 from pages.base import BasePage
-import random
 from config import config
 
 
 class EventsPage(BasePage):
     def __init__(self, page):
+        super().__init__(page)
         self.page: Page = page
 
         self.EVENT_CARD = page.locator("div.event-card")
@@ -27,7 +25,7 @@ class EventsPage(BasePage):
         self.EMAIL: Locator = self.MODAL_EVENT.locator("input[name=email]")
         self.ROLE: Locator = self.MODAL_EVENT.locator("select[name=role]")
         self.AGREEMENT_CHECKBOX = self.MODAL_EVENT.locator("input[name='agreement']")
-        self.submit_button = self.MODAL_EVENT.locator("button[type=submit]")
+        self.SUBMIT_BUTTON = self.MODAL_EVENT.locator("button[type=submit]")
 
         # Добавление в избранное
         self.FAVORITE_BTN = page.locator("div.favoriteEvent")
@@ -87,9 +85,9 @@ class EventsPage(BasePage):
             pytest.skip("Нет нужного состояния для продолжения теста")
 
     def choose_random_role_event(self):
-        expect(self.CHOOSE_ROLE_EVENT).to_be_visible()
+        expect(self.ROLE).to_be_visible()
 
-        options = self.CHOOSE_ROLE_EVENT.locator("option")
+        options = self.ROLE.locator("option")
         roles = []
 
         for i in range(options.count()):
@@ -105,8 +103,8 @@ class EventsPage(BasePage):
 
         random_role = random.choice(roles)
 
-        self.CHOOSE_ROLE_EVENT.select_option(value=random_role)
-        expect(self.CHOOSE_ROLE_EVENT).to_have_value(random_role)
+        self.ROLE.select_option(value=random_role)
+        expect(self.ROLE).to_have_value(random_role)
 
         return random_role
 
@@ -114,20 +112,12 @@ class EventsPage(BasePage):
         self.AGREEMENT_CHECKBOX.check(force=True)
 
     def get_result(self):
-        email = self.EMAIL.get_attribute("value")
-        name = self.FULL_NAME.get_attribute("value")
-        agreement = self.AGREEMENT_CHECKBOX.get_attribute("value")
-
         expect(self.EMAIL).not_to_be_empty()
         expect(self.FULL_NAME).not_to_be_empty()
         expect(self.AGREEMENT_CHECKBOX).to_be_checked()
 
-
-    def submit_button(self):
-        self.submit_button.click(force=True)
-
     def submit_form(self):
-        self.submit_button.click(force=True)
+        self.SUBMIT_BUTTON.click(force=True)
 
     def get_cards_count(self) -> int:
         return self.EVENT_CARD.count()

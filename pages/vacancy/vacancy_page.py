@@ -14,6 +14,7 @@ import random
 
 class VacancyPage(BasePage):
     def __init__(self, page):
+        super().__init__(page)
         self.page = page
 
         self.VACANCY_LINK = page.locator("#main-top").get_by_role(

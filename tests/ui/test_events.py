@@ -27,15 +27,7 @@ class TestEvents:
             main_page.page.keyboard.press("Escape")
 
         with allure.step("Переход к Мероприятиям"):
-            with main_page.page.expect_response("**/event/") as response:
-                main_page.page.keyboard.press("Escape")
-                main_page.EVENTS_LINK.click()
-
-                try:
-                    main_page.EVENTS_LINK.click()
-                except Exception:
-                    pass
-
+            response = main_page.open_page_from_menu('events')
             assert response.value.status == 200, "Event Page does not open"
 
         with allure.step("Открытие Мероприятия"):
@@ -44,7 +36,7 @@ class TestEvents:
         with allure.step('Клик на "Участвовать"'):
             events_page.click_participate_btn()
 
-        with allure.step("Заполнение формы"):  # TODO: fix
+        with allure.step("Заполнение формы"):
             events_page.checkbox_click()
             events_page.get_result()
 

@@ -5,6 +5,7 @@ from pages.base import BasePage
 
 class HubMarketPage(BasePage):
     def __init__(self, page):
+        super().__init__(page)
         self.page = page
         self.POPULAR_TITLE = page.get_by_text("Популярные услуги и товары", exact=True)
         self.POPULAR_BLOCK = self.POPULAR_TITLE.locator("xpath=ancestor::div[1]")
