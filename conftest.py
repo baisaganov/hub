@@ -131,11 +131,12 @@ def auth_cookies(test_user):
             base_url=config.app.app_url,
             timeout=config.api.timeout,
         ) as client:
-            response = await AuthClient(client).login(
-                email=email,
-                password=password,
+            await AuthClient(client).login(
+                email=config.app.test_user_email,
+                password=config.app.test_user_password,
             )
-            return response.cookies
+            # login возвращает модель, куки сессии оседают в jar httpx-клиента
+            return client.cookies
 
     # Логин выполняется в отдельном потоке: sync-Playwright держит запущенный
     # event loop в главном потоке, и asyncio.run() здесь упал бы с RuntimeError.

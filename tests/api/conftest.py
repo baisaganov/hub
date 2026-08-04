@@ -39,11 +39,12 @@ async def auth_client(anonymous_http_client):
 
 @pytest.fixture
 async def get_cookies(auth_client):
-    response = await auth_client.login(
+    await auth_client.login(
         email=API_EMAIL,
         password=API_PASSWORD,
     )
-    return response.cookies
+    # login возвращает модель, куки сессии оседают в jar httpx-клиента
+    return auth_client.client.cookies
 
 
 @pytest.fixture 
