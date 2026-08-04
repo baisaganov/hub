@@ -1,4 +1,4 @@
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Page
 
 from pages.base import BasePage
 from config import config
@@ -9,7 +9,6 @@ from pathlib import Path
 class AuthPage(BasePage):
     def __init__(self, page: Page):
         super().__init__(page)
-        self.page: Page = page
 
         # ============================ Авторизация ============================
 
@@ -77,15 +76,13 @@ class AuthPage(BasePage):
 
     # ============================ Сингл таск функции ============================
     def navigate(self):
+        """Переход на страницу логина. :return: ответ страницы — статус проверяется в тесте"""
         self.page.set_default_timeout(100000)
-        with self.page.expect_response(f"**/ru/s/auth/login/") as resp:
+        with self.page.expect_response("**/ru/s/auth/login/") as resp:
             self.page.goto(f"{config.app.app_url}/ru/s/auth/login/", wait_until="load")
 
         self.page.set_default_timeout(30000)
-
-        assert (
-            resp.value.status == 200
-        ), f"AuthPage: Страница не доступна {resp.value.status}"
+        return resp.value
 
     def welcome_hubid(self):
         self.page.wait_for_load_state("networkidle")
@@ -95,16 +92,14 @@ class AuthPage(BasePage):
     def click_auth_password_continue_btn(self):
         """
         Клик на продолжить при вводе пароля Авторизация
-        :return:
+        :return: ответ auth/email — статус проверяется в тесте
         """
         with self.page.expect_response(
-            f"**/s/auth/api/v1/auth/email/"
+            "**/s/auth/api/v1/auth/email/"
         ) as response_info:
             self.PASSWORD_AUTH_BTN.click()
 
-        assert (
-            response_info.value.status == 200
-        ), f"AuthPage: Продолжить этап ввода пароля"
+        return response_info.value
 
     def input_email_or_phone(self, value):
         """
@@ -117,39 +112,31 @@ class AuthPage(BasePage):
             self.page.reload()
         input_field.fill(value)
 
-    def click_auth_email_continue_btn(self, is_auth: bool = True):
+    def click_auth_email_continue_btn(self):
         """
-        Клик по кнопке продолжить при вводе почты в шаге Авторизация
-        :param is_auth: Bool: default True = шаг авторизация; False = шаг регистрация
+        Клик по кнопке продолжить при вводе почты
+        :return: ответ auth/check — статус и user_exists проверяются в тесте
         """
         with self.page.expect_response(
-            f"**/s/auth/api/v1/auth/check/"
+            "**/s/auth/api/v1/auth/check/"
         ) as response_info:
             self.EMAIL_AUTH_BTN.click()
 
-        assert response_info is not None, "AuthPage: Пустой ответ при заполнении почты"
-        assert (
-            response_info.value.status == 200
-        ), "AuthPage: Ошибка при клике продолжить"
-
-        if is_auth:
-            assert response_info.value.json()["user_exists"] is True, (
-                "AuthPage: Ошибка при авторизации, " "Юзер отсутвует"
-            )
-        else:
-            assert response_info.value.json()["user_exists"] is False, (
-                "AuthPage: Ошибка при авторизации, " "Юзер существует"
-            )
+        return response_info.value
 
     def click_reg_continue_btn(self, is_auth_step: bool = True):
-        with self.page.expect_response(f"**/s/auth/api/v1/auth/check/") as resp:
+        """
+        Клик продолжить на шаге почты
+        :param is_auth_step: True — кнопка шага авторизации, False — шага регистрации
+        :return: ответ auth/check — статус проверяется в тесте
+        """
+        with self.page.expect_response("**/s/auth/api/v1/auth/check/") as resp:
             if is_auth_step:
                 self.EMAIL_AUTH_BTN.click()
             else:
                 self.SIGNUP_SUBMIT.click()
 
-        assert resp is not None, "AuthPage: Пустой ответ при заполнении почты"
-        assert resp.value.status == 200, "AuthPage: Ошибка при клике продолжить"
+        return resp.value
 
     def input_password(self, password):
         """
@@ -163,12 +150,7 @@ class AuthPage(BasePage):
         """
         Нажатие на кнопку "Присоединиться к Astanahub..."
         """
-        try:
-            self.JOIN_SPAN.click()
-        except Exception as e:
-            assert (
-                1 == 0
-            ), f'AuthPage: Ошибка при нажатии на кнопку "Присоединиться к Astanahub..." \n {e}'
+        self.JOIN_SPAN.click()
 
     def toggle_privacy_checkbox(self, always_checked: bool = True):
         """
@@ -181,53 +163,43 @@ class AuthPage(BasePage):
         if not always_checked:
             self.PRIVACY_CHECKBOX.check()
 
-    def privacy_continue_btn_click(self, need_scroll: bool = True):
-        """
-        Метод отмечает чекбокс если не отмечен, делает скролл соглашения если необоходимо и нажимает на продолжить
-        Проверки на та что, если скролл не делается, выходит ли уведомление, если скролл сделан не выходит ли или
-        скрывается ли уведомление, а также при нажатии на продолжить, успешно ли выполняется запрос
+    def scroll_privacy_policy(self):
+        """Скролл текста политики конфиденциальности до конца"""
+        self.PRIVACY_SCROLL.evaluate("el => el.scrollTop = el.scrollHeight")
 
-        :param need_scroll: если True то нужен скролл соглашения, в противном случаем клик по кнопке продолжить
-        :return:
+    def accept_privacy_policy(self):
         """
-
+        Чекбокс + скролл соглашения + клик продолжить
+        :return: ответ privacy_policy_accept — статус проверяется в тесте
+        """
         self.toggle_privacy_checkbox()
+        self.scroll_privacy_policy()
 
-        if need_scroll:
-            self.PRIVACY_SCROLL.evaluate("el => el.scrollTop = el.scrollHeight")
-            assert self.PRIVACY_READ.is_hidden(), (
-                "AuthPage: Вышло уведомление, что необходимо прочесть политику "
-                "конфиденциальности"
-            )
-            with self.page.expect_response(
-                f"**/s/auth/api/v1/auth/privacy_policy_accept/"
-            ) as resp:
-                self.PRIVACY_CONTINUE_BTN.click()
-
-            assert (
-                resp.value.status == 200
-            ), f"AuthPage: Политика конф-ти вернула {resp.value.status}"
-
-        else:
+        with self.page.expect_response(
+            "**/s/auth/api/v1/auth/privacy_policy_accept/"
+        ) as resp:
             self.PRIVACY_CONTINUE_BTN.click()
-            assert self.PRIVACY_READ.is_visible(), (
-                f"AuthPage: Не вышло уведомление, о необходимости прочесть "
-                f"политику конфиденциальности"
-            )
 
-    def check_email_input_text(self, text):
+        return resp.value
+
+    def privacy_continue_without_scroll(self):
         """
-        Проверка что в инпуте введен верный текст
-        :param text: Ожидаемый текст
+        Клик продолжить без скролла соглашения —
+        появление уведомления PRIVACY_READ проверяется в тесте
+        """
+        self.toggle_privacy_checkbox()
+        self.PRIVACY_CONTINUE_BTN.click()
+
+    def get_email_input_text(self) -> str:
+        """
+        :return: текст, подтянувшийся в инпут почты на шаге регистрации — сверяется в тесте
         """
         self.page.set_default_timeout(90000)
 
-        result = self.check_input_text_correct(
-            "form[data_tag=start_registration] input", text
-        )
-        assert result == text, "AuthPage: Подтянулась неверная почта"
+        result = self.get_input_value("form[data_tag=start_registration] input")
 
         self.page.set_default_timeout(30000)
+        return result
 
     def input_registration_code(self, code="111111"):
         """
@@ -237,14 +209,11 @@ class AuthPage(BasePage):
         self.OTP_CODE_INPUT.fill(code)
 
         with self.page.expect_response(
-            f"**/s/auth/api/v1/auth/activation_confirm/"
+            "**/s/auth/api/v1/auth/activation_confirm/"
         ) as response:
             self.OTP_SUBMIT.click()
 
-        assert response.value.status == 200, (
-            f"AuthPage: Ошибка активации почты "
-            f"при регистарции {response.value.status}"
-        )
+        return response.value
 
     def set_password(self, password):
         """
@@ -255,14 +224,11 @@ class AuthPage(BasePage):
             i.fill(password)
 
         with self.page.expect_response(
-            f"**/s/auth/api/v1/flow/set_password/"
+            "**/s/auth/api/v1/flow/set_password/"
         ) as response:
             self.SIGNUP_PASSWORD_SUBMIT.click()
 
-        assert response.value.status == 200, (
-            "AuthPage: Ошибка при создании пароля "
-            f"{response.value.status} {response.value.json()}"
-        )
+        return response.value
 
     def fill_user_info(self, name, surname):
         """
@@ -273,27 +239,26 @@ class AuthPage(BasePage):
         self.SIGNUP_USER_INFO_NAME.fill(name)
         self.SIGNUP_USER_INFO_SURNAME.fill(surname)
         with (
-            self.page.expect_response(f"**/s/auth/api/v1/flow/set_names/") as response,
+            self.page.expect_response("**/s/auth/api/v1/flow/set_names/") as response,
             (
-                self.page.expect_navigation(url=f"**/account/v2/main/**")
+                self.page.expect_navigation(url="**/account/v2/main/**")
                 if config.app.subdomain == "dev"
-                else self.page.expect_navigation(url=f"**/account/v2/onboarding/**")
+                else self.page.expect_navigation(url="**/account/v2/onboarding/**")
             ) as resp,
         ):
             self.SIGNUP_USER_INFO_SUBMIT.click()
 
-        assert (
-            response.value.status == 200
-        ), f"AuthPage: ФИО не назначено [Код {response.value.status}]"
-        assert resp.value.status == 200, f"AuthPage: Редирект не успешеый"
+        return response.value, resp.value
 
-    def upload_profile_photo(self):
+    def upload_profile_photo(self) -> dict:
+        """
+        Прикрепление и загрузка фото профиля при регистрации
+        :return: словарь ответов по шагам — статусы проверяются в тесте
+        """
         with self.page.expect_response(
             f"blob:https://{config.app.subdomain}.astanahub.com/**"
-        ) as resp:
+        ) as attach_resp:
             self.PROFILE_PHOTO_ATTACH.set_input_files(self.PROFILE_PHOTO_FILE)
-
-        assert resp.value.status in [200, 201], "AuthPage: Фото профиля не прикреплено"
 
         with (
             self.page.expect_response("**/account/api/media_file/") as file_resp,
@@ -306,27 +271,26 @@ class AuthPage(BasePage):
         ):
             self.PROFILE_PHOTO_BTN.click()
 
-        assert file_resp.value.status in [
-            200,
-            201,
-        ], "AuthPage: Фото профиля не загружено"
-        assert update_resp.value.status in [200, 201], "AuthPage: Профиль не обновлен"
-        assert set_resp.value.status in [200, 201], "AuthPage: Фото не установлено"
+        return {
+            "attach": attach_resp.value,
+            "file": file_resp.value,
+            "update": update_resp.value,
+            "set": set_resp.value,
+        }
 
     def select_role(self):
-        roles = self.ROLES_LIST.all()
-        expect(self.ROLES_LIST).to_have_count(4)
-        roles[0].click()
+        """Выбор первой роли — количество ролей проверяется в тесте по ROLES_LIST"""
+        self.ROLES_LIST.first.click()
         self.ROLE_BTN.click()
 
     #   ====================================== Обобщенные функции ======================================
 
     def email_auth(self, email, password):
         """
-        Авторизация через почту
+        Авторизация через почту (хелпер: полный флоу без проверок)
         :param email: Почта
         :param password: Пароль
-        :return:
+        :return: ответ auth/email — статус проверяется в тесте
         """
         self.navigate()
 
@@ -336,13 +300,10 @@ class AuthPage(BasePage):
 
         self.input_password(password=password)
 
-        with self.page.expect_response(f"**/s/auth/api/v1/auth/email/") as response:
-            self.click_auth_password_continue_btn()
+        response = self.click_auth_password_continue_btn()
 
-        assert (
-            response.value.status == 200
-        ), "AuthPage: Ошибка при авторизации (этап пароль)"
-
-        self.page.wait_for_url(f"**/account/v2/main/", wait_until="networkidle")
+        self.page.wait_for_url("**/account/v2/main/", wait_until="networkidle")
 
         self.page.keyboard.press("Escape")
+
+        return response

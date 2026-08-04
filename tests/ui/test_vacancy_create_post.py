@@ -7,6 +7,7 @@ from pages.vacancy.vacancy_page import VacancyPage
 @allure.label("level", "UI")
 @pytest.mark.vacancy
 @pytest.mark.ui
+@allure.label("owner", "aliwka")
 class TestVacancy:
     @allure.title("Vacancy")
     @pytest.mark.critical
@@ -20,25 +21,37 @@ class TestVacancy:
         api_login,
     ):
          with allure.step("Авторизация через API и открытие главной"):
-            main_page.navigate()
+            main_resp = main_page.navigate()
+            assert main_resp.status in (200, 301), (
+                f"Главная страница не доступна: {main_resp.status}"
+            )
 
          with allure.step("Вакансии"):
-             vacancy_page.open_vacancy_from_menu()
+             vacancy_resp = vacancy_page.open_vacancy_from_menu()
+             assert vacancy_resp.status == 200, (
+                 f"Страница вакансий не открылась: {vacancy_resp.status}"
+             )
 
          with allure.step("Вакансии клик"):
              vacancy_create_post_page.dropdown_click_publish()
-             vacancy_create_post_page.dropdown_vacancy_item_click()
+             create_page_resp = vacancy_create_post_page.dropdown_vacancy_item_click()
+             assert create_page_resp.status == 200, (
+                 f"Страница создания вакансии не открылась: {create_page_resp.status}"
+             )
 
          with allure.step("Заполнить поля"):
              vacancy_create_post_page.fill_vacancy(email=base_user_creds["email"], name="Тестовая вакансия", text="Тестовый текст", number="100")
 
          with allure.step("Checkbox"):
              vacancy_create_post_page.click_checkbox()
-        
+
          with allure.step("Publish"):
              vacancy_create_post_page.publish()
 
          with allure.step("Translate"):
-             vacancy_create_post_page.translate()
+             translate_resp = vacancy_create_post_page.translate()
+             assert translate_resp.status == 200, (
+                 f"Перевод не выполнился: {translate_resp.status}"
+             )
 
              

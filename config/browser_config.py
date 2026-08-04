@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Optional, List
 from config.environment import get_env_bool, get_env_int, get_env
 
