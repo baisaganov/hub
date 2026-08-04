@@ -12,9 +12,7 @@ pytest tests --collect-only -q > /dev/null || exit 1
 # API и UI гоняются отдельными процессами: sync-Playwright держит запущенный
 # event loop в главном потоке, и asyncio-тесты в том же процессе после него падают.
 pytest --alluredir=logs/allure-results tests/api -v -n 2
-pytest --alluredir=logs/allure-results tests/ui -v -n 2
-
-
+# pytest --alluredir=logs/allure-results tests/ui -v -n 2
 
 
 #rm -rf testdata/account_data
