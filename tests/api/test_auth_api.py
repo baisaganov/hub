@@ -7,10 +7,18 @@ from testdata.factories import fake_invalid_email, fake_password
 pytestmark = [pytest.mark.api]
 
 
+<<<<<<< HEAD
 @allure.suite("Authorization")
 @allure.label("owner", "aliwka")
+=======
+@allure.suite("HUB ID")
+@allure.label("level", "API")
+@pytest.mark.hubid
+@pytest.mark.api
+>>>>>>> e81ccfb (api test guide + metadata fixes)
 class TestAuthAPI:
     @allure.title("Valid authorization")
+    @pytest.mark.critical
     @pytest.mark.asyncio
     async def test_valid_authorization(self, auth_client):
         with allure.step("Логин с валидными кредами"):
