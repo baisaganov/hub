@@ -8,6 +8,10 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .tests/.pytest_cache
+.ruff_cache/
+.vs_code/
+.claude/
+.github/
 
 # Others
 venv
@@ -30,3 +34,4 @@ testdata/account_data/*
 .DS_Store
 *.p12
 allure-report-out
+api_schema
