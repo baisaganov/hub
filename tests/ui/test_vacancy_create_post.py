@@ -1,7 +1,14 @@
 import allure
 import pytest
+from playwright.sync_api import expect
+from config import config
+
 
 from pages.vacancy.vacancy_page import VacancyPage
+
+mutates_data = pytest.mark.skipif(
+    config.is_production(), reason="Мутирует данные — только dev/qa"
+)
 
 
 @allure.suite("Vacancy")
@@ -12,7 +19,7 @@ from pages.vacancy.vacancy_page import VacancyPage
 class TestVacancy:
     @allure.title("Создание вакансии")
     @pytest.mark.critical
-    @pytest.mark.dev
+    @mutates_data
     def test_vacancy_create(
         self,
         main_page,

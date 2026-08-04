@@ -4,6 +4,10 @@ import pytest
 from playwright.sync_api import expect
 from config import config
 
+mutates_data = pytest.mark.skipif(
+    config.is_production(), reason="Мутирует данные — только dev/qa"
+)
+
 
 @allure.suite("HUB ID")
 @allure.label("level", "UI")
@@ -183,8 +187,8 @@ class TestHubID:
 
     @allure.title("Авторизация с помощью email")
     @pytest.mark.critical
-    @allure.id("2")
     @allure.label("owner", "aliwka")
+    @mutates_data
     def test_email_auth(self, base_user_creds, auth_page):
 
         with allure.step("Переход к HubID"):
@@ -218,6 +222,3 @@ class TestHubID:
             )
             auth_page.page.keyboard.press("Escape")
             auth_page.save_context()
-
-    def phone_auth(self, base_user_creds):
-        pass
