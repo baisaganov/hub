@@ -19,22 +19,22 @@ medium — чтение ключевых сущностей; low — справ�
 
 | № | Метод | Эндпоинт | Статус | Тест | Критичность | Набор | Среда | Ответственный |
 |---|---|---|---|---|---|---|---|---|
-| 1 | GET | `/s/auth/api/schema/` | ❌ |  | low | regress | все | aliwka |
+| 1 | GET | `/s/auth/api/schema/` | ✅ | `test_openapi_schema` | low | regress | все | aliwka |
 | 2 | GET | `/s/auth/api/v1/alem-gpt/widget-token` | ❌ |  | low | regress | все | aliwka |
-| 3 | POST | `/s/auth/api/v1/auth/activation_confirm/` | 🔷 | UI-регистрация (skip) | critical | smoke | dev/qa | aliwka |
-| 4 | POST | `/s/auth/api/v1/auth/apple/` | ❌ |  | high | regress | dev/qa | aliwka |
-| 5 | POST | `/s/auth/api/v1/auth/check/` | 🔷 | UI-логин | critical | smoke | все | aliwka |
+| 3 | POST | `/s/auth/api/v1/auth/activation_confirm/` | ✅ | `test_activation_confirm_unknown_activation` | critical | smoke | dev/qa | aliwka |
+| 4 | POST | `/s/auth/api/v1/auth/apple/` | ✅ | `test_apple_login_invalid_token` (xfail: баг 500) | high | regress | dev/qa | aliwka |
+| 5 | POST | `/s/auth/api/v1/auth/check/` | ✅ | `TestAuthCheck` (3) | critical | smoke | все | aliwka |
 | 6 | GET | `/s/auth/api/v1/auth/egov_sign_uri/` | ❌ |  | low | regress | все | aliwka |
 | 7 | GET | `/s/auth/api/v1/auth/egov_signature_check/{uuid}/` | ❌ |  | low | regress | все | aliwka |
 | 8 | POST | `/s/auth/api/v1/auth/email/` | ✅ | `test_valid_authorization`, `test_authorization_with_invalid_email` | critical | smoke | все | aliwka |
-| 9 | POST | `/s/auth/api/v1/auth/email_otp/` | ❌ |  | critical | smoke | dev/qa | aliwka |
-| 10 | POST | `/s/auth/api/v1/auth/email_registration/` | ❌ |  | critical | smoke | dev/qa | aliwka |
-| 11 | POST | `/s/auth/api/v1/auth/email_reset_password/` | ❌ |  | critical | smoke | dev/qa | aliwka |
-| 12 | POST | `/s/auth/api/v1/auth/google/` | ❌ |  | high | regress | dev/qa | aliwka |
-| 13 | POST | `/s/auth/api/v1/auth/phone/` | ❌ |  | critical | smoke | все | aliwka |
-| 14 | POST | `/s/auth/api/v1/auth/phone_registration/` | ❌ |  | critical | smoke | dev/qa | aliwka |
-| 15 | POST | `/s/auth/api/v1/auth/phone_reset_password/` | ❌ |  | critical | smoke | dev/qa | aliwka |
-| 16 | POST | `/s/auth/api/v1/auth/privacy_policy_accept/` | 🔷 | UI-регистрация (skip) | high | regress | dev/qa | aliwka |
+| 9 | POST | `/s/auth/api/v1/auth/email_otp/` | ✅ | `TestEmailOtp` (3) | critical | smoke | dev/qa | aliwka |
+| 10 | POST | `/s/auth/api/v1/auth/email_registration/` | ✅ | `TestEmailRegistration` (2) | critical | smoke | dev/qa | aliwka |
+| 11 | POST | `/s/auth/api/v1/auth/email_reset_password/` | ✅ | `TestEmailResetPassword` (2) | critical | smoke | dev/qa | aliwka |
+| 12 | POST | `/s/auth/api/v1/auth/google/` | ✅ | `test_google_login_invalid_token` (xfail: баг 500) | high | regress | dev/qa | aliwka |
+| 13 | POST | `/s/auth/api/v1/auth/phone/` | ✅ | `test_phone_login_invalid_phone` | critical | smoke | все | aliwka |
+| 14 | POST | `/s/auth/api/v1/auth/phone_registration/` | ✅ | `test_phone_registration_invalid_phone` (xfail: баг 500) | critical | smoke | dev/qa | aliwka |
+| 15 | POST | `/s/auth/api/v1/auth/phone_reset_password/` | ✅ | `test_phone_reset_password_unknown_phone` | critical | smoke | dev/qa | aliwka |
+| 16 | POST | `/s/auth/api/v1/auth/privacy_policy_accept/` | ✅ | `test_privacy_policy_accept_already_accepted` | high | regress | dev/qa | aliwka |
 | 17 | POST | `/s/auth/api/v1/auth/signature/` | ❌ |  | high | regress | dev/qa | aliwka |
 | 18 | GET | `/s/auth/api/v1/auth/signature_xml/` | ❌ |  | low | regress | все | aliwka |
 | 19 | GET | `/s/auth/api/v1/auth/{id}/egov_info/{uuid_param}/` | ❌ |  | low | regress | все | aliwka |
@@ -42,25 +42,25 @@ medium — чтение ключевых сущностей; low — справ�
 | 21 | PUT | `/s/auth/api/v1/auth/{id}/egov_sign/{uuid_param}/` | ❌ |  | high | regress | dev/qa | aliwka |
 | 22 | GET | `/s/auth/api/v1/auth/{id}/mgovSign/egov_info/{uuid_param}/` | ❌ |  | low | regress | все | aliwka |
 | 23 | GET | `/s/auth/api/v1/external/token/exchange/` | ❌ |  | low | regress | все | aliwka |
-| 24 | GET | `/s/auth/api/v1/external/user/info/` | ❌ |  | medium | regress | все | aliwka |
+| 24 | GET | `/s/auth/api/v1/external/user/info/` | ✅ | `test_external_user_info_unauthorized` | medium | regress | все | aliwka |
 | 25 | POST | `/s/auth/api/v1/flow/set_community_role/` | ❌ |  | high | regress | dev/qa | aliwka |
-| 26 | POST | `/s/auth/api/v1/flow/set_completed/` | ❌ |  | high | regress | dev/qa | aliwka |
-| 27 | POST | `/s/auth/api/v1/flow/set_names/` | 🔷 | UI-регистрация (skip) | high | regress | dev/qa | aliwka |
-| 28 | POST | `/s/auth/api/v1/flow/set_password/` | 🔷 | UI-регистрация (skip) | high | regress | dev/qa | aliwka |
-| 29 | POST | `/s/auth/api/v1/flow/set_photo/` | ❌ |  | high | regress | dev/qa | aliwka |
-| 30 | POST | `/s/auth/api/v1/has_permissions/` | ❌ |  | high | regress | dev/qa | aliwka |
+| 26 | POST | `/s/auth/api/v1/flow/set_completed/` | ✅ | `test_flow_set_completed` | high | regress | dev/qa | aliwka |
+| 27 | POST | `/s/auth/api/v1/flow/set_names/` | ✅ | `test_flow_set_names` | high | regress | dev/qa | aliwka |
+| 28 | POST | `/s/auth/api/v1/flow/set_password/` | ✅ | `test_flow_set_password_empty` | high | regress | dev/qa | aliwka |
+| 29 | POST | `/s/auth/api/v1/flow/set_photo/` | ✅ | `test_flow_skip_photo` | high | regress | dev/qa | aliwka |
+| 30 | POST | `/s/auth/api/v1/has_permissions/` | ✅ | `test_has_permissions_invalid` | high | regress | dev/qa | aliwka |
 | 31 | POST | `/s/auth/api/v1/internal/user/` | ❌ |  | low | regress | dev/qa | — |
 | 32 | POST | `/s/auth/api/v1/internal/user/attach_iin/` | ❌ |  | low | regress | dev/qa | — |
 | 33 | POST | `/s/auth/api/v1/internal/verify/` | ❌ |  | low | regress | dev/qa | — |
-| 34 | GET | `/s/auth/api/v1/permissions/` | ❌ |  | low | regress | все | aliwka |
-| 35 | GET | `/s/auth/api/v1/permissions/check/{permission}/` | ❌ |  | low | regress | все | aliwka |
-| 36 | POST | `/s/auth/api/v1/profile/change_email/` | ❌ |  | high | regress | dev/qa | aliwka |
-| 37 | POST | `/s/auth/api/v1/profile/change_password/` | ❌ |  | high | regress | dev/qa | aliwka |
-| 38 | POST | `/s/auth/api/v1/profile/change_phone/` | ❌ |  | high | regress | dev/qa | aliwka |
-| 39 | POST | `/s/auth/api/v1/profile/delete_account/` | ❌ |  | high | regress | dev/qa | aliwka |
-| 40 | GET | `/s/auth/api/v1/profile/info/` | ❌ |  | low | regress | все | aliwka |
-| 41 | GET | `/s/auth/api/v1/profile/info_by_id/` | ❌ |  | low | regress | все | aliwka |
-| 42 | POST | `/s/auth/api/v1/profile/update_profile/` | ❌ |  | high | regress | dev/qa | aliwka |
+| 34 | GET | `/s/auth/api/v1/permissions/` | ✅ | `test_permissions_list` | low | regress | все | aliwka |
+| 35 | GET | `/s/auth/api/v1/permissions/check/{permission}/` | ✅ | `test_permission_check_forbidden` | low | regress | все | aliwka |
+| 36 | POST | `/s/auth/api/v1/profile/change_email/` | ✅ | `test_change_email_invalid_email` | high | regress | dev/qa | aliwka |
+| 37 | POST | `/s/auth/api/v1/profile/change_password/` | ✅ | `test_change_password_wrong_old_password` | high | regress | dev/qa | aliwka |
+| 38 | POST | `/s/auth/api/v1/profile/change_phone/` | ✅ | `test_change_phone_returns_activation` | high | regress | dev/qa | aliwka |
+| 39 | POST | `/s/auth/api/v1/profile/delete_account/` | ✅ | `test_delete_account_unauthorized` | high | regress | dev/qa | aliwka |
+| 40 | GET | `/s/auth/api/v1/profile/info/` | ✅ | `test_profile_info`, `test_profile_info_unauthorized` | low | regress | все | aliwka |
+| 41 | GET | `/s/auth/api/v1/profile/info_by_id/` | ✅ | `test_profile_info_by_id_forbidden` | low | regress | все | aliwka |
+| 42 | POST | `/s/auth/api/v1/profile/update_profile/` | ✅ | `test_update_profile_names` | high | regress | dev/qa | aliwka |
 | 43 | POST | `/s/auth/api/v1/profile/verify/` | ❌ |  | high | regress | dev/qa | aliwka |
 
 ## techhub — публичное API (70)

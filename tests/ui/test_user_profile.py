@@ -1,6 +1,11 @@
 import pytest
 import allure
+from config import config
 
+
+mutates_data = pytest.mark.skipif(
+    config.is_production(), reason="Мутирует данные — только dev/qa"
+)
 
 @allure.suite("User Profile")
 @allure.label("level", "UI")
@@ -10,6 +15,7 @@ class TestUserProfile:
 
     @allure.title("Добавление компании")
     @pytest.mark.regression
+    @mutates_data
     def test_create_company(
         self,
         main_page,

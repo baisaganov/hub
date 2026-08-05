@@ -38,6 +38,11 @@ async def auth_client(anonymous_http_client):
 
 
 @pytest.fixture
+async def authorized_auth_client(authorized_http_client):
+    yield AuthClient(authorized_http_client)
+
+
+@pytest.fixture
 async def get_cookies(auth_client):
     await auth_client.login(
         email=API_EMAIL,

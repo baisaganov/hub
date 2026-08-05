@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import BaseModel
 
 
@@ -27,3 +29,48 @@ class LoginResponse(BaseModel):
     user: AuthUser
     token: str | None
     redirect_url: str | None
+
+
+class AuthCheckResponse(BaseModel):
+    """Ответ /auth/check/ — определяет метод входа и наличие юзера"""
+
+    value: str
+    method: str  # "email" | "phone"
+    user_exists: bool
+
+
+class ActivationResponse(BaseModel):
+    """
+    Единый контракт запуска активации (OTP/регистрация/сброс пароля/смена телефона):
+    uuid активации + задержка до повторной отправки кода.
+    """
+
+    activation: UUID
+    resend_delay: int
+
+
+class PermissionsListResponse(BaseModel):
+    """Ответ GET /permissions/"""
+
+    result: list
+
+
+class HasPermissionsResponse(BaseModel):
+    """Ответ POST /has_permissions/"""
+
+    valid: bool
+
+
+class OpenApiSchemaResponse(BaseModel):
+    """Минимальный контракт OpenAPI-схемы сервиса"""
+
+    openapi: str
+    info: dict
+    paths: dict
+
+
+class UpdateNamesRequest(BaseModel):
+    """Тело /flow/set_names/ и /profile/update_profile/"""
+
+    first_name: str
+    last_name: str

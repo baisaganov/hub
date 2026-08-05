@@ -1,7 +1,13 @@
 import allure
 import pytest
+import re
+from config import config
 
 from playwright.sync_api import expect
+
+mutates_data = pytest.mark.skipif(
+    config.is_production(), reason="Мутирует данные — только dev/qa"
+)
 
 
 @allure.suite("Events")
@@ -14,7 +20,7 @@ class TestEvents:
 
     @allure.title("Отправление ивента с одной сферой")
     @pytest.mark.critical
-    @pytest.mark.dev
+    @mutates_data
     def test_event_send(self, page, events_page, events_create_page, api_login):
         with allure.step("Переход на страницу мероприятий (авторизация через API)"):
             events_resp = events_page.navigate()
@@ -58,7 +64,7 @@ class TestEvents:
 
     @allure.title("Участвовать в мероприятии")
     @pytest.mark.critical
-    @pytest.mark.dev
+    @mutates_data
     def test_participate_event(self, main_page, events_page, api_login):
         with allure.step("Авторизация через API и открытие главной"):
             main_resp = main_page.navigate()

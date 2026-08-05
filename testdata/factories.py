@@ -5,7 +5,7 @@
 """
 from faker import Faker
 
-from models import UpdateContactRequest
+from models import UpdateContactRequest, UpdateNamesRequest
 
 fake = Faker("ru_RU")
 
@@ -42,3 +42,26 @@ def fake_invalid_email() -> str:
 
 def fake_password(length: int = 12) -> str:
     return fake.password(length=length)
+
+
+def fake_unregistered_email() -> str:
+    """Валидный email, которого гарантированно нет в базе"""
+    return f"autotest_{fake.uuid4()[:10]}@hub.kz"
+
+
+def fake_phone() -> str:
+    """Телефон тестового диапазона +7777XXXXXXX"""
+    return f"+7777{fake.numerify('#######')}"
+
+
+def fake_invalid_phone() -> str:
+    """Синтаксически невалидный телефон"""
+    return fake.lexify("????????")
+
+
+def fake_names() -> UpdateNamesRequest:
+    """Имя и фамилия для set_names / update_profile"""
+    return UpdateNamesRequest(
+        first_name=fake.first_name(),
+        last_name=fake.last_name(),
+    )
