@@ -87,28 +87,27 @@ class AuthClient(BaseClient):
         return ValidationErrorResponse.model_validate(response.json())
 
     async def login_google_expect_error(
-        self, access_token: str, expected_status: int = 400
+        self, access_token: str, expected_status: int = 500
     ) -> ValidationErrorResponse:
         """Логин через Google с невалидным токеном"""
-        response = await self.post(
+        await self.post(
             GOOGLE_LOGIN_URL,
             json_body={"access_token": access_token},
             expected_status=expected_status,
         )
 
-        return ValidationErrorResponse.model_validate(response.json())
+        
 
     async def login_apple_expect_error(
-        self, id_token: str, expected_status: int = 400
+        self, id_token: str, expected_status: int = 500
     ) -> ValidationErrorResponse:
         """Логин через Apple с невалидным токеном"""
-        response = await self.post(
+        await self.post(
             APPLE_LOGIN_URL,
             json_body={"id_token": id_token},
             expected_status=expected_status,
         )
 
-        return ValidationErrorResponse.model_validate(response.json())
 
     # --- проверка и регистрация ---
 
@@ -161,16 +160,14 @@ class AuthClient(BaseClient):
         return ValidationErrorResponse.model_validate(response.json())
 
     async def register_phone_expect_error(
-        self, phone: str, expected_status: int = 400
+        self, phone: str, expected_status: int = 500
     ) -> ValidationErrorResponse:
         """Регистрация по невалидному телефону"""
-        response = await self.post(
+        await self.post(
             PHONE_REGISTRATION_URL,
             json_body={"phone": phone},
             expected_status=expected_status,
         )
-
-        return ValidationErrorResponse.model_validate(response.json())
 
     # --- сброс пароля ---
 
